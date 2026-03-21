@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -85,7 +85,7 @@ public:
     GKO_ENABLE_LIN_OP_FACTORY(DummyLinOp, parameters, Factory);
     GKO_ENABLE_BUILD_METHOD(Factory);
 
-    DummyLinOp(const Factory* factory, std::shared_ptr<const gko::LinOp> op)
+    DummyLinOp(const Factory* factory, gko::LinOpGenerateComponents components)
         : gko::EnableLinOp<DummyLinOp>(factory->get_executor()),
           parameters_{factory->get_parameters()}
     {

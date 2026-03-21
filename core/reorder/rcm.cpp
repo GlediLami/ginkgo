@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -145,8 +145,9 @@ std::unique_ptr<matrix::Permutation<IndexType>> Rcm<IndexType>::generate(
 
 template <typename IndexType>
 std::unique_ptr<LinOp> Rcm<IndexType>::generate_impl(
-    std::shared_ptr<const LinOp> system_matrix) const
+    LinOpGenerateComponents components) const
 {
+    auto system_matrix = std::move(components.system_matrix);
     GKO_ASSERT_IS_SQUARE_MATRIX(system_matrix);
     const auto exec = this->get_executor();
     // The reordering is not supported on DPC++, use the host instead
