@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -1677,7 +1677,8 @@ private:
     array<index_type> row_ptrs_;
     array<index_type> srow_;
 
-    void add_scaled_identity_impl(const LinOp* a, const LinOp* b) override;
+    void add_scaled_identity_impl(const MultiVector* a,
+                                  const MultiVector* b) override;
 };
 
 
