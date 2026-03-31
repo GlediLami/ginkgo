@@ -5,7 +5,7 @@
 #pragma once
 
 #include <ginkgo/config.hpp>
-#include <ginkgo/core/base/lin_op.hpp>
+#include <ginkgo/core/base/precision.hpp>
 #include <ginkgo/core/base/range.hpp>
 #include <ginkgo/core/base/temporary_conversion.hpp>
 #include <ginkgo/core/matrix/device_views.hpp>
@@ -71,7 +71,7 @@ struct scaling_param<std::complex<ValueType>>
                    const matrix::Dense<std::complex<ValueType>>*> {};
 
 
-class MultiVector : public EnableAbstractPolymorphicObject<MultiVector, LinOp> {
+class MultiVector : public EnableAbstractPolymorphicObject<MultiVector> {
 public:
     template <typename ValueType>
     using device_view = matrix::view::dense<ValueType>;
@@ -203,6 +203,20 @@ public:
     [[nodiscard]] detail::temporary_conversion<const MultiVector> as_precision(
         ptr_param<const LinOp> p) const;
 
+    [[nodiscard]] precision get_precision() const noexcept;
+
+    [[nodiscard]] dim<2> get_size() const noexcept;
+
+    MultiVector(const MultiVector& other);
+
+    MultiVector(MultiVector&& other);
+
+    // Preserves executor and precision on both objects
+    MultiVector& operator=(const MultiVector& other);
+
+    // Preserves executor and precision on both objects
+    MultiVector& operator=(MultiVector&& other);
+
 protected:
     explicit MultiVector(std::shared_ptr<const Executor> exec,
                          const dim<2>& size = dim<2>{},
@@ -327,6 +341,12 @@ protected:
 
     [[nodiscard]] virtual detail::temporary_conversion<const MultiVector>
     as_precision_impl(precision p) const = 0;
+
+    void set_size(const dim<2>& value) noexcept;
+
+private:
+    dim<2> size_;
+    precision precision_;
 };
 
 
