@@ -188,8 +188,20 @@ public:
     [[nodiscard]] detail::temporary_conversion<MultiVector> as_precision(
         precision p);
 
+    [[nodiscard]] detail::temporary_conversion<MultiVector> as_precision(
+        ptr_param<const MultiVector> p);
+
+    [[nodiscard]] detail::temporary_conversion<MultiVector> as_precision(
+        ptr_param<const LinOp> p);
+
     [[nodiscard]] detail::temporary_conversion<const MultiVector> as_precision(
         precision p) const;
+
+    [[nodiscard]] detail::temporary_conversion<const MultiVector> as_precision(
+        ptr_param<const MultiVector> p) const;
+
+    [[nodiscard]] detail::temporary_conversion<const MultiVector> as_precision(
+        ptr_param<const LinOp> p) const;
 
 protected:
     explicit MultiVector(std::shared_ptr<const Executor> exec,
@@ -1005,8 +1017,7 @@ void EnableMultiVector<ConcreteType>::add_scaled_impl(const MultiVector* alpha,
                             detail::scaling_factor_target_type<
                                 value_type, alpha_value_type>>()
                         .get()},
-                as<const ConcreteType>(
-                    b->as_precision(this->get_precision()).get()));
+                as<const ConcreteType>(b->as_precision(this).get()));
         },
         precision_to_variant(alpha->get_precision()));
 }
@@ -1027,8 +1038,7 @@ void EnableMultiVector<ConcreteType>::sub_scaled_impl(const MultiVector* alpha,
                             detail::scaling_factor_target_type<
                                 value_type, alpha_value_type>>()
                         .get()},
-                as<const ConcreteType>(
-                    b->as_precision(this->get_precision()).get()));
+                as<const ConcreteType>(b->as_precision(this).get()));
         },
         precision_to_variant(alpha->get_precision()));
 }
@@ -1039,9 +1049,8 @@ void EnableMultiVector<ConcreteType>::compute_dot_impl(
     const MultiVector* b, MultiVector* result) const
 {
     this->compute_dot_impl(
-        as<const ConcreteType>(b->as_precision(this->get_precision()).get()),
-        as<matrix::Dense<value_type>>(
-            result->as_precision(this->get_precision()).get()));
+        as<const ConcreteType>(b->as_precision(this).get()),
+        as<matrix::Dense<value_type>>(result->as_precision(this).get()));
 }
 
 
@@ -1051,10 +1060,8 @@ void EnableMultiVector<ConcreteType>::compute_dot_impl(const MultiVector* b,
                                                        array<char>& tmp) const
 {
     this->compute_dot_impl(
-        as<const ConcreteType>(b->as_precision(this->get_precision()).get()),
-        as<matrix::Dense<value_type>>(
-            result->as_precision(this->get_precision()).get()),
-        tmp);
+        as<const ConcreteType>(b->as_precision(this).get()),
+        as<matrix::Dense<value_type>>(result->as_precision(this).get()), tmp);
 }
 
 
@@ -1063,9 +1070,8 @@ void EnableMultiVector<ConcreteType>::compute_conj_dot_impl(
     const MultiVector* b, MultiVector* result) const
 {
     this->compute_conj_dot_impl(
-        as<const ConcreteType>(b->as_precision(this->get_precision()).get()),
-        as<matrix::Dense<value_type>>(
-            result->as_precision(this->get_precision()).get()));
+        as<const ConcreteType>(b->as_precision(this).get()),
+        as<matrix::Dense<value_type>>(result->as_precision(this).get()));
 }
 
 
@@ -1074,10 +1080,8 @@ void EnableMultiVector<ConcreteType>::compute_conj_dot_impl(
     const MultiVector* b, MultiVector* result, array<char>& tmp) const
 {
     this->compute_conj_dot_impl(
-        as<const ConcreteType>(b->as_precision(this->get_precision()).get()),
-        as<matrix::Dense<value_type>>(
-            result->as_precision(this->get_precision()).get()),
-        tmp);
+        as<const ConcreteType>(b->as_precision(this).get()),
+        as<matrix::Dense<value_type>>(result->as_precision(this).get()), tmp);
 }
 
 
