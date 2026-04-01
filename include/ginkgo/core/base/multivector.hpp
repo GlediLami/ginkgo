@@ -1151,8 +1151,9 @@ EnableMultiVector<ConcreteType>::as_precision_impl(precision p)
             using snd_value_type = std::decay_t<decltype(v)>;
             if constexpr (is_complex_s<fst_value_type>::value ==
                           is_complex_s<snd_value_type>::value) {
-                return detail::temporary_conversion<MultiVector>::create(
-                    self()->template as_precision<snd_value_type>());
+                return detail::temporary_conversion<MultiVector>::
+                    create_from_derived(
+                        self()->template as_precision<snd_value_type>());
             } else {
                 GKO_NOT_IMPLEMENTED;
             }
@@ -1171,8 +1172,9 @@ EnableMultiVector<ConcreteType>::as_precision_impl(precision p) const
             using snd_value_type = std::decay_t<decltype(v)>;
             if constexpr (is_complex_s<fst_value_type>::value ==
                           is_complex_s<snd_value_type>::value) {
-                return detail::temporary_conversion<const MultiVector>::create(
-                    self()->template as_precision<snd_value_type>());
+                return detail::temporary_conversion<const MultiVector>::
+                    create_from_derived(
+                        self()->template as_precision<snd_value_type>());
             } else {
                 GKO_NOT_IMPLEMENTED;
             }
