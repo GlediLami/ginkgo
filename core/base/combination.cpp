@@ -14,8 +14,8 @@ namespace {
 
 template <typename ValueType>
 inline void initialize_scalars(std::shared_ptr<const Executor> exec,
-                               std::unique_ptr<LinOp>& zero,
-                               std::unique_ptr<LinOp>& one)
+                               std::unique_ptr<matrix::Dense<ValueType>>& zero,
+                               std::unique_ptr<matrix::Dense<ValueType>>& one)
 {
     if (zero == nullptr) {
         zero = initialize<matrix::Dense<ValueType>>({gko::zero<ValueType>()},
@@ -119,7 +119,7 @@ std::unique_ptr<LinOp> Combination<ValueType>::conj_transpose() const
     // conjugate coefficients!
     for (auto& coef : get_coefficients()) {
         transposed->coefficients_.push_back(
-            share(as<Transposable>(coef)->conj_transpose()));
+            share(as<matrix::Dense<ValueType>>(coef)->conj_transpose()));
     }
     // conjugate-transpose operators
     for (auto& op : get_operators()) {
@@ -132,38 +132,39 @@ std::unique_ptr<LinOp> Combination<ValueType>::conj_transpose() const
 
 
 template <typename ValueType>
-void Combination<ValueType>::apply_impl(const LinOp* b, LinOp* x) const
+void Combination<ValueType>::apply_impl(const MultiVector* b,
+                                        MultiVector* x) const
 {
-    initialize_scalars<ValueType>(this->get_executor(), cache_.zero,
-                                  cache_.one);
-    precision_dispatch_real_complex<ValueType>(
-        [this](auto dense_b, auto dense_x) {
-            operators_[0]->apply(coefficients_[0], dense_b, cache_.zero,
-                                 dense_x);
-            for (size_type i = 1; i < operators_.size(); ++i) {
-                operators_[i]->apply(coefficients_[i], dense_b, cache_.one,
-                                     dense_x);
-            }
-        },
-        b, x);
+    initialize_scalars(this->get_executor(), cache_.zero, cache_.one);
+
+    auto converted_b = b->as_precision(this);
+    auto converted_x = x->as_precision(this);
+    auto dense_b = converted_b.get();
+    auto dense_x = converted_x.get();
+    operators_[0]->apply(coefficients_[0], dense_b, cache_.zero, dense_x);
+    for (size_type i = 1; i < operators_.size(); ++i) {
+        operators_[i]->apply(coefficients_[i], dense_b, cache_.one, dense_x);
+    }
 }
 
 
 template <typename ValueType>
-void Combination<ValueType>::apply_impl(const LinOp* alpha, const LinOp* b,
-                                        const LinOp* beta, LinOp* x) const
+void Combination<ValueType>::apply_impl(const MultiVector* alpha,
+                                        const MultiVector* b,
+                                        const MultiVector* beta,
+                                        MultiVector* x) const
 {
-    precision_dispatch_real_complex<ValueType>(
-        [this](auto dense_alpha, auto dense_b, auto dense_beta, auto dense_x) {
-            if (cache_.intermediate_x == nullptr ||
-                cache_.intermediate_x->get_size() != dense_x->get_size()) {
-                cache_.intermediate_x = dense_x->clone();
-            }
-            this->apply_impl(dense_b, cache_.intermediate_x.get());
-            dense_x->scale(dense_beta);
-            dense_x->add_scaled(dense_alpha, cache_.intermediate_x);
-        },
-        alpha, b, beta, x);
+    auto converted_b = b->as_precision(this);
+    auto converted_x = x->as_precision(this);
+    auto dense_b = converted_b.get();
+    auto dense_x = converted_x.get();
+    if (cache_.intermediate_x == nullptr ||
+        cache_.intermediate_x->get_size() != dense_x->get_size()) {
+        cache_.intermediate_x = dense_x->clone();
+    }
+    this->apply_impl(dense_b, cache_.intermediate_x.get());
+    dense_x->scale(beta);
+    dense_x->add_scaled(alpha, cache_.intermediate_x);
 }
 
 
