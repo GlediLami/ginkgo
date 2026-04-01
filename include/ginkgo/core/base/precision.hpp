@@ -4,7 +4,12 @@
 
 #pragma once
 
+#include <complex>
+#include <variant>
+
 #include <ginkgo/config.hpp>
+#include <ginkgo/core/base/exception_helpers.hpp>
+#include <ginkgo/core/base/types.hpp>
 
 namespace gko {
 
