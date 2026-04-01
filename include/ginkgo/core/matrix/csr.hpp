@@ -1340,12 +1340,7 @@ public:
      * @param alpha  The entire matrix is scaled by alpha. alpha has to be a 1x1
      * Dense matrix.
      */
-    void scale(ptr_param<const LinOp> alpha)
-    {
-        auto exec = this->get_executor();
-        GKO_ASSERT_EQUAL_DIMENSIONS(alpha, dim<2>(1, 1));
-        this->scale_impl(make_temporary_clone(exec, alpha).get());
-    }
+    void scale(ptr_param<const MultiVector> alpha);
 
     /**
      * Scales the matrix with the inverse of a scalar.
@@ -1353,12 +1348,7 @@ public:
      * @param alpha  The entire matrix is scaled by 1 / alpha. alpha has to be a
      * 1x1 Dense matrix.
      */
-    void inv_scale(ptr_param<const LinOp> alpha)
-    {
-        auto exec = this->get_executor();
-        GKO_ASSERT_EQUAL_DIMENSIONS(alpha, dim<2>(1, 1));
-        this->inv_scale_impl(make_temporary_clone(exec, alpha).get());
-    }
+    void inv_scale(ptr_param<const MultiVector> alpha);
 
     /**
      * Creates an uninitialized CSR matrix of the specified size.
@@ -1518,10 +1508,10 @@ protected:
         array<index_type> row_ptrs,
         std::shared_ptr<strategy_type> strategy = nullptr);
 
-    void apply_impl(const LinOp* b, LinOp* x) const override;
+    void apply_impl(const MultiVector* b, MultiVector* x) const override;
 
-    void apply_impl(const LinOp* alpha, const LinOp* b, const LinOp* beta,
-                    LinOp* x) const override;
+    void apply_impl(const MultiVector* alpha, const MultiVector* b,
+                    const MultiVector* beta, MultiVector* x) const override;
 
     // TODO: This provides some more sane settings. Please fix this!
     static std::shared_ptr<strategy_type> make_default_strategy(
@@ -1660,7 +1650,7 @@ protected:
      * @note  Other implementations of Csr should override this function
      *        instead of scale(const LinOp *alpha).
      */
-    virtual void scale_impl(const LinOp* alpha);
+    virtual void scale_impl(const MultiVector* alpha);
 
     /**
      * @copydoc inv_scale(const LinOp *)
@@ -1668,7 +1658,7 @@ protected:
      * @note  Other implementations of Csr should override this function
      *        instead of inv_scale(const LinOp *alpha).
      */
-    virtual void inv_scale_impl(const LinOp* alpha);
+    virtual void inv_scale_impl(const MultiVector* alpha);
 
 private:
     std::shared_ptr<strategy_type> strategy_;

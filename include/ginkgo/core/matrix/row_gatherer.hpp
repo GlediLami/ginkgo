@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -114,10 +114,10 @@ protected:
     RowGatherer(std::shared_ptr<const Executor> exec, const dim<2>& size,
                 array<index_type> row_idxs);
 
-    void apply_impl(const LinOp* in, LinOp* out) const override;
+    void apply_impl(const MultiVector* in, MultiVector* out) const override;
 
-    void apply_impl(const LinOp* alpha, const LinOp* in, const LinOp* beta,
-                    LinOp* out) const override;
+    void apply_impl(const MultiVector* alpha, const MultiVector* in,
+                    const MultiVector* beta, MultiVector* out) const override;
 
 private:
     gko::array<index_type> row_idxs_;

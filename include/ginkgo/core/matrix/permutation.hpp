@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -264,10 +264,10 @@ protected:
     Permutation(std::shared_ptr<const Executor> exec,
                 array<IndexType> permutation_indices);
 
-    void apply_impl(const LinOp* in, LinOp* out) const override;
+    void apply_impl(const MultiVector* in, MultiVector* out) const override;
 
-    void apply_impl(const LinOp*, const LinOp* in, const LinOp*,
-                    LinOp* out) const override;
+    void apply_impl(const MultiVector*, const MultiVector* in,
+                    const MultiVector*, MultiVector* out) const override;
 
 private:
     array<index_type> permutation_;
