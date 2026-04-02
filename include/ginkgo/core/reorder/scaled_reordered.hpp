@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -100,63 +100,15 @@ protected:
     /**
      * Creates an empty scaled reordered operator (0x0 operator).
      */
-    explicit ScaledReordered(std::shared_ptr<const Executor> exec)
-        : EnableLinOp<ScaledReordered>(std::move(exec)),
-          permutation_array_{exec}
-    {}
+    explicit ScaledReordered(std::shared_ptr<const Executor> exec);
 
     explicit ScaledReordered(const Factory* factory,
-                             std::shared_ptr<const LinOp> system_matrix)
-        : EnableLinOp<ScaledReordered>(factory->get_executor(),
-                                       system_matrix->get_size()),
-          parameters_{factory->get_parameters()},
-          permutation_array_{factory->get_executor()}
-    {
-        // For now only support square matrices.
-        GKO_ASSERT_IS_SQUARE_MATRIX(system_matrix);
+                             std::shared_ptr<const LinOp> system_matrix);
 
-        auto exec = this->get_executor();
+    void apply_impl(const MultiVector* b, MultiVector* x) const override;
 
-        system_matrix_ = gko::clone(exec, system_matrix);
-
-        // Scale the system matrix if scaling coefficients are provided
-        if (parameters_.row_scaling) {
-            GKO_ASSERT_EQUAL_DIMENSIONS(parameters_.row_scaling,
-                                        system_matrix_);
-            row_scaling_ = parameters_.row_scaling;
-            row_scaling_->apply(system_matrix_, system_matrix_);
-        }
-        if (parameters_.col_scaling) {
-            GKO_ASSERT_EQUAL_DIMENSIONS(parameters_.col_scaling,
-                                        system_matrix_);
-            col_scaling_ = parameters_.col_scaling;
-            col_scaling_->rapply(system_matrix_, system_matrix_);
-        }
-
-        // If a reordering factory is provided, generate the reordering and
-        // permute the system matrix accordingly.
-        if (parameters_.reordering) {
-            auto reordering = parameters_.reordering->generate(system_matrix_);
-            permutation_array_ = reordering->get_permutation_array();
-            system_matrix_ = as<Permutable<index_type>>(system_matrix_)
-                                 ->permute(&permutation_array_);
-        }
-
-        // Generate the inner operator with the scaled and reordered system
-        // matrix. If none is provided, use the Identity.
-        if (parameters_.inner_operator) {
-            inner_operator_ =
-                parameters_.inner_operator->generate(system_matrix_);
-        } else {
-            inner_operator_ = gko::matrix::Identity<value_type>::create(
-                exec, this->get_size()[0]);
-        }
-    }
-
-    void apply_impl(const LinOp* b, LinOp* x) const override;
-
-    void apply_impl(const LinOp* alpha, const LinOp* b, const LinOp* beta,
-                    LinOp* x) const override;
+    void apply_impl(const MultiVector* alpha, const MultiVector* b,
+                    const MultiVector* beta, MultiVector* x) const override;
 
     /**
      * Prepares the intermediate right hand side, solution and intermediate
@@ -169,26 +121,10 @@ protected:
      * case the inner operator uses an initial guess, will be scaled and
      * permuted accordingly.
      */
-    void set_cache_to(const LinOp* b, const LinOp* x) const
-    {
-        if (cache_.inner_b == nullptr ||
-            cache_.inner_b->get_size() != b->get_size()) {
-            const auto size = b->get_size();
-            cache_.inner_b =
-                matrix::Dense<value_type>::create(this->get_executor(), size);
-            cache_.inner_x =
-                matrix::Dense<value_type>::create(this->get_executor(), size);
-            cache_.intermediate =
-                matrix::Dense<value_type>::create(this->get_executor(), size);
-        }
-        cache_.inner_b->copy_from(b);
-        if (inner_operator_->apply_uses_initial_guess()) {
-            cache_.inner_x->copy_from(x);
-        }
-    }
+    void set_cache_to(const MultiVector* b, const MultiVector* x) const;
 
 private:
-    std::shared_ptr<LinOp> system_matrix_{};
+    std::shared_ptr<matrix::Csr<ValueType, IndexType>> system_matrix_{};
     std::shared_ptr<const LinOp> inner_operator_{};
     std::shared_ptr<const matrix::Diagonal<value_type>> row_scaling_{};
     std::shared_ptr<const matrix::Diagonal<value_type>> col_scaling_{};
