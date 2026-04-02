@@ -1147,13 +1147,24 @@ EnableMultiVector<ConcreteType>::as_precision_impl(precision p)
 {
     return std::visit(
         [this](auto v) -> detail::temporary_conversion<MultiVector> {
-            using fst_value_type = typename ConcreteType::value_type;
-            using snd_value_type = std::decay_t<decltype(v)>;
-            if constexpr (is_complex_s<fst_value_type>::value ==
-                          is_complex_s<snd_value_type>::value) {
+            using source_value_type = typename ConcreteType::value_type;
+            using target_value_type = std::decay_t<decltype(v)>;
+            if constexpr (is_complex<source_value_type>() ==
+                          is_complex<target_value_type>()) {
                 return detail::temporary_conversion<MultiVector>::
                     create_from_derived(
-                        self()->template as_precision<snd_value_type>());
+                        self()->template as_precision<target_value_type>());
+            } else if constexpr (!is_complex<target_value_type>() &&
+                                 std::is_same_v<
+                                     remove_complex<source_value_type>,
+                                     target_value_type>) {
+                // The as_precision is a noop, but necessary to convert
+                // the real view to a temporary_conversion
+                return detail::temporary_conversion<MultiVector>::
+                    create_from_derived(
+                        self()
+                            ->create_real_view()
+                            ->template as_precision<target_value_type>());
             } else {
                 GKO_NOT_IMPLEMENTED;
             }
@@ -1168,13 +1179,24 @@ EnableMultiVector<ConcreteType>::as_precision_impl(precision p) const
 {
     return std::visit(
         [this](auto v) -> detail::temporary_conversion<const MultiVector> {
-            using fst_value_type = typename ConcreteType::value_type;
-            using snd_value_type = std::decay_t<decltype(v)>;
-            if constexpr (is_complex_s<fst_value_type>::value ==
-                          is_complex_s<snd_value_type>::value) {
+            using source_value_type = typename ConcreteType::value_type;
+            using target_value_type = std::decay_t<decltype(v)>;
+            if constexpr (is_complex<source_value_type>() ==
+                          is_complex<target_value_type>()) {
                 return detail::temporary_conversion<const MultiVector>::
                     create_from_derived(
-                        self()->template as_precision<snd_value_type>());
+                        self()->template as_precision<target_value_type>());
+            } else if constexpr (!is_complex<target_value_type>() &&
+                                 std::is_same_v<
+                                     remove_complex<source_value_type>,
+                                     target_value_type>) {
+                // The as_precision is a noop, but necessary to convert
+                // the real view to a temporary_conversion
+                return detail::temporary_conversion<const MultiVector>::
+                    create_from_derived(
+                        self()
+                            ->create_real_view()
+                            ->template as_precision<target_value_type>());
             } else {
                 GKO_NOT_IMPLEMENTED;
             }
