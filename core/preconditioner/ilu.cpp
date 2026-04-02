@@ -154,52 +154,42 @@ Ilu<ValueType, ReverseApply, IndexType>::Ilu(Ilu&& other)
 
 
 template <typename ValueType, bool ReverseApply, typename IndexType>
-void Ilu<ValueType, ReverseApply, IndexType>::apply_impl(const LinOp* b,
-                                                         LinOp* x) const
+void Ilu<ValueType, ReverseApply, IndexType>::apply_impl(const MultiVector* b,
+                                                         MultiVector* x) const
 
 {
-    // take care of real-to-complex apply
-    precision_dispatch_real_complex<value_type>(
-        [&](auto dense_b, auto dense_x) {
-            this->set_cache_to(dense_b);
-            if (!ReverseApply) {
-                l_solver_->apply(dense_b, cache_.intermediate);
-                if (u_solver_->apply_uses_initial_guess()) {
-                    dense_x->copy_from(cache_.intermediate);
-                }
-                u_solver_->apply(cache_.intermediate, dense_x);
-            } else {
-                u_solver_->apply(dense_b, cache_.intermediate);
-                if (l_solver_->apply_uses_initial_guess()) {
-                    dense_x->copy_from(cache_.intermediate);
-                }
-                l_solver_->apply(cache_.intermediate, dense_x);
-            }
-        },
-        b, x);
+    auto converted_x = x->as_precision(this);
+    auto dense_x = converted_x.get();
+
+    this->set_cache_to(b);
+    if (!ReverseApply) {
+        l_solver_->apply(b, cache_.intermediate);
+        if (u_solver_->apply_uses_initial_guess()) {
+            dense_x->copy_from(cache_.intermediate);
+        }
+        u_solver_->apply(cache_.intermediate, dense_x);
+    } else {
+        u_solver_->apply(b, cache_.intermediate);
+        if (l_solver_->apply_uses_initial_guess()) {
+            dense_x->copy_from(cache_.intermediate);
+        }
+        l_solver_->apply(cache_.intermediate, dense_x);
+    }
 }
 
 
 template <typename ValueType, bool ReverseApply, typename IndexType>
-void Ilu<ValueType, ReverseApply, IndexType>::apply_impl(const LinOp* alpha,
-                                                         const LinOp* b,
-                                                         const LinOp* beta,
-                                                         LinOp* x) const
+void Ilu<ValueType, ReverseApply, IndexType>::apply_impl(
+    const MultiVector* alpha, const MultiVector* b, const MultiVector* beta,
+    MultiVector* x) const
 {
-    precision_dispatch_real_complex<value_type>(
-        [&](auto dense_alpha, auto dense_b, auto dense_beta, auto dense_x) {
-            this->set_cache_to(dense_b);
-            if (!ReverseApply) {
-                l_solver_->apply(dense_b, cache_.intermediate);
-                u_solver_->apply(dense_alpha, cache_.intermediate, dense_beta,
-                                 dense_x);
-            } else {
-                u_solver_->apply(dense_b, cache_.intermediate);
-                l_solver_->apply(dense_alpha, cache_.intermediate, dense_beta,
-                                 dense_x);
-            }
-        },
-        alpha, b, beta, x);
+    if (!ReverseApply) {
+        l_solver_->apply(b, cache_.intermediate);
+        u_solver_->apply(alpha, cache_.intermediate, beta, x);
+    } else {
+        u_solver_->apply(b, cache_.intermediate);
+        l_solver_->apply(alpha, cache_.intermediate, beta, x);
+    }
 }
 
 
@@ -266,7 +256,8 @@ Ilu<ValueType, ReverseApply, IndexType>::Ilu(
 
 
 template <typename ValueType, bool ReverseApply, typename IndexType>
-void Ilu<ValueType, ReverseApply, IndexType>::set_cache_to(const LinOp* b) const
+void Ilu<ValueType, ReverseApply, IndexType>::set_cache_to(
+    const MultiVector* b) const
 
 {
     if (cache_.intermediate == nullptr) {

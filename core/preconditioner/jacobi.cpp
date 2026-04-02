@@ -9,7 +9,6 @@
 #include <ginkgo/core/base/exception_helpers.hpp>
 #include <ginkgo/core/base/executor.hpp>
 #include <ginkgo/core/base/math.hpp>
-#include <ginkgo/core/base/precision_dispatch.hpp>
 #include <ginkgo/core/base/temporary_conversion.hpp>
 #include <ginkgo/core/base/utils.hpp>
 #include <ginkgo/core/config/config.hpp>
@@ -17,6 +16,7 @@
 #include <ginkgo/core/matrix/csr.hpp>
 #include <ginkgo/core/matrix/dense.hpp>
 
+#include "core/base/dispatch_helper.hpp"
 #include "core/base/extended_float.hpp"
 #include "core/base/utils.hpp"
 #include "core/config/config_helper.hpp"
@@ -95,6 +95,19 @@ Jacobi<ValueType, IndexType>::parse(const config::pnode& config,
     return params;
 }
 
+
+template <typename ValueType, typename IndexType>
+Jacobi<ValueType, IndexType>::Jacobi(std::shared_ptr<const Executor> exec)
+    : EnableLinOp<Jacobi>(exec),
+      num_blocks_{},
+      blocks_(exec),
+      conditioning_(exec)
+{
+    parameters_.block_pointers.set_executor(exec);
+    parameters_.storage_optimization.block_wise.set_executor(exec);
+}
+
+
 template <typename ValueType, typename IndexType>
 Jacobi<ValueType, IndexType>& Jacobi<ValueType, IndexType>::operator=(
     const Jacobi& other)
@@ -147,21 +160,19 @@ Jacobi<ValueType, IndexType>::Jacobi(Jacobi&& other)
 
 
 template <typename ValueType, typename IndexType>
-void Jacobi<ValueType, IndexType>::apply_impl(const LinOp* b, LinOp* x) const
+void Jacobi<ValueType, IndexType>::apply_impl(const MultiVector* b,
+                                              MultiVector* x) const
 {
-    precision_dispatch_real_complex<ValueType>(
-        [this](auto dense_b, auto dense_x) {
+    apply_precision_dispatch<ValueType>(
+        [this](auto view_b, auto view_x, auto...) {
             if (parameters_.max_block_size == 1) {
                 this->get_executor()->run(jacobi::make_simple_scalar_apply(
-                    this->blocks_, dense_b->get_const_device_view(),
-                    dense_x->get_device_view()));
+                    this->blocks_, view_b, view_x));
             } else {
                 this->get_executor()->run(jacobi::make_simple_apply(
                     num_blocks_, parameters_.max_block_size, storage_scheme_,
                     parameters_.storage_optimization.block_wise,
-                    parameters_.block_pointers, blocks_,
-                    dense_b->get_const_device_view(),
-                    dense_x->get_device_view()));
+                    parameters_.block_pointers, blocks_, view_b, view_x));
             }
         },
         b, x);
@@ -169,27 +180,25 @@ void Jacobi<ValueType, IndexType>::apply_impl(const LinOp* b, LinOp* x) const
 
 
 template <typename ValueType, typename IndexType>
-void Jacobi<ValueType, IndexType>::apply_impl(const LinOp* alpha,
-                                              const LinOp* b, const LinOp* beta,
-                                              LinOp* x) const
+void Jacobi<ValueType, IndexType>::apply_impl(const MultiVector* alpha,
+                                              const MultiVector* b,
+                                              const MultiVector* beta,
+                                              MultiVector* x) const
 {
-    precision_dispatch_real_complex<ValueType>(
-        [this](auto dense_alpha, auto dense_b, auto dense_beta, auto dense_x) {
+    apply_precision_dispatch<ValueType>(
+        [this](auto dense_alpha, auto view_b, auto dense_beta, auto view_x,
+               auto...) {
             if (parameters_.max_block_size == 1) {
                 this->get_executor()->run(jacobi::make_scalar_apply(
-                    this->blocks_, dense_alpha->get_const_device_view(),
-                    dense_b->get_const_device_view(),
-                    dense_beta->get_const_device_view(),
-                    dense_x->get_device_view()));
+                    this->blocks_, dense_alpha->get_const_device_view(), view_b,
+                    dense_beta->get_const_device_view(), view_x));
             } else {
                 this->get_executor()->run(jacobi::make_apply(
                     num_blocks_, parameters_.max_block_size, storage_scheme_,
                     parameters_.storage_optimization.block_wise,
                     parameters_.block_pointers, blocks_,
-                    dense_alpha->get_const_device_view(),
-                    dense_b->get_const_device_view(),
-                    dense_beta->get_const_device_view(),
-                    dense_x->get_device_view()));
+                    dense_alpha->get_const_device_view(), view_b,
+                    dense_beta->get_const_device_view(), view_x));
             }
         },
         alpha, b, beta, x);
@@ -317,6 +326,67 @@ std::unique_ptr<LinOp> Jacobi<ValueType, IndexType>::conj_transpose() const
     }
 
     return std::move(res);
+}
+
+
+template <typename ValueType, typename IndexType>
+Jacobi<ValueType, IndexType>::Jacobi(const Factory* factory,
+                                     std::shared_ptr<const LinOp> system_matrix)
+
+    : EnableLinOp<Jacobi>(factory->get_executor(),
+                          gko::transpose(system_matrix->get_size())),
+      parameters_{factory->get_parameters()},
+      storage_scheme_{this->compute_storage_scheme(
+          parameters_.max_block_size, parameters_.max_block_stride)},
+      num_blocks_{parameters_.block_pointers.get_size() - 1},
+      blocks_(factory->get_executor(),
+              storage_scheme_.compute_storage_space(
+                  parameters_.block_pointers.get_size() - 1)),
+      conditioning_(factory->get_executor())
+{
+    parameters_.block_pointers.set_executor(this->get_executor());
+    parameters_.storage_optimization.block_wise.set_executor(
+        this->get_executor());
+    this->generate(system_matrix.get(), parameters_.skip_sorting);
+}
+
+
+template <typename ValueType, typename IndexType>
+block_interleaved_storage_scheme<
+    typename Jacobi<ValueType, IndexType>::index_type>
+Jacobi<ValueType, IndexType>::compute_storage_scheme(
+    uint32 max_block_size, uint32 param_max_block_stride)
+
+{
+    uint32 default_block_stride = 32;
+    // If the executor is hip, the warp size is 32 or 64
+    if (auto hip_exec = std::dynamic_pointer_cast<const gko::HipExecutor>(
+            this->get_executor())) {
+        default_block_stride = hip_exec->get_warp_size();
+    }
+    uint32 max_block_stride = default_block_stride;
+    if (param_max_block_stride != 0) {
+        // if parameter max_block_stride is not zero, set max_block_stride =
+        // param_max_block_stride
+        max_block_stride = param_max_block_stride;
+        if (this->get_executor() != this->get_executor()->get_master() &&
+            max_block_stride != default_block_stride) {
+            // only support the default value on the gpu device
+            GKO_NOT_SUPPORTED(this);
+        }
+    }
+    if (parameters_.max_block_size > max_block_stride ||
+        parameters_.max_block_size < 1) {
+        GKO_NOT_SUPPORTED(this);
+    }
+    const auto group_size = static_cast<uint32>(
+        max_block_stride / get_superior_power(uint32{2}, max_block_size));
+    const auto block_offset = max_block_size;
+    const auto block_stride = group_size * block_offset;
+    const auto group_offset = max_block_size * block_stride;
+    return {static_cast<index_type>(block_offset),
+            static_cast<index_type>(group_offset),
+            get_significant_bit(group_size)};
 }
 
 
