@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -158,10 +158,10 @@ public:
 protected:
     using CsrMatrix = matrix::Csr<ValueType, IndexType>;
 
-    void apply_impl(const LinOp* b, LinOp* x) const override;
+    void apply_impl(const MultiVector* b, MultiVector* x) const override;
 
-    void apply_impl(const LinOp* alpha, const LinOp* b, const LinOp* beta,
-                    LinOp* x) const override;
+    void apply_impl(const MultiVector* alpha, const MultiVector* b,
+                    const MultiVector* beta, MultiVector* x) const override;
 
     /**
      * Generates the analysis structure from the system matrix and the right
@@ -327,10 +327,10 @@ public:
 protected:
     using CsrMatrix = matrix::Csr<ValueType, IndexType>;
 
-    void apply_impl(const LinOp* b, LinOp* x) const override;
+    void apply_impl(const MultiVector* b, MultiVector* x) const override;
 
-    void apply_impl(const LinOp* alpha, const LinOp* b, const LinOp* beta,
-                    LinOp* x) const override;
+    void apply_impl(const MultiVector* alpha, const MultiVector* b,
+                    const MultiVector* beta, MultiVector* x) const override;
 
     /**
      * Generates the analysis structure from the system matrix and the right

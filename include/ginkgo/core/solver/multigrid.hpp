@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -401,20 +401,20 @@ public:
                                      config::make_type_descriptor<>());
 
 protected:
-    void apply_impl(const LinOp* b, LinOp* x) const override;
+    void apply_impl(const MultiVector* b, MultiVector* x) const override;
 
-    void apply_impl(const LinOp* alpha, const LinOp* b, const LinOp* beta,
-                    LinOp* x) const override;
+    void apply_impl(const MultiVector* alpha, const MultiVector* b,
+                    const MultiVector* beta, MultiVector* x) const override;
 
-    void apply_with_initial_guess_impl(const LinOp* b, LinOp* x,
+    void apply_with_initial_guess_impl(const MultiVector* b, MultiVector* x,
                                        initial_guess_mode guess) const override;
 
-    void apply_with_initial_guess_impl(const LinOp* alpha, const LinOp* b,
-                                       const LinOp* beta, LinOp* x,
+    void apply_with_initial_guess_impl(const MultiVector* alpha,
+                                       const MultiVector* b,
+                                       const MultiVector* beta, MultiVector* x,
                                        initial_guess_mode guess) const override;
 
-    template <typename VectorType>
-    void apply_dense_impl(const VectorType* b, VectorType* x,
+    void apply_dense_impl(const MultiVector* b, MultiVector* x,
                           initial_guess_mode guess) const;
 
     /**

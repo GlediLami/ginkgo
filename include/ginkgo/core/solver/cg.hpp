@@ -66,7 +66,7 @@ public:
      *
      * @return true as iterative solvers use the data in x as an initial guess.
      */
-    bool apply_uses_initial_guess() const override { return true; }
+    bool apply_uses_initial_guess() const override;
 
     class Factory;
 
@@ -99,26 +99,15 @@ public:
                   ptr_param<MultiVector> x) const;
 
 protected:
-    void apply_impl(const LinOp* b, LinOp* x) const override;
+    void apply_impl(const MultiVector* b, MultiVector* x) const override;
 
-    template <typename VectorType>
-    void apply_dense_impl(const VectorType* b, VectorType* x) const;
+    void apply_impl(const MultiVector* alpha, const MultiVector* b,
+                    const MultiVector* beta, MultiVector* x) const override;
 
-    void apply_impl(const LinOp* alpha, const LinOp* b, const LinOp* beta,
-                    LinOp* x) const override;
-
-    explicit Cg(std::shared_ptr<const Executor> exec)
-        : EnableLinOp<Cg>(std::move(exec))
-    {}
+    explicit Cg(std::shared_ptr<const Executor> exec);
 
     explicit Cg(const Factory* factory,
-                std::shared_ptr<const LinOp> system_matrix)
-        : EnableLinOp<Cg>(factory->get_executor(),
-                          gko::transpose(system_matrix->get_size())),
-          EnablePreconditionedIterativeSolver<ValueType, Cg<ValueType>>{
-              std::move(system_matrix), factory->get_parameters()},
-          parameters_{factory->get_parameters()}
-    {}
+                std::shared_ptr<const LinOp> system_matrix);
 };
 
 

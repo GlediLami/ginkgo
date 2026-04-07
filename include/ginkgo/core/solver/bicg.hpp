@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -101,26 +101,15 @@ public:
                                      config::make_type_descriptor<ValueType>());
 
 protected:
-    void apply_impl(const LinOp* b, LinOp* x) const override;
+    void apply_impl(const MultiVector* b, MultiVector* x) const override;
 
-    void apply_dense_impl(const matrix::Dense<ValueType>* b,
-                          matrix::Dense<ValueType>* x) const;
+    void apply_impl(const MultiVector* alpha, const MultiVector* b,
+                    const MultiVector* beta, MultiVector* x) const override;
 
-    void apply_impl(const LinOp* alpha, const LinOp* b, const LinOp* beta,
-                    LinOp* x) const override;
-
-    explicit Bicg(std::shared_ptr<const Executor> exec)
-        : EnableLinOp<Bicg>(std::move(exec))
-    {}
+    explicit Bicg(std::shared_ptr<const Executor> exec);
 
     explicit Bicg(const Factory* factory,
-                  std::shared_ptr<const LinOp> system_matrix)
-        : EnableLinOp<Bicg>(factory->get_executor(),
-                            gko::transpose(system_matrix->get_size())),
-          EnablePreconditionedIterativeSolver<ValueType, Bicg<ValueType>>{
-              std::move(system_matrix), factory->get_parameters()},
-          parameters_{factory->get_parameters()}
-    {}
+                  std::shared_ptr<const LinOp> system_matrix);
 };
 
 

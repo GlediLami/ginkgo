@@ -6,10 +6,10 @@
 
 #include <string>
 
-#include <ginkgo/core/base/precision_dispatch.hpp>
 #include <ginkgo/core/matrix/dense.hpp>
 #include <ginkgo/core/solver/solver_base.hpp>
 
+#include "core/base/dispatch_helper.hpp"
 #include "core/config/solver_config.hpp"
 #include "core/distributed/helpers.hpp"
 #include "core/solver/chebyshev_kernels.hpp"
@@ -177,7 +177,8 @@ std::unique_ptr<LinOp> Chebyshev<ValueType>::conj_transpose() const
 
 
 template <typename ValueType>
-void Chebyshev<ValueType>::apply_impl(const LinOp* b, LinOp* x) const
+void Chebyshev<ValueType>::apply_impl(const MultiVector* b,
+                                      MultiVector* x) const
 {
     this->apply_with_initial_guess(b, x, this->get_default_initial_guess());
 }
@@ -185,115 +186,116 @@ void Chebyshev<ValueType>::apply_impl(const LinOp* b, LinOp* x) const
 
 template <typename ValueType>
 void Chebyshev<ValueType>::apply_with_initial_guess_impl(
-    const LinOp* b, LinOp* x, initial_guess_mode guess) const
+    const MultiVector* b, MultiVector* x, initial_guess_mode guess) const
 {
     if (!this->get_system_matrix()) {
         return;
     }
-    experimental::precision_dispatch_real_complex_distributed<ValueType>(
-        [this, guess](auto dense_b, auto dense_x) {
-            prepare_initial_guess(dense_b, dense_x, guess);
-            this->apply_dense_impl(dense_b, dense_x, guess);
+    precision_dispatch<ValueType>(
+        [this, guess](auto converted_b, auto converted_x) {
+            using Vector = matrix::Dense<ValueType>;
+            using ws = workspace_traits<Chebyshev>;
+            using coeff_type = solver::detail::coeff_type<ValueType>;
+
+            auto exec = this->get_executor();
+            this->setup_workspace();
+
+            GKO_SOLVER_VECTOR(residual, converted_b);
+            GKO_SOLVER_VECTOR(inner_solution, converted_b);
+            GKO_SOLVER_VECTOR(update_solution, converted_b);
+
+            GKO_SOLVER_ONE_MINUS_ONE();
+
+            auto alpha_host = coeff_type{1} / center_;
+            auto beta_host = coeff_type{0.5} * (foci_direction_ * alpha_host) *
+                             (foci_direction_ * alpha_host);
+
+            auto& stop_status =
+                this->template create_workspace_array<stopping_status>(
+                    ws::stop, converted_b->get_size()[1]);
+            exec->run(ir::make_initialize(stop_status));
+            if (guess != initial_guess_mode::zero) {
+                residual->copy_from(converted_b);
+                this->get_system_matrix()->apply(neg_one_op, converted_x,
+                                                 one_op, residual);
+            }
+            // zero input the residual is converted_b
+            const MultiVector* residual_ptr =
+                guess == initial_guess_mode::zero ? converted_b : residual;
+
+            auto stop_criterion = this->get_stop_criterion_factory()->generate(
+                this->get_system_matrix(),
+                std::shared_ptr<const MultiVector>(converted_b,
+                                                   [](const MultiVector*) {}),
+                converted_x, residual_ptr);
+
+            int iter = -1;
+            while (true) {
+                ++iter;
+                auto log_func = [this](auto solver, auto converted_b,
+                                       auto converted_x, auto iter,
+                                       auto residual_ptr,
+                                       array<stopping_status>& stop_status,
+                                       bool all_stopped) {
+                    this->template log<log::Logger::iteration_complete>(
+                        solver, converted_b, converted_x, iter, residual_ptr,
+                        nullptr, nullptr, &stop_status, all_stopped);
+                };
+                bool all_stopped = update_residual(
+                    this, iter, converted_b, converted_x, residual,
+                    residual_ptr, stop_criterion, stop_status, log_func);
+                if (all_stopped) {
+                    break;
+                }
+
+                if (this->get_preconditioner()->apply_uses_initial_guess()) {
+                    // Use the inner solver to solve
+                    // A * inner_solution = residual
+                    // with residual as initial guess.
+                    inner_solution->copy_from(residual_ptr);
+                }
+                this->get_preconditioner()->apply(residual_ptr, inner_solution);
+                if (iter == 0) {
+                    // x = x + alpha * inner_solution
+                    // update_solution = inner_solution
+                    exec->run(chebyshev::make_init_update(
+                        alpha_host,
+                        inner_solution
+                            ->template get_const_local_device_view<ValueType>(),
+                        update_solution
+                            ->template get_local_device_view<ValueType>(),
+                        converted_x
+                            ->template get_local_device_view<ValueType>()));
+                    continue;
+                }
+                // beta_host for iter == 1 is initialized in the beginning
+                if (iter > 1) {
+                    beta_host =
+                        (foci_direction_ * alpha_host / coeff_type{2.0}) *
+                        (foci_direction_ * alpha_host / coeff_type{2.0});
+                }
+                alpha_host =
+                    coeff_type{1.0} / (center_ - beta_host / alpha_host);
+                // z = z + beta * p
+                // p = z
+                // x += alpha * p
+                exec->run(chebyshev::make_update(
+                    alpha_host, beta_host,
+                    inner_solution->template get_local_device_view<ValueType>(),
+                    update_solution
+                        ->template get_local_device_view<ValueType>(),
+                    converted_x->template get_local_device_view<ValueType>()));
+            }
         },
         b, x);
 }
 
 
 template <typename ValueType>
-template <typename VectorType>
-void Chebyshev<ValueType>::apply_dense_impl(const VectorType* dense_b,
-                                            VectorType* dense_x,
-                                            initial_guess_mode guess) const
-{
-    using Vector = matrix::Dense<ValueType>;
-    using ws = workspace_traits<Chebyshev>;
-    using coeff_type = solver::detail::coeff_type<ValueType>;
-
-    auto exec = this->get_executor();
-    this->setup_workspace();
-
-    GKO_SOLVER_VECTOR(residual, dense_b);
-    GKO_SOLVER_VECTOR(inner_solution, dense_b);
-    GKO_SOLVER_VECTOR(update_solution, dense_b);
-
-    GKO_SOLVER_ONE_MINUS_ONE();
-
-    auto alpha_host = coeff_type{1} / center_;
-    auto beta_host = coeff_type{0.5} * (foci_direction_ * alpha_host) *
-                     (foci_direction_ * alpha_host);
-
-    auto& stop_status = this->template create_workspace_array<stopping_status>(
-        ws::stop, dense_b->get_size()[1]);
-    exec->run(ir::make_initialize(stop_status));
-    if (guess != initial_guess_mode::zero) {
-        residual->copy_from(dense_b);
-        this->get_system_matrix()->apply(neg_one_op, dense_x, one_op, residual);
-    }
-    // zero input the residual is dense_b
-    const VectorType* residual_ptr =
-        guess == initial_guess_mode::zero ? dense_b : residual;
-
-    auto stop_criterion = this->get_stop_criterion_factory()->generate(
-        this->get_system_matrix(),
-        std::shared_ptr<const LinOp>(dense_b, [](const LinOp*) {}), dense_x,
-        residual_ptr);
-
-    int iter = -1;
-    while (true) {
-        ++iter;
-        auto log_func = [this](auto solver, auto dense_b, auto dense_x,
-                               auto iter, auto residual_ptr,
-                               array<stopping_status>& stop_status,
-                               bool all_stopped) {
-            this->template log<log::Logger::iteration_complete>(
-                solver, dense_b, dense_x, iter, residual_ptr, nullptr, nullptr,
-                &stop_status, all_stopped);
-        };
-        bool all_stopped = update_residual(
-            this, iter, dense_b, dense_x, residual, residual_ptr,
-            stop_criterion, stop_status, log_func);
-        if (all_stopped) {
-            break;
-        }
-
-        if (this->get_preconditioner()->apply_uses_initial_guess()) {
-            // Use the inner solver to solve
-            // A * inner_solution = residual
-            // with residual as initial guess.
-            inner_solution->copy_from(residual_ptr);
-        }
-        this->get_preconditioner()->apply(residual_ptr, inner_solution);
-        if (iter == 0) {
-            // x = x + alpha * inner_solution
-            // update_solution = inner_solution
-            exec->run(chebyshev::make_init_update(
-                alpha_host,
-                gko::detail::get_local(inner_solution)->get_const_device_view(),
-                gko::detail::get_local(update_solution)->get_device_view(),
-                gko::detail::get_local(dense_x)->get_device_view()));
-            continue;
-        }
-        // beta_host for iter == 1 is initialized in the beginning
-        if (iter > 1) {
-            beta_host = (foci_direction_ * alpha_host / coeff_type{2.0}) *
-                        (foci_direction_ * alpha_host / coeff_type{2.0});
-        }
-        alpha_host = coeff_type{1.0} / (center_ - beta_host / alpha_host);
-        // z = z + beta * p
-        // p = z
-        // x += alpha * p
-        exec->run(chebyshev::make_update(
-            alpha_host, beta_host,
-            gko::detail::get_local(inner_solution)->get_device_view(),
-            gko::detail::get_local(update_solution)->get_device_view(),
-            gko::detail::get_local(dense_x)->get_device_view()));
-    }
-}
-
-
-template <typename ValueType>
-void Chebyshev<ValueType>::apply_impl(const LinOp* alpha, const LinOp* b,
-                                      const LinOp* beta, LinOp* x) const
+void Chebyshev<ValueType>::apply_impl(const MultiVector* alpha,
+                                      const MultiVector* b,
+                                      const MultiVector* beta,
+                                      MultiVector* x) const
 {
     this->apply_with_initial_guess(alpha, b, beta, x,
                                    this->get_default_initial_guess());
@@ -301,22 +303,21 @@ void Chebyshev<ValueType>::apply_impl(const LinOp* alpha, const LinOp* b,
 
 template <typename ValueType>
 void Chebyshev<ValueType>::apply_with_initial_guess_impl(
-    const LinOp* alpha, const LinOp* b, const LinOp* beta, LinOp* x,
-    initial_guess_mode guess) const
+    const MultiVector* alpha, const MultiVector* b, const MultiVector* beta,
+    MultiVector* x, initial_guess_mode guess) const
 {
     if (!this->get_system_matrix()) {
         return;
     }
-    experimental::precision_dispatch_real_complex_distributed<ValueType>(
-        [this, guess](auto dense_alpha, auto dense_b, auto dense_beta,
-                      auto dense_x) {
-            prepare_initial_guess(dense_b, dense_x, guess);
-            auto x_clone = dense_x->clone();
-            this->apply_dense_impl(dense_b, x_clone.get(), guess);
-            dense_x->scale(dense_beta);
-            dense_x->add_scaled(dense_alpha, x_clone.get());
-        },
-        alpha, b, beta, x);
+    auto converted_b = b->as_precision(this);
+    auto converted_x = x->as_precision(this);
+    auto dense_b = converted_b.get();
+    auto dense_x = converted_x.get();
+    prepare_initial_guess(dense_b, dense_x, guess);
+    auto x_clone = dense_x->clone();
+    this->apply_with_initial_guess_impl(dense_b, x_clone.get(), guess);
+    dense_x->scale(beta);
+    dense_x->add_scaled(alpha, x_clone);
 }
 
 

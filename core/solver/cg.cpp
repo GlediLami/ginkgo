@@ -10,13 +10,9 @@
 #include <ginkgo/core/base/exception_helpers.hpp>
 #include <ginkgo/core/base/executor.hpp>
 #include <ginkgo/core/base/math.hpp>
-#include <ginkgo/core/base/name_demangling.hpp>
-#include <ginkgo/core/base/precision_dispatch.hpp>
-#include <ginkgo/core/base/utils.hpp>
 
 #include "core/config/config_helper.hpp"
 #include "core/config/solver_config.hpp"
-#include "core/distributed/helpers.hpp"
 #include "core/solver/cg_kernels.hpp"
 #include "core/solver/solver_boilerplate.hpp"
 
@@ -51,105 +47,7 @@ template <typename ValueType>
 void Cg<ValueType>::apply_mv(ptr_param<const MultiVector> b,
                              ptr_param<MultiVector> x) const
 {
-    // @todo: need precision dispatch
-    auto dense_b = b.get();
-    auto dense_x = x.get();
-
-    using std::swap;
-    constexpr uint8 RelativeStoppingId{1};
-
-    auto exec = this->get_executor();
-    this->setup_workspace();
-
-    // Todo fix workspace handling
-    auto r = MultiVector::create_with_config_of(dense_b);
-    auto z = MultiVector::create_with_config_of(dense_b);
-    auto p = MultiVector::create_with_config_of(dense_b);
-    auto q = MultiVector::create_with_config_of(dense_b);
-
-    GKO_SOLVER_SCALAR(beta, dense_b);
-    GKO_SOLVER_SCALAR(prev_rho, dense_b);
-    GKO_SOLVER_SCALAR(rho, dense_b);
-
-    GKO_SOLVER_ONE_MINUS_ONE();
-
-    bool one_changed{};
-    GKO_SOLVER_STOP_REDUCTION_ARRAYS();
-
-    // r = dense_b
-    // rho = 0.0
-    // prev_rho = 1.0
-    // z = p = q = 0
-    // @todo: I think the template keyword is necessary because some of these
-    //        variables are defined via auto.
-    exec->run(cg::make_initialize(
-        dense_b->template get_const_local_device_view<ValueType>(),
-        r->template get_local_device_view<ValueType>(),
-        z->template get_local_device_view<ValueType>(),
-        p->template get_local_device_view<ValueType>(),
-        q->template get_local_device_view<ValueType>(),
-        prev_rho->get_device_view(), rho->get_device_view(), stop_status));
-
-    this->get_system_matrix()->apply(neg_one_op, dense_x, one_op, r);
-    auto stop_criterion = this->get_stop_criterion_factory()->generate(
-        this->get_system_matrix(),
-        std::shared_ptr<const LinOp>(dense_b, [](const LinOp*) {}), nullptr,
-        nullptr);
-
-    int iter = -1;
-    /* Memory movement summary:
-     * 18n * values + matrix/preconditioner storage
-     * 1x SpMV:           2n * values + storage
-     * 1x Preconditioner: 2n * values + storage
-     * 2x dot             4n
-     * 1x step 1 (axpy)   3n
-     * 1x step 2 (axpys)  6n
-     * 1x norm2 residual   n
-     */
-    while (true) {
-        // z = preconditioner * r
-        this->get_preconditioner()->apply(r, z);
-        // rho = dot(r, z)
-        r->compute_conj_dot(z, rho, reduction_tmp);
-
-        ++iter;
-        bool all_stopped =
-            stop_criterion->update()
-                .num_iterations(iter)
-                .residual(nullptr)
-                .implicit_sq_residual_norm(rho)
-                .solution(nullptr)
-                .check(RelativeStoppingId, true, &stop_status, &one_changed);
-        this->template log<log::Logger::iteration_complete>(
-            this, nullptr, nullptr, iter, nullptr, nullptr, rho, &stop_status,
-            all_stopped);
-        if (all_stopped) {
-            break;
-        }
-
-        // tmp = rho / prev_rho
-        // p = z + tmp * p
-        exec->run(cg::make_step_1(
-            p->template get_local_device_view<ValueType>(),
-            z->template get_const_local_device_view<ValueType>(),
-            rho->get_const_device_view(), prev_rho->get_const_device_view(),
-            stop_status));
-        // q = A * p
-        this->get_system_matrix()->apply(p, q);
-        // beta = dot(p, q)
-        p->compute_conj_dot(q, beta, reduction_tmp);
-        // tmp = rho / beta
-        // x = x + tmp * p
-        // r = r - tmp * q
-        exec->run(cg::make_step_2(
-            dense_x->template get_local_device_view<ValueType>(),
-            r->template get_local_device_view<ValueType>(),
-            p->template get_const_local_device_view<ValueType>(),
-            q->template get_const_local_device_view<ValueType>(),
-            beta->get_const_device_view(), rho->get_const_device_view(),
-            stop_status));
-        swap(prev_rho, rho);
-    }
+    this->apply_impl(b.get(), x.get());
 }
 
 
@@ -180,26 +78,25 @@ std::unique_ptr<LinOp> Cg<ValueType>::conj_transpose() const
 
 
 template <typename ValueType>
-void Cg<ValueType>::apply_impl(const LinOp* b, LinOp* x) const
+bool Cg<ValueType>::apply_uses_initial_guess() const
 {
-    if (!this->get_system_matrix()) {
-        return;
-    }
-    experimental::precision_dispatch_real_complex_distributed<ValueType>(
-        [this](auto dense_b, auto dense_x) {
-            this->apply_dense_impl(dense_b, dense_x);
-        },
-        b, x);
+    return true;
 }
 
 
 template <typename ValueType>
-template <typename VectorType>
-void Cg<ValueType>::apply_dense_impl(const VectorType* dense_b,
-                                     VectorType* dense_x) const
+void Cg<ValueType>::apply_impl(const MultiVector* b, MultiVector* x) const
 {
+    if (!this->get_system_matrix()) {
+        return;
+    }
+
     using std::swap;
-    using LocalVector = matrix::Dense<ValueType>;
+
+    auto converted_b = b->as_precision(this);
+    auto converted_x = x->as_precision(this);
+    auto dense_b = converted_b.get();
+    auto dense_x = converted_x.get();
 
     constexpr uint8 RelativeStoppingId{1};
 
@@ -218,24 +115,25 @@ void Cg<ValueType>::apply_dense_impl(const VectorType* dense_b,
     GKO_SOLVER_ONE_MINUS_ONE();
 
     bool one_changed{};
-    GKO_SOLVER_STOP_REDUCTION_ARRAYS();
+    GKO_SOLVER_STOP_REDUCTION_ARRAYS(converted_b->get_size()[1]);
 
     // r = dense_b
     // rho = 0.0
     // prev_rho = 1.0
     // z = p = q = 0
     exec->run(cg::make_initialize(
-        gko::detail::get_local(dense_b)->get_const_device_view(),
-        gko::detail::get_local(r)->get_device_view(),
-        gko::detail::get_local(z)->get_device_view(),
-        gko::detail::get_local(p)->get_device_view(),
-        gko::detail::get_local(q)->get_device_view(),
+        dense_b->template get_const_local_device_view<ValueType>(),
+        r->template get_local_device_view<ValueType>(),
+        z->template get_local_device_view<ValueType>(),
+        p->template get_local_device_view<ValueType>(),
+        q->template get_local_device_view<ValueType>(),
         prev_rho->get_device_view(), rho->get_device_view(), stop_status));
 
     this->get_system_matrix()->apply(neg_one_op, dense_x, one_op, r);
     auto stop_criterion = this->get_stop_criterion_factory()->generate(
         this->get_system_matrix(),
-        std::shared_ptr<const LinOp>(dense_b, [](const LinOp*) {}), dense_x, r);
+        std::shared_ptr<const MultiVector>(dense_b, [](const MultiVector*) {}),
+        dense_x, r);
 
     int iter = -1;
     /* Memory movement summary:
@@ -270,11 +168,11 @@ void Cg<ValueType>::apply_dense_impl(const VectorType* dense_b,
 
         // tmp = rho / prev_rho
         // p = z + tmp * p
-        exec->run(
-            cg::make_step_1(gko::detail::get_local(p)->get_device_view(),
-                            gko::detail::get_local(z)->get_const_device_view(),
-                            rho->get_const_device_view(),
-                            prev_rho->get_const_device_view(), stop_status));
+        exec->run(cg::make_step_1(
+            p->template get_local_device_view<ValueType>(),
+            z->template get_const_local_device_view<ValueType>(),
+            rho->get_const_device_view(), prev_rho->get_const_device_view(),
+            stop_status));
         // q = A * p
         this->get_system_matrix()->apply(p, q);
         // beta = dot(p, q)
@@ -282,34 +180,46 @@ void Cg<ValueType>::apply_dense_impl(const VectorType* dense_b,
         // tmp = rho / beta
         // x = x + tmp * p
         // r = r - tmp * q
-        exec->run(
-            cg::make_step_2(gko::detail::get_local(dense_x)->get_device_view(),
-                            gko::detail::get_local(r)->get_device_view(),
-                            gko::detail::get_local(p)->get_const_device_view(),
-                            gko::detail::get_local(q)->get_const_device_view(),
-                            beta->get_const_device_view(),
-                            rho->get_const_device_view(), stop_status));
+        exec->run(cg::make_step_2(
+            dense_x->template get_local_device_view<ValueType>(),
+            r->template get_local_device_view<ValueType>(),
+            p->template get_const_local_device_view<ValueType>(),
+            q->template get_const_local_device_view<ValueType>(),
+            beta->get_const_device_view(), rho->get_const_device_view(),
+            stop_status));
         swap(prev_rho, rho);
     }
 }
 
 
 template <typename ValueType>
-void Cg<ValueType>::apply_impl(const LinOp* alpha, const LinOp* b,
-                               const LinOp* beta, LinOp* x) const
+void Cg<ValueType>::apply_impl(const MultiVector* alpha, const MultiVector* b,
+                               const MultiVector* beta, MultiVector* x) const
 {
     if (!this->get_system_matrix()) {
         return;
     }
-    experimental::precision_dispatch_real_complex_distributed<ValueType>(
-        [this](auto dense_alpha, auto dense_b, auto dense_beta, auto dense_x) {
-            auto x_clone = dense_x->clone();
-            this->apply_dense_impl(dense_b, x_clone.get());
-            dense_x->scale(dense_beta);
-            dense_x->add_scaled(dense_alpha, x_clone);
-        },
-        alpha, b, beta, x);
+    LinOp::apply_impl(alpha, b, beta, x);
 }
+
+
+template <typename ValueType>
+Cg<ValueType>::Cg(std::shared_ptr<const Executor> exec)
+
+    : EnableLinOp<Cg>(std::move(exec))
+{}
+
+
+template <typename ValueType>
+Cg<ValueType>::Cg(const Factory* factory,
+                  std::shared_ptr<const LinOp> system_matrix)
+
+    : EnableLinOp<Cg>(factory->get_executor(),
+                      gko::transpose(system_matrix->get_size())),
+      EnablePreconditionedIterativeSolver<ValueType, Cg<ValueType>>{
+          std::move(system_matrix), factory->get_parameters()},
+      parameters_{factory->get_parameters()}
+{}
 
 
 template <typename ValueType>
