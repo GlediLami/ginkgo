@@ -46,7 +46,6 @@ using any_dense_type =
 class any_scalar : public syn::variant_from_tuple<supported_value_types> {
 public:
     using base_type = syn::variant_from_tuple<supported_value_types>;
-    using base_type::base_type;
 
     template <typename T, std::enable_if_t<
                               std::is_constructible_v<base_type, T&&>, int> = 0>
