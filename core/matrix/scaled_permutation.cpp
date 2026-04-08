@@ -6,7 +6,6 @@
 
 #include <ginkgo/core/base/exception_helpers.hpp>
 #include <ginkgo/core/base/executor.hpp>
-#include <ginkgo/core/base/precision_dispatch.hpp>
 
 #include "core/base/dispatch_helper.hpp"
 #include "core/matrix/scaled_permutation_kernels.hpp"
