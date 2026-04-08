@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <iterator>
 
-#include <ginkgo/core/base/precision_dispatch.hpp>
 #include <ginkgo/core/matrix/dense.hpp>
 
 #include "core/components/fill_array_kernels.hpp"
