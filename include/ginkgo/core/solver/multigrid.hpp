@@ -16,7 +16,6 @@
 #include <ginkgo/core/base/exception_helpers.hpp>
 #include <ginkgo/core/base/lin_op.hpp>
 #include <ginkgo/core/base/math.hpp>
-#include <ginkgo/core/base/precision_dispatch.hpp>
 #include <ginkgo/core/base/types.hpp>
 #include <ginkgo/core/config/config.hpp>
 #include <ginkgo/core/config/registry.hpp>

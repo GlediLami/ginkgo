@@ -10,7 +10,6 @@
 #include <ginkgo/core/base/exception_helpers.hpp>
 #include <ginkgo/core/base/executor.hpp>
 #include <ginkgo/core/base/math.hpp>
-#include <ginkgo/core/base/precision_dispatch.hpp>
 #include <ginkgo/core/solver/solver_base.hpp>
 
 #include "core/config/config_helper.hpp"
