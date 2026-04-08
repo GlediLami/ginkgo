@@ -6,7 +6,7 @@
 
 #include <ginkgo/core/base/mpi.hpp>
 #include <ginkgo/core/distributed/vector.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/distributed/vector_cache_accessor.hpp"
 

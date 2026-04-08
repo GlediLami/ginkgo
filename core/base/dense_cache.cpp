@@ -10,7 +10,7 @@
 #include <ginkgo/core/base/array.hpp>
 #include <ginkgo/core/base/dim.hpp>
 #include <ginkgo/core/base/executor.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/base/dense_cache_accessor.hpp"
 
@@ -154,8 +154,8 @@ std::shared_ptr<const matrix::MultiVector<ValueType>> ScalarCache::get() const
 }
 
 
-#define GKO_DECLARE_DENSE_CACHE(ValueType) struct DenseCache<ValueType>
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_DENSE_CACHE);
+#define GKO_DECLARE_MULTIVECTOR_CACHE(ValueType) struct DenseCache<ValueType>
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_MULTIVECTOR_CACHE);
 
 #define GKO_DECLARE_GENERIC_DENSE_CACHE_GET(ValueType)                         \
     std::shared_ptr<matrix::MultiVector<ValueType>>                            \

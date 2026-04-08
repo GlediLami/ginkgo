@@ -6,7 +6,7 @@
 
 #include <utility>
 
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/base/dispatch_helper.hpp"
 

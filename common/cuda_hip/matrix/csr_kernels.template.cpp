@@ -21,9 +21,9 @@
 #include <ginkgo/core/base/math.hpp>
 #include <ginkgo/core/base/std_extensions.hpp>
 #include <ginkgo/core/matrix/coo.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
 #include <ginkgo/core/matrix/ell.hpp>
 #include <ginkgo/core/matrix/hybrid.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 #include <ginkgo/core/matrix/sellp.hpp>
 
 #include "accessor/cuda_hip_helper.hpp"
@@ -54,7 +54,7 @@
 #include "core/matrix/csr_accessor_helper.hpp"
 #include "core/matrix/csr_builder.hpp"
 #include "core/matrix/csr_lookup.hpp"
-#include "core/matrix/dense_kernels.hpp"
+#include "core/matrix/multivector_kernels.hpp"
 #include "core/synthesizer/implementation_selection.hpp"
 
 
@@ -2185,9 +2185,9 @@ bool load_balance_spmv(
 #endif
     {
         if (beta) {
-            dense::scale(exec, *beta, c);
+            multivector::scale(exec, *beta, c);
         } else {
-            dense::fill(exec, c, zero<OutputValueType>());
+            multivector::fill(exec, c, zero<OutputValueType>());
         }
         const IndexType nwarps = a->get_num_srow_elements();
         if (nwarps > 0) {

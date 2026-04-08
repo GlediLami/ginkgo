@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "ginkgo/core/matrix/dense.hpp"
+#include "ginkgo/core/matrix/multivector.hpp"
 
 #include <algorithm>
 #include <type_traits>
@@ -28,82 +28,93 @@
 #include "core/base/array_access.hpp"
 #include "core/base/dispatch_helper.hpp"
 #include "core/components/prefix_sum_kernels.hpp"
-#include "core/matrix/dense_kernels.hpp"
 #include "core/matrix/hybrid_kernels.hpp"
+#include "core/matrix/multivector_kernels.hpp"
 #include "core/matrix/permutation.hpp"
 
 
 namespace gko {
 namespace matrix {
-namespace dense {
+namespace multivector {
 namespace {
 
 
-GKO_REGISTER_OPERATION(simple_apply, dense::simple_apply);
-GKO_REGISTER_OPERATION(apply, dense::apply);
-GKO_REGISTER_OPERATION(copy, dense::copy);
-GKO_REGISTER_OPERATION(fill, dense::fill);
-GKO_REGISTER_OPERATION(scale, dense::scale);
-GKO_REGISTER_OPERATION(inv_scale, dense::inv_scale);
-GKO_REGISTER_OPERATION(add_scaled, dense::add_scaled);
-GKO_REGISTER_OPERATION(sub_scaled, dense::sub_scaled);
-GKO_REGISTER_OPERATION(add_scaled_diag, dense::add_scaled_diag);
-GKO_REGISTER_OPERATION(sub_scaled_diag, dense::sub_scaled_diag);
-GKO_REGISTER_OPERATION(compute_dot, dense::compute_dot_dispatch);
-GKO_REGISTER_OPERATION(compute_conj_dot, dense::compute_conj_dot_dispatch);
-GKO_REGISTER_OPERATION(compute_norm2, dense::compute_norm2_dispatch);
-GKO_REGISTER_OPERATION(compute_norm1, dense::compute_norm1);
-GKO_REGISTER_OPERATION(compute_mean, dense::compute_mean);
-GKO_REGISTER_OPERATION(compute_squared_norm2, dense::compute_squared_norm2);
-GKO_REGISTER_OPERATION(compute_sqrt, dense::compute_sqrt);
-GKO_REGISTER_OPERATION(compute_max_nnz_per_row, dense::compute_max_nnz_per_row);
+GKO_REGISTER_OPERATION(simple_apply, multivector::simple_apply);
+GKO_REGISTER_OPERATION(apply, multivector::apply);
+GKO_REGISTER_OPERATION(copy, multivector::copy);
+GKO_REGISTER_OPERATION(fill, multivector::fill);
+GKO_REGISTER_OPERATION(scale, multivector::scale);
+GKO_REGISTER_OPERATION(inv_scale, multivector::inv_scale);
+GKO_REGISTER_OPERATION(add_scaled, multivector::add_scaled);
+GKO_REGISTER_OPERATION(sub_scaled, multivector::sub_scaled);
+GKO_REGISTER_OPERATION(add_scaled_diag, multivector::add_scaled_diag);
+GKO_REGISTER_OPERATION(sub_scaled_diag, multivector::sub_scaled_diag);
+GKO_REGISTER_OPERATION(compute_dot, multivector::compute_dot_dispatch);
+GKO_REGISTER_OPERATION(compute_conj_dot,
+                       multivector::compute_conj_dot_dispatch);
+GKO_REGISTER_OPERATION(compute_norm2, multivector::compute_norm2_dispatch);
+GKO_REGISTER_OPERATION(compute_norm1, multivector::compute_norm1);
+GKO_REGISTER_OPERATION(compute_mean, multivector::compute_mean);
+GKO_REGISTER_OPERATION(compute_squared_norm2,
+                       multivector::compute_squared_norm2);
+GKO_REGISTER_OPERATION(compute_sqrt, multivector::compute_sqrt);
+GKO_REGISTER_OPERATION(compute_max_nnz_per_row,
+                       multivector::compute_max_nnz_per_row);
 GKO_REGISTER_OPERATION(compute_hybrid_coo_row_ptrs,
                        hybrid::compute_coo_row_ptrs);
-GKO_REGISTER_OPERATION(count_nonzeros_per_row, dense::count_nonzeros_per_row);
+GKO_REGISTER_OPERATION(count_nonzeros_per_row,
+                       multivector::count_nonzeros_per_row);
 GKO_REGISTER_OPERATION(count_nonzero_blocks_per_row,
-                       dense::count_nonzero_blocks_per_row);
+                       multivector::count_nonzero_blocks_per_row);
 GKO_REGISTER_OPERATION(prefix_sum_nonnegative,
                        components::prefix_sum_nonnegative);
-GKO_REGISTER_OPERATION(compute_slice_sets, dense::compute_slice_sets);
-GKO_REGISTER_OPERATION(transpose, dense::transpose);
-GKO_REGISTER_OPERATION(conj_transpose, dense::conj_transpose);
-GKO_REGISTER_OPERATION(symm_permute, dense::symm_permute);
-GKO_REGISTER_OPERATION(inv_symm_permute, dense::inv_symm_permute);
-GKO_REGISTER_OPERATION(nonsymm_permute, dense::nonsymm_permute);
-GKO_REGISTER_OPERATION(inv_nonsymm_permute, dense::inv_nonsymm_permute);
-GKO_REGISTER_OPERATION(row_gather, dense::row_gather);
-GKO_REGISTER_OPERATION(advanced_row_gather, dense::advanced_row_gather);
-GKO_REGISTER_OPERATION(col_permute, dense::col_permute);
-GKO_REGISTER_OPERATION(inverse_row_permute, dense::inv_row_permute);
-GKO_REGISTER_OPERATION(inverse_col_permute, dense::inv_col_permute);
-GKO_REGISTER_OPERATION(symm_scale_permute, dense::symm_scale_permute);
-GKO_REGISTER_OPERATION(inv_symm_scale_permute, dense::inv_symm_scale_permute);
-GKO_REGISTER_OPERATION(nonsymm_scale_permute, dense::nonsymm_scale_permute);
+GKO_REGISTER_OPERATION(compute_slice_sets, multivector::compute_slice_sets);
+GKO_REGISTER_OPERATION(transpose, multivector::transpose);
+GKO_REGISTER_OPERATION(conj_transpose, multivector::conj_transpose);
+GKO_REGISTER_OPERATION(symm_permute, multivector::symm_permute);
+GKO_REGISTER_OPERATION(inv_symm_permute, multivector::inv_symm_permute);
+GKO_REGISTER_OPERATION(nonsymm_permute, multivector::nonsymm_permute);
+GKO_REGISTER_OPERATION(inv_nonsymm_permute, multivector::inv_nonsymm_permute);
+GKO_REGISTER_OPERATION(row_gather, multivector::row_gather);
+GKO_REGISTER_OPERATION(advanced_row_gather, multivector::advanced_row_gather);
+GKO_REGISTER_OPERATION(col_permute, multivector::col_permute);
+GKO_REGISTER_OPERATION(inverse_row_permute, multivector::inv_row_permute);
+GKO_REGISTER_OPERATION(inverse_col_permute, multivector::inv_col_permute);
+GKO_REGISTER_OPERATION(symm_scale_permute, multivector::symm_scale_permute);
+GKO_REGISTER_OPERATION(inv_symm_scale_permute,
+                       multivector::inv_symm_scale_permute);
+GKO_REGISTER_OPERATION(nonsymm_scale_permute,
+                       multivector::nonsymm_scale_permute);
 GKO_REGISTER_OPERATION(inv_nonsymm_scale_permute,
-                       dense::inv_nonsymm_scale_permute);
-GKO_REGISTER_OPERATION(row_scale_permute, dense::row_scale_permute);
-GKO_REGISTER_OPERATION(col_scale_permute, dense::col_scale_permute);
-GKO_REGISTER_OPERATION(inv_row_scale_permute, dense::inv_row_scale_permute);
-GKO_REGISTER_OPERATION(inv_col_scale_permute, dense::inv_col_scale_permute);
-GKO_REGISTER_OPERATION(fill_in_matrix_data, dense::fill_in_matrix_data);
-GKO_REGISTER_OPERATION(convert_to_coo, dense::convert_to_coo);
-GKO_REGISTER_OPERATION(convert_to_csr, dense::convert_to_csr);
-GKO_REGISTER_OPERATION(convert_to_ell, dense::convert_to_ell);
-GKO_REGISTER_OPERATION(convert_to_fbcsr, dense::convert_to_fbcsr);
-GKO_REGISTER_OPERATION(convert_to_hybrid, dense::convert_to_hybrid);
-GKO_REGISTER_OPERATION(convert_to_sellp, dense::convert_to_sellp);
-GKO_REGISTER_OPERATION(convert_to_sparsity_csr, dense::convert_to_sparsity_csr);
-GKO_REGISTER_OPERATION(extract_diagonal, dense::extract_diagonal);
-GKO_REGISTER_OPERATION(inplace_absolute_dense, dense::inplace_absolute_dense);
-GKO_REGISTER_OPERATION(outplace_absolute_dense, dense::outplace_absolute_dense);
-GKO_REGISTER_OPERATION(make_complex, dense::make_complex);
-GKO_REGISTER_OPERATION(get_real, dense::get_real);
-GKO_REGISTER_OPERATION(get_imag, dense::get_imag);
-GKO_REGISTER_OPERATION(add_scaled_identity, dense::add_scaled_identity);
+                       multivector::inv_nonsymm_scale_permute);
+GKO_REGISTER_OPERATION(row_scale_permute, multivector::row_scale_permute);
+GKO_REGISTER_OPERATION(col_scale_permute, multivector::col_scale_permute);
+GKO_REGISTER_OPERATION(inv_row_scale_permute,
+                       multivector::inv_row_scale_permute);
+GKO_REGISTER_OPERATION(inv_col_scale_permute,
+                       multivector::inv_col_scale_permute);
+GKO_REGISTER_OPERATION(fill_in_matrix_data, multivector::fill_in_matrix_data);
+GKO_REGISTER_OPERATION(convert_to_coo, multivector::convert_to_coo);
+GKO_REGISTER_OPERATION(convert_to_csr, multivector::convert_to_csr);
+GKO_REGISTER_OPERATION(convert_to_ell, multivector::convert_to_ell);
+GKO_REGISTER_OPERATION(convert_to_fbcsr, multivector::convert_to_fbcsr);
+GKO_REGISTER_OPERATION(convert_to_hybrid, multivector::convert_to_hybrid);
+GKO_REGISTER_OPERATION(convert_to_sellp, multivector::convert_to_sellp);
+GKO_REGISTER_OPERATION(convert_to_sparsity_csr,
+                       multivector::convert_to_sparsity_csr);
+GKO_REGISTER_OPERATION(extract_diagonal, multivector::extract_diagonal);
+GKO_REGISTER_OPERATION(inplace_absolute_dense,
+                       multivector::inplace_absolute_dense);
+GKO_REGISTER_OPERATION(outplace_absolute_dense,
+                       multivector::outplace_absolute_dense);
+GKO_REGISTER_OPERATION(make_complex, multivector::make_complex);
+GKO_REGISTER_OPERATION(get_real, multivector::get_real);
+GKO_REGISTER_OPERATION(get_imag, multivector::get_imag);
+GKO_REGISTER_OPERATION(add_scaled_identity, multivector::add_scaled_identity);
 
 
 }  // anonymous namespace
-}  // namespace dense
+}  // namespace multivector
 
 
 template <typename ValueType>
@@ -112,8 +123,8 @@ void MultiVector<ValueType>::inv_scale_impl(scaling_param<value_type> alpha)
     std::visit(
         [this](auto alpha_v) {
             auto exec = this->get_executor();
-            exec->run(dense::make_inv_scale(alpha_v->get_const_device_view(),
-                                            this->get_device_view()));
+            exec->run(multivector::make_inv_scale(
+                alpha_v->get_const_device_view(), this->get_device_view()));
         },
         alpha);
 }
@@ -125,8 +136,8 @@ void MultiVector<ValueType>::scale_impl(scaling_param<value_type> alpha)
     std::visit(
         [this](auto alpha_v) {
             auto exec = this->get_executor();
-            exec->run(dense::make_scale(alpha_v->get_const_device_view(),
-                                        this->get_device_view()));
+            exec->run(multivector::make_scale(alpha_v->get_const_device_view(),
+                                              this->get_device_view()));
         },
         alpha);
 }
@@ -139,9 +150,9 @@ void MultiVector<ValueType>::add_scaled_impl(scaling_param<value_type> alpha,
     std::visit(
         [this, b](auto alpha_v) {
             auto exec = this->get_executor();
-            exec->run(dense::make_add_scaled(alpha_v->get_const_device_view(),
-                                             b->get_const_device_view(),
-                                             this->get_device_view()));
+            exec->run(multivector::make_add_scaled(
+                alpha_v->get_const_device_view(), b->get_const_device_view(),
+                this->get_device_view()));
         },
         alpha);
 }
@@ -155,9 +166,9 @@ void MultiVector<ValueType>::sub_scaled_impl(scaling_param<value_type> alpha,
         [this, b](auto alpha_v) {
             auto exec = this->get_executor();
 
-            exec->run(dense::make_sub_scaled(alpha_v->get_const_device_view(),
-                                             b->get_const_device_view(),
-                                             this->get_device_view()));
+            exec->run(multivector::make_sub_scaled(
+                alpha_v->get_const_device_view(), b->get_const_device_view(),
+                this->get_device_view()));
         },
         alpha);
 }
@@ -173,9 +184,9 @@ void MultiVector<ValueType>::compute_dot_impl(const MultiVector* b,
         tmp.clear();
         tmp.set_executor(exec);
     }
-    exec->run(dense::make_compute_dot(this->get_const_device_view(),
-                                      b->get_const_device_view(),
-                                      result->get_device_view(), tmp));
+    exec->run(multivector::make_compute_dot(this->get_const_device_view(),
+                                            b->get_const_device_view(),
+                                            result->get_device_view(), tmp));
 }
 
 
@@ -185,9 +196,9 @@ void MultiVector<ValueType>::compute_dot_impl(const MultiVector* b,
 {
     auto exec = this->get_executor();
     array<char> tmp{exec};
-    exec->run(dense::make_compute_dot(this->get_const_device_view(),
-                                      b->get_const_device_view(),
-                                      result->get_device_view(), tmp));
+    exec->run(multivector::make_compute_dot(this->get_const_device_view(),
+                                            b->get_const_device_view(),
+                                            result->get_device_view(), tmp));
 }
 
 
@@ -201,9 +212,9 @@ void MultiVector<ValueType>::compute_conj_dot_impl(const MultiVector* b,
         tmp.clear();
         tmp.set_executor(exec);
     }
-    exec->run(dense::make_compute_conj_dot(this->get_const_device_view(),
-                                           b->get_const_device_view(),
-                                           result->get_device_view(), tmp));
+    exec->run(multivector::make_compute_conj_dot(
+        this->get_const_device_view(), b->get_const_device_view(),
+        result->get_device_view(), tmp));
 }
 
 
@@ -213,9 +224,9 @@ void MultiVector<ValueType>::compute_conj_dot_impl(const MultiVector* b,
 {
     auto exec = this->get_executor();
     array<char> tmp{exec};
-    exec->run(dense::make_compute_conj_dot(this->get_const_device_view(),
-                                           b->get_const_device_view(),
-                                           result->get_device_view(), tmp));
+    exec->run(multivector::make_compute_conj_dot(
+        this->get_const_device_view(), b->get_const_device_view(),
+        result->get_device_view(), tmp));
 }
 
 
@@ -228,8 +239,8 @@ void MultiVector<ValueType>::compute_norm2_impl(absolute_type* result,
         tmp.clear();
         tmp.set_executor(exec);
     }
-    exec->run(dense::make_compute_norm2(this->get_const_device_view(),
-                                        result->get_device_view(), tmp));
+    exec->run(multivector::make_compute_norm2(this->get_const_device_view(),
+                                              result->get_device_view(), tmp));
 }
 
 
@@ -238,8 +249,8 @@ void MultiVector<ValueType>::compute_norm2_impl(absolute_type* result) const
 {
     auto exec = this->get_executor();
     array<char> tmp{exec};
-    exec->run(dense::make_compute_norm2(this->get_const_device_view(),
-                                        result->get_device_view(), tmp));
+    exec->run(multivector::make_compute_norm2(this->get_const_device_view(),
+                                              result->get_device_view(), tmp));
 }
 
 
@@ -252,8 +263,8 @@ void MultiVector<ValueType>::compute_norm1_impl(absolute_type* result,
         tmp.clear();
         tmp.set_executor(exec);
     }
-    exec->run(dense::make_compute_norm1(this->get_const_device_view(),
-                                        result->get_device_view(), tmp));
+    exec->run(multivector::make_compute_norm1(this->get_const_device_view(),
+                                              result->get_device_view(), tmp));
 }
 
 
@@ -262,8 +273,8 @@ void MultiVector<ValueType>::compute_norm1_impl(absolute_type* result) const
 {
     auto exec = this->get_executor();
     array<char> tmp{exec};
-    exec->run(dense::make_compute_norm1(this->get_const_device_view(),
-                                        result->get_device_view(), tmp));
+    exec->run(multivector::make_compute_norm1(this->get_const_device_view(),
+                                              result->get_device_view(), tmp));
 }
 
 
@@ -276,7 +287,7 @@ void MultiVector<ValueType>::compute_squared_norm2_impl(absolute_type* result,
         tmp.clear();
         tmp.set_executor(exec);
     }
-    exec->run(dense::make_compute_squared_norm2(
+    exec->run(multivector::make_compute_squared_norm2(
         this->get_const_device_view(), result->get_device_view(), tmp));
 }
 
@@ -287,7 +298,7 @@ void MultiVector<ValueType>::compute_squared_norm2_impl(
 {
     auto exec = this->get_executor();
     array<char> tmp{exec};
-    exec->run(dense::make_compute_squared_norm2(
+    exec->run(multivector::make_compute_squared_norm2(
         this->get_const_device_view(), result->get_device_view(), tmp));
 }
 
@@ -311,7 +322,7 @@ void MultiVector<ValueType>::compute_mean(ptr_param<IMultiVector> result,
         tmp.set_executor(exec);
     }
     auto dense_res = result->as_precision(this);
-    exec->run(dense::make_compute_mean(
+    exec->run(multivector::make_compute_mean(
         this->get_const_device_view(),
         dense_res->template get_local_device_view<value_type>(), tmp));
 }
@@ -350,8 +361,8 @@ MultiVector<ValueType>& MultiVector<ValueType>::operator=(
                         make_array_view(exec, exec_values_array->get_size(),
                                         exec_values_array->get_data()),
                         this->get_stride()};
-        exec->run(dense::make_copy(other.get_const_device_view(),
-                                   exec_this_view.get_device_view()));
+        exec->run(multivector::make_copy(other.get_const_device_view(),
+                                         exec_this_view.get_device_view()));
     }
     return *this;
 }
@@ -397,7 +408,7 @@ void MultiVector<ValueType>::convert_to(
                                          result->stride_);
     }
     auto exec = this->get_executor();
-    exec->run(dense::make_copy(
+    exec->run(multivector::make_copy(
         this->get_const_device_view(),
         make_temporary_output_clone(exec, result)->get_device_view()));
 }
@@ -423,7 +434,7 @@ void MultiVector<ValueType>::convert_to(
                                          result->stride_);
     }
     auto exec = this->get_executor();
-    exec->run(dense::make_copy(
+    exec->run(multivector::make_copy(
         this->get_const_device_view(),
         make_temporary_output_clone(exec, result)->get_device_view()));
 }
@@ -450,7 +461,7 @@ void MultiVector<ValueType>::convert_to(
                                          result->stride_);
     }
     auto exec = this->get_executor();
-    exec->run(dense::make_copy(
+    exec->run(multivector::make_copy(
         this->get_const_device_view(),
         make_temporary_output_clone(exec, result)->get_device_view()));
 }
@@ -474,13 +485,13 @@ void MultiVector<ValueType>::convert_impl(
     const auto num_rows = this->get_size()[0];
 
     array<int64> row_ptrs{exec, num_rows + 1};
-    exec->run(dense::make_count_nonzeros_per_row(this->get_const_device_view(),
-                                                 row_ptrs.get_data()));
-    exec->run(
-        dense::make_prefix_sum_nonnegative(row_ptrs.get_data(), num_rows + 1));
+    exec->run(multivector::make_count_nonzeros_per_row(
+        this->get_const_device_view(), row_ptrs.get_data()));
+    exec->run(multivector::make_prefix_sum_nonnegative(row_ptrs.get_data(),
+                                                       num_rows + 1));
     const auto nnz = get_element(row_ptrs, num_rows);
     result->resize(this->get_size(), nnz);
-    exec->run(dense::make_convert_to_coo(
+    exec->run(multivector::make_convert_to_coo(
         this->get_const_device_view(), row_ptrs.get_const_data(),
         make_temporary_clone(exec, result)->get_device_view()));
 }
@@ -524,17 +535,17 @@ void MultiVector<ValueType>::convert_impl(
         const auto num_rows = this->get_size()[0];
         auto tmp = make_temporary_clone(exec, result);
         tmp->row_ptrs_.resize_and_reset(num_rows + 1);
-        exec->run(dense::make_count_nonzeros_per_row(
+        exec->run(multivector::make_count_nonzeros_per_row(
             this->get_const_device_view(), tmp->get_row_ptrs()));
-        exec->run(dense::make_prefix_sum_nonnegative(tmp->get_row_ptrs(),
-                                                     num_rows + 1));
+        exec->run(multivector::make_prefix_sum_nonnegative(tmp->get_row_ptrs(),
+                                                           num_rows + 1));
         const auto nnz =
             exec->copy_val_to_host(tmp->get_const_row_ptrs() + num_rows);
         tmp->col_idxs_.resize_and_reset(nnz);
         tmp->values_.resize_and_reset(nnz);
         tmp->set_size(this->get_size());
-        exec->run(dense::make_convert_to_csr(this->get_const_device_view(),
-                                             tmp.get()));
+        exec->run(multivector::make_convert_to_csr(
+            this->get_const_device_view(), tmp.get()));
     }
     result->make_srow();
 }
@@ -579,18 +590,18 @@ void MultiVector<ValueType>::convert_impl(
     const auto col_blocks = detail::get_num_blocks(bs, this->get_size()[1]);
     auto tmp = make_temporary_clone(exec, result);
     tmp->row_ptrs_.resize_and_reset(row_blocks + 1);
-    exec->run(dense::make_count_nonzero_blocks_per_row(
+    exec->run(multivector::make_count_nonzero_blocks_per_row(
         this->get_const_device_view(), bs, tmp->get_row_ptrs()));
-    exec->run(dense::make_prefix_sum_nonnegative(tmp->get_row_ptrs(),
-                                                 row_blocks + 1));
+    exec->run(multivector::make_prefix_sum_nonnegative(tmp->get_row_ptrs(),
+                                                       row_blocks + 1));
     const auto nnz_blocks =
         exec->copy_val_to_host(tmp->get_const_row_ptrs() + row_blocks);
     tmp->col_idxs_.resize_and_reset(nnz_blocks);
     tmp->values_.resize_and_reset(nnz_blocks * bs * bs);
     tmp->values_.fill(zero<ValueType>());
     tmp->set_size(this->get_size());
-    exec->run(
-        dense::make_convert_to_fbcsr(this->get_const_device_view(), tmp.get()));
+    exec->run(multivector::make_convert_to_fbcsr(this->get_const_device_view(),
+                                                 tmp.get()));
 }
 
 
@@ -629,10 +640,10 @@ void MultiVector<ValueType>::convert_impl(
 {
     auto exec = this->get_executor();
     size_type num_stored_elements_per_row{};
-    exec->run(dense::make_compute_max_nnz_per_row(this->get_const_device_view(),
-                                                  num_stored_elements_per_row));
+    exec->run(multivector::make_compute_max_nnz_per_row(
+        this->get_const_device_view(), num_stored_elements_per_row));
     result->resize(this->get_size(), num_stored_elements_per_row);
-    exec->run(dense::make_convert_to_ell(
+    exec->run(multivector::make_convert_to_ell(
         this->get_const_device_view(),
         make_temporary_clone(exec, result)->get_device_view()));
 }
@@ -676,8 +687,8 @@ void MultiVector<ValueType>::convert_impl(
     const auto num_cols = this->get_size()[1];
     array<size_type> row_nnz{exec, num_rows};
     array<int64> coo_row_ptrs{exec, num_rows + 1};
-    exec->run(dense::make_count_nonzeros_per_row(this->get_const_device_view(),
-                                                 row_nnz.get_data()));
+    exec->run(multivector::make_count_nonzeros_per_row(
+        this->get_const_device_view(), row_nnz.get_data()));
     size_type ell_lim{};
     size_type coo_nnz{};
     result->get_strategy()->compute_hybrid_config(row_nnz, &ell_lim, &coo_nnz);
@@ -685,14 +696,14 @@ void MultiVector<ValueType>::convert_impl(
         // TODO remove temporary fix after ELL gains true structural zeros
         ell_lim = num_cols;
     }
-    exec->run(dense::make_compute_hybrid_coo_row_ptrs(row_nnz, ell_lim,
-                                                      coo_row_ptrs.get_data()));
+    exec->run(multivector::make_compute_hybrid_coo_row_ptrs(
+        row_nnz, ell_lim, coo_row_ptrs.get_data()));
     coo_nnz = get_element(coo_row_ptrs, num_rows);
     auto tmp = make_temporary_clone(exec, result);
     tmp->resize(this->get_size(), ell_lim, coo_nnz);
-    exec->run(dense::make_convert_to_hybrid(this->get_const_device_view(),
-                                            coo_row_ptrs.get_const_data(),
-                                            tmp.get()));
+    exec->run(multivector::make_convert_to_hybrid(this->get_const_device_view(),
+                                                  coo_row_ptrs.get_const_data(),
+                                                  tmp.get()));
 }
 
 
@@ -739,7 +750,7 @@ void MultiVector<ValueType>::convert_impl(
     tmp->slice_size_ = slice_size;
     tmp->slice_sets_.resize_and_reset(num_slices + 1);
     tmp->slice_lengths_.resize_and_reset(num_slices);
-    exec->run(dense::make_compute_slice_sets(
+    exec->run(multivector::make_compute_slice_sets(
         this->get_const_device_view(), slice_size, stride_factor,
         tmp->get_slice_sets(), tmp->get_slice_lengths()));
     auto total_cols =
@@ -747,8 +758,8 @@ void MultiVector<ValueType>::convert_impl(
     tmp->col_idxs_.resize_and_reset(total_cols * slice_size);
     tmp->values_.resize_and_reset(total_cols * slice_size);
     tmp->set_size(this->get_size());
-    exec->run(dense::make_convert_to_sellp(this->get_const_device_view(),
-                                           tmp->get_device_view()));
+    exec->run(multivector::make_convert_to_sellp(this->get_const_device_view(),
+                                                 tmp->get_device_view()));
 }
 
 
@@ -789,16 +800,16 @@ void MultiVector<ValueType>::convert_impl(
     const auto num_rows = this->get_size()[0];
     auto tmp = make_temporary_clone(exec, result);
     tmp->row_ptrs_.resize_and_reset(num_rows + 1);
-    exec->run(dense::make_count_nonzeros_per_row(this->get_const_device_view(),
-                                                 tmp->row_ptrs_.get_data()));
-    exec->run(dense::make_prefix_sum_nonnegative(tmp->row_ptrs_.get_data(),
-                                                 num_rows + 1));
+    exec->run(multivector::make_count_nonzeros_per_row(
+        this->get_const_device_view(), tmp->row_ptrs_.get_data()));
+    exec->run(multivector::make_prefix_sum_nonnegative(
+        tmp->row_ptrs_.get_data(), num_rows + 1));
     const auto nnz = get_element(tmp->row_ptrs_, num_rows);
     tmp->col_idxs_.resize_and_reset(nnz);
     tmp->value_.fill(one<ValueType>());
     tmp->set_size(this->get_size());
-    exec->run(dense::make_convert_to_sparsity_csr(this->get_const_device_view(),
-                                                  tmp.get()));
+    exec->run(multivector::make_convert_to_sparsity_csr(
+        this->get_const_device_view(), tmp.get()));
 }
 
 
@@ -849,7 +860,7 @@ void MultiVector<ValueType>::read(const device_mat_data& data)
     auto exec = this->get_executor();
     this->resize(data.get_size());
     this->fill(zero<ValueType>());
-    exec->run(dense::make_fill_in_matrix_data(
+    exec->run(multivector::make_fill_in_matrix_data(
         *make_temporary_clone(exec, &data), this->get_device_view()));
 }
 
@@ -860,7 +871,7 @@ void MultiVector<ValueType>::read(const device_mat_data32& data)
     auto exec = this->get_executor();
     this->resize(data.get_size());
     this->fill(zero<ValueType>());
-    exec->run(dense::make_fill_in_matrix_data(
+    exec->run(multivector::make_fill_in_matrix_data(
         *make_temporary_clone(exec, &data), this->get_device_view()));
 }
 
@@ -960,7 +971,7 @@ void MultiVector<ValueType>::transpose(
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(output, gko::transpose(this->get_size()));
     auto exec = this->get_executor();
-    exec->run(dense::make_transpose(
+    exec->run(multivector::make_transpose(
         this->get_const_device_view(),
         make_temporary_output_clone(exec, output)->get_device_view()));
 }
@@ -972,7 +983,7 @@ void MultiVector<ValueType>::conj_transpose(
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(output, gko::transpose(this->get_size()));
     auto exec = this->get_executor();
-    exec->run(dense::make_conj_transpose(
+    exec->run(multivector::make_conj_transpose(
         this->get_const_device_view(),
         make_temporary_output_clone(exec, output)->get_device_view()));
 }
@@ -996,32 +1007,32 @@ void MultiVector<ValueType>::permute_impl(
     auto local_perm = make_temporary_clone(exec, permutation);
     switch (mode) {
     case permute_mode::rows:
-        exec->run(dense::make_row_gather(local_perm->get_const_permutation(),
-                                         this->get_const_device_view(),
-                                         local_output->get_device_view()));
+        exec->run(multivector::make_row_gather(
+            local_perm->get_const_permutation(), this->get_const_device_view(),
+            local_output->get_device_view()));
         break;
     case permute_mode::columns:
-        exec->run(dense::make_col_permute(local_perm->get_const_permutation(),
-                                          this->get_const_device_view(),
-                                          local_output->get_device_view()));
+        exec->run(multivector::make_col_permute(
+            local_perm->get_const_permutation(), this->get_const_device_view(),
+            local_output->get_device_view()));
         break;
     case permute_mode::symmetric:
-        exec->run(dense::make_symm_permute(local_perm->get_const_permutation(),
-                                           this->get_const_device_view(),
-                                           local_output->get_device_view()));
+        exec->run(multivector::make_symm_permute(
+            local_perm->get_const_permutation(), this->get_const_device_view(),
+            local_output->get_device_view()));
         break;
     case permute_mode::inverse_rows:
-        exec->run(dense::make_inverse_row_permute(
+        exec->run(multivector::make_inverse_row_permute(
             local_perm->get_const_permutation(), this->get_const_device_view(),
             local_output->get_device_view()));
         break;
     case permute_mode::inverse_columns:
-        exec->run(dense::make_inverse_col_permute(
+        exec->run(multivector::make_inverse_col_permute(
             local_perm->get_const_permutation(), this->get_const_device_view(),
             local_output->get_device_view()));
         break;
     case permute_mode::inverse_symmetric:
-        exec->run(dense::make_inv_symm_permute(
+        exec->run(multivector::make_inv_symm_permute(
             local_perm->get_const_permutation(), this->get_const_device_view(),
             local_output->get_device_view()));
         break;
@@ -1047,12 +1058,12 @@ void MultiVector<ValueType>::permute_impl(
     auto local_row_perm = make_temporary_clone(exec, row_permutation);
     auto local_col_perm = make_temporary_clone(exec, col_permutation);
     if (invert) {
-        exec->run(dense::make_inv_nonsymm_permute(
+        exec->run(multivector::make_inv_nonsymm_permute(
             local_row_perm->get_const_permutation(),
             local_col_perm->get_const_permutation(),
             this->get_const_device_view(), local_output->get_device_view()));
     } else {
-        exec->run(dense::make_nonsymm_permute(
+        exec->run(multivector::make_nonsymm_permute(
             local_row_perm->get_const_permutation(),
             local_col_perm->get_const_permutation(),
             this->get_const_device_view(), local_output->get_device_view()));
@@ -1078,37 +1089,37 @@ void MultiVector<ValueType>::scale_permute_impl(
     auto local_perm = make_temporary_clone(exec, permutation);
     switch (mode) {
     case permute_mode::rows:
-        exec->run(dense::make_row_scale_permute(
+        exec->run(multivector::make_row_scale_permute(
             local_perm->get_const_scaling_factors(),
             local_perm->get_const_permutation(), this->get_const_device_view(),
             local_output->get_device_view()));
         break;
     case permute_mode::columns:
-        exec->run(dense::make_col_scale_permute(
+        exec->run(multivector::make_col_scale_permute(
             local_perm->get_const_scaling_factors(),
             local_perm->get_const_permutation(), this->get_const_device_view(),
             local_output->get_device_view()));
         break;
     case permute_mode::symmetric:
-        exec->run(dense::make_symm_scale_permute(
+        exec->run(multivector::make_symm_scale_permute(
             local_perm->get_const_scaling_factors(),
             local_perm->get_const_permutation(), this->get_const_device_view(),
             local_output->get_device_view()));
         break;
     case permute_mode::inverse_rows:
-        exec->run(dense::make_inv_row_scale_permute(
+        exec->run(multivector::make_inv_row_scale_permute(
             local_perm->get_const_scaling_factors(),
             local_perm->get_const_permutation(), this->get_const_device_view(),
             local_output->get_device_view()));
         break;
     case permute_mode::inverse_columns:
-        exec->run(dense::make_inv_col_scale_permute(
+        exec->run(multivector::make_inv_col_scale_permute(
             local_perm->get_const_scaling_factors(),
             local_perm->get_const_permutation(), this->get_const_device_view(),
             local_output->get_device_view()));
         break;
     case permute_mode::inverse_symmetric:
-        exec->run(dense::make_inv_symm_scale_permute(
+        exec->run(multivector::make_inv_symm_scale_permute(
             local_perm->get_const_scaling_factors(),
             local_perm->get_const_permutation(), this->get_const_device_view(),
             local_output->get_device_view()));
@@ -1135,14 +1146,14 @@ void MultiVector<ValueType>::scale_permute_impl(
     auto local_row_perm = make_temporary_clone(exec, row_permutation);
     auto local_col_perm = make_temporary_clone(exec, col_permutation);
     if (invert) {
-        exec->run(dense::make_inv_nonsymm_scale_permute(
+        exec->run(multivector::make_inv_nonsymm_scale_permute(
             local_row_perm->get_const_scaling_factors(),
             local_row_perm->get_const_permutation(),
             local_col_perm->get_const_scaling_factors(),
             local_col_perm->get_const_permutation(),
             this->get_const_device_view(), local_output->get_device_view()));
     } else {
-        exec->run(dense::make_nonsymm_scale_permute(
+        exec->run(multivector::make_nonsymm_scale_permute(
             local_row_perm->get_const_scaling_factors(),
             local_row_perm->get_const_permutation(),
             local_col_perm->get_const_scaling_factors(),
@@ -1162,7 +1173,7 @@ void MultiVector<ValueType>::row_gather_impl(
     dim<2> expected_dim{row_idxs->get_size(), this->get_size()[1]};
     GKO_ASSERT_EQUAL_DIMENSIONS(expected_dim, row_collection);
 
-    exec->run(dense::make_row_gather(
+    exec->run(multivector::make_row_gather(
         make_temporary_clone(exec, row_idxs)->get_const_data(),
         this->get_const_device_view(),
         make_temporary_output_clone(exec, row_collection)->get_device_view()));
@@ -1179,7 +1190,7 @@ void MultiVector<ValueType>::row_gather_impl(
     dim<2> expected_dim{row_idxs->get_size(), this->get_size()[1]};
     GKO_ASSERT_EQUAL_DIMENSIONS(expected_dim, row_collection);
 
-    exec->run(dense::make_advanced_row_gather(
+    exec->run(multivector::make_advanced_row_gather(
         make_temporary_clone(exec, alpha)->get_const_device_view(),
         make_temporary_clone(exec, row_idxs)->get_const_data(),
         this->get_const_device_view(),
@@ -1250,7 +1261,8 @@ MultiVector<ValueType>::create_subview_impl(local_span rows, local_span columns,
 template <typename ValueType>
 void MultiVector<ValueType>::fill_impl(value_type value)
 {
-    this->get_executor()->run(dense::make_fill(this->get_device_view(), value));
+    this->get_executor()->run(
+        multivector::make_fill(this->get_device_view(), value));
 }
 
 
@@ -1294,13 +1306,13 @@ MultiVector<ValueType>::as_precision()
     }
 }
 
-#define GKO_DECLARE_DENSE_AS_PRECISION(ValueType, OtherValueType) \
-    auto MultiVector<ValueType>::as_precision()                   \
+#define GKO_DECLARE_MULTIVECTOR_AS_PRECISION(ValueType, OtherValueType) \
+    auto MultiVector<ValueType>::as_precision()                         \
         ->gko::detail::temporary_conversion<MultiVector<OtherValueType>>
-#define GKO_DECLARE_DENSE_AS_PRECISION_same(ValueType) \
-    GKO_DECLARE_DENSE_AS_PRECISION(ValueType, ValueType)
-GKO_INSTANTIATE_FOR_EACH_VALUE_CONVERSION(GKO_DECLARE_DENSE_AS_PRECISION);
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_DENSE_AS_PRECISION_same);
+#define GKO_DECLARE_MULTIVECTOR_AS_PRECISION_same(ValueType) \
+    GKO_DECLARE_MULTIVECTOR_AS_PRECISION(ValueType, ValueType)
+GKO_INSTANTIATE_FOR_EACH_VALUE_CONVERSION(GKO_DECLARE_MULTIVECTOR_AS_PRECISION);
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_MULTIVECTOR_AS_PRECISION_same);
 
 
 template <typename ValueType>
@@ -1328,13 +1340,15 @@ MultiVector<ValueType>::as_precision() const
     }
 }
 
-#define GKO_DECLARE_DENSE_CONST_AS_PRECISION(ValueType, OtherValueType) \
-    auto MultiVector<ValueType>::as_precision() const                   \
+#define GKO_DECLARE_MULTIVECTOR_CONST_AS_PRECISION(ValueType, OtherValueType) \
+    auto MultiVector<ValueType>::as_precision() const                         \
         ->gko::detail::temporary_conversion<const MultiVector<OtherValueType>>
-#define GKO_DECLARE_DENSE_CONST_AS_PRECISION_same(ValueType) \
-    GKO_DECLARE_DENSE_CONST_AS_PRECISION(ValueType, ValueType)
-GKO_INSTANTIATE_FOR_EACH_VALUE_CONVERSION(GKO_DECLARE_DENSE_CONST_AS_PRECISION);
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_DENSE_CONST_AS_PRECISION_same);
+#define GKO_DECLARE_MULTIVECTOR_CONST_AS_PRECISION_same(ValueType) \
+    GKO_DECLARE_MULTIVECTOR_CONST_AS_PRECISION(ValueType, ValueType)
+GKO_INSTANTIATE_FOR_EACH_VALUE_CONVERSION(
+    GKO_DECLARE_MULTIVECTOR_CONST_AS_PRECISION);
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(
+    GKO_DECLARE_MULTIVECTOR_CONST_AS_PRECISION_same);
 
 
 template <typename ValueType>
@@ -1867,7 +1881,7 @@ void MultiVector<ValueType>::extract_diagonal(
     const auto diag_size = std::min(this->get_size()[0], this->get_size()[1]);
     GKO_ASSERT_EQ(output->get_size()[0], diag_size);
 
-    exec->run(dense::make_extract_diagonal(
+    exec->run(multivector::make_extract_diagonal(
         this->get_const_device_view(),
         make_temporary_output_clone(exec, output).get()));
 }
@@ -1888,7 +1902,7 @@ template <typename ValueType>
 void MultiVector<ValueType>::compute_absolute_inplace_impl()
 {
     this->get_executor()->run(
-        dense::make_inplace_absolute_dense(this->get_device_view()));
+        multivector::make_inplace_absolute_dense(this->get_device_view()));
 }
 
 
@@ -1908,7 +1922,7 @@ void MultiVector<ValueType>::compute_absolute_impl(absolute_type* output) const
 {
     auto exec = this->get_executor();
 
-    exec->run(dense::make_outplace_absolute_dense(
+    exec->run(multivector::make_outplace_absolute_dense(
         this->get_const_device_view(),
         make_temporary_output_clone(exec, output)->get_device_view()));
 }
@@ -1929,7 +1943,7 @@ void MultiVector<ValueType>::make_complex_impl(complex_type* result) const
 {
     auto exec = this->get_executor();
 
-    exec->run(dense::make_make_complex(
+    exec->run(multivector::make_make_complex(
         this->get_const_device_view(),
         make_temporary_output_clone(exec, result)->get_device_view()));
 }
@@ -1950,7 +1964,7 @@ void MultiVector<ValueType>::get_real_impl(real_type* result) const
 {
     auto exec = this->get_executor();
 
-    exec->run(dense::make_get_real(
+    exec->run(multivector::make_get_real(
         this->get_const_device_view(),
         make_temporary_output_clone(exec, result)->get_device_view()));
 }
@@ -1971,7 +1985,7 @@ void MultiVector<ValueType>::get_imag_impl(real_type* result) const
 {
     auto exec = this->get_executor();
 
-    exec->run(dense::make_get_imag(
+    exec->run(multivector::make_get_imag(
         this->get_const_device_view(),
         make_temporary_output_clone(exec, result)->get_device_view()));
 }
@@ -1999,7 +2013,7 @@ template <typename ValueType>
 void MultiVector<ValueType>::add_scaled_identity_impl(const IMultiVector* a,
                                                       const IMultiVector* b)
 {
-    this->get_executor()->run(dense::make_add_scaled_identity(
+    this->get_executor()->run(multivector::make_add_scaled_identity(
         a->as_precision(this)
             ->template get_const_local_device_view<ValueType>(),
         b->as_precision(this)
@@ -2102,8 +2116,8 @@ MultiVector<ValueType>::MultiVector(std::shared_ptr<const Executor> exec,
 }
 
 
-#define GKO_DECLARE_DENSE_MATRIX(ValueType) class MultiVector<ValueType>
-GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_DENSE_MATRIX);
+#define GKO_DECLARE_MULTIVECTOR_MATRIX(ValueType) class MultiVector<ValueType>
+GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_MULTIVECTOR_MATRIX);
 
 
 }  // namespace matrix

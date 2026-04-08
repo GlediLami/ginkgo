@@ -16,8 +16,8 @@
 #include <ginkgo/core/base/index_set.hpp>
 #include <ginkgo/core/base/math.hpp>
 #include <ginkgo/core/matrix/coo.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
 #include <ginkgo/core/matrix/hybrid.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/base/allocator.hpp"
 #include "core/base/index_range.hpp"

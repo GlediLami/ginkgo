@@ -12,8 +12,8 @@
 #include <ginkgo/core/base/temporary_clone.hpp>
 #include <ginkgo/core/base/utils.hpp>
 #include <ginkgo/core/matrix/csr.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
 #include <ginkgo/core/matrix/device_views.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/base/allocator.hpp"
 #include "core/base/array_access.hpp"

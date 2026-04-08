@@ -14,7 +14,7 @@
 #include <ginkgo/core/base/math.hpp>
 #include <ginkgo/core/base/temporary_clone.hpp>
 #include <ginkgo/core/base/utils.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/matrix/batch_dense_kernels.hpp"
 

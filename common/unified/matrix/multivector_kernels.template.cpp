@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "core/matrix/dense_kernels.hpp"
+#include "core/matrix/multivector_kernels.hpp"
 
 #include <ginkgo/core/base/device_matrix_data.hpp>
 #include <ginkgo/core/base/math.hpp>
@@ -22,7 +22,7 @@ namespace GKO_DEVICE_NAMESPACE {
  *
  * @ingroup dense
  */
-namespace dense {
+namespace multivector {
 
 
 template <typename InValueType, typename OutValueType>
@@ -786,7 +786,7 @@ void add_scaled_identity(std::shared_ptr<const DefaultExecutor> exec,
 }
 
 
-}  // namespace dense
+}  // namespace multivector
 }  // namespace GKO_DEVICE_NAMESPACE
 }  // namespace kernels
 }  // namespace gko

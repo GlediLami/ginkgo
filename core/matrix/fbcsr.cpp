@@ -15,8 +15,8 @@
 #include <ginkgo/core/base/temporary_clone.hpp>
 #include <ginkgo/core/base/types.hpp>
 #include <ginkgo/core/base/utils.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
 #include <ginkgo/core/matrix/identity.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 #include <ginkgo/core/matrix/sparsity_csr.hpp>
 
 #include "accessor/block_col_major.hpp"

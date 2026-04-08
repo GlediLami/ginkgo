@@ -15,8 +15,8 @@
 #include <ginkgo/core/config/registry.hpp>
 #include <ginkgo/core/distributed/matrix.hpp>
 #include <ginkgo/core/matrix/csr.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
 #include <ginkgo/core/matrix/identity.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 #include <ginkgo/core/multigrid/multigrid_level.hpp>
 
 #include "core/base/utils.hpp"

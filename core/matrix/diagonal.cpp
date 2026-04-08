@@ -6,7 +6,7 @@
 
 #include <ginkgo/core/base/exception_helpers.hpp>
 #include <ginkgo/core/base/utils.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/base/dispatch_helper.hpp"
 #include "core/components/absolute_array_kernels.hpp"

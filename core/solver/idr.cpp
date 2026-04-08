@@ -15,19 +15,19 @@
 #include "core/config/config_helper.hpp"
 #include "core/config/solver_config.hpp"
 #include "core/distributed/helpers.hpp"
-#include "core/matrix/dense_kernels.hpp"
+#include "core/matrix/multivector_kernels.hpp"
 #include "core/solver/idr_kernels.hpp"
 #include "core/solver/solver_boilerplate.hpp"
 
 namespace gko {
 namespace matrix {
-namespace dense {
+namespace multivector {
 
 
-GKO_REGISTER_OPERATION(simple_apply, dense::simple_apply);
+GKO_REGISTER_OPERATION(simple_apply, multivector::simple_apply);
 
 
-}  // namespace dense
+}  // namespace multivector
 }  // namespace matrix
 namespace solver {
 namespace idr {
@@ -235,7 +235,7 @@ void Idr<ValueType>::iterate(const VectorType* dense_b,
         }
 
         // f = P^H * residual
-        exec->run(gko::matrix::dense::make_simple_apply(
+        exec->run(gko::matrix::multivector::make_simple_apply(
             subspace_vectors->get_const_device_view(),
             residual->get_const_device_view(), f->get_device_view()));
 

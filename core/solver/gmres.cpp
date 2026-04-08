@@ -16,8 +16,8 @@
 #include <ginkgo/core/base/name_demangling.hpp>
 #include <ginkgo/core/base/utils.hpp>
 #include <ginkgo/core/distributed/vector.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
 #include <ginkgo/core/matrix/identity.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/config/config_helper.hpp"
 #include "core/config/solver_config.hpp"

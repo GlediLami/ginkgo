@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -6,8 +6,8 @@
 #define GKO_CORE_MATRIX_HYBRID_KERNELS_HPP_
 
 
-#include <ginkgo/core/matrix/dense.hpp>
 #include <ginkgo/core/matrix/hybrid.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/base/kernel_declaration.hpp"
 

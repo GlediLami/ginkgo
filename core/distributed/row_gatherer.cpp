@@ -8,7 +8,7 @@
 #include <ginkgo/core/base/event.hpp>
 #include <ginkgo/core/distributed/dense_communicator.hpp>
 #include <ginkgo/core/distributed/vector.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/base/dispatch_helper.hpp"
 #include "core/base/event_kernels.hpp"

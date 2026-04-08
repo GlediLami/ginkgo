@@ -8,7 +8,7 @@
 
 #include <typeinfo>
 
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 
 namespace gko {

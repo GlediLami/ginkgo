@@ -17,7 +17,7 @@
 #include <ginkgo/core/base/mpi.hpp>
 #include <ginkgo/core/base/multivector.hpp>
 #include <ginkgo/core/distributed/base.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 namespace gko {
 namespace experimental {

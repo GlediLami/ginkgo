@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <iterator>
 
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/components/fill_array_kernels.hpp"
 

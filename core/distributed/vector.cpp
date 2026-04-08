@@ -7,7 +7,7 @@
 #include <ginkgo/core/distributed/partition.hpp>
 
 #include "core/distributed/vector_kernels.hpp"
-#include "core/matrix/dense_kernels.hpp"
+#include "core/matrix/multivector_kernels.hpp"
 #include "core/mpi/mpi_op.hpp"
 
 namespace gko {
@@ -17,9 +17,11 @@ namespace vector {
 namespace {
 
 
-GKO_REGISTER_OPERATION(compute_squared_norm2, dense::compute_squared_norm2);
-GKO_REGISTER_OPERATION(compute_sqrt, dense::compute_sqrt);
-GKO_REGISTER_OPERATION(outplace_absolute_dense, dense::outplace_absolute_dense);
+GKO_REGISTER_OPERATION(compute_squared_norm2,
+                       multivector::compute_squared_norm2);
+GKO_REGISTER_OPERATION(compute_sqrt, multivector::compute_sqrt);
+GKO_REGISTER_OPERATION(outplace_absolute_dense,
+                       multivector::outplace_absolute_dense);
 GKO_REGISTER_OPERATION(build_local, distributed_vector::build_local);
 
 

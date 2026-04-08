@@ -4,7 +4,7 @@
 
 #include <../../include/ginkgo/core/base/multivector.hpp>
 
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 namespace gko {
 

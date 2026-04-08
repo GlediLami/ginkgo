@@ -1249,9 +1249,10 @@ std::unique_ptr<Matrix> initialize(
     size_type stride, std::initializer_list<typename Matrix::value_type> vals,
     std::shared_ptr<const Executor> exec, TArgs&&... create_args)
 {
-    using dense = matrix::MultiVector<typename Matrix::value_type>;
+    using multi_vector = matrix::MultiVector<typename Matrix::value_type>;
     size_type num_rows = vals.size();
-    auto tmp = dense::create(exec->get_master(), dim<2>{num_rows, 1}, stride);
+    auto tmp =
+        multi_vector::create(exec->get_master(), dim<2>{num_rows, 1}, stride);
     size_type idx = 0;
     for (const auto& elem : vals) {
         tmp->at(idx) = elem;
@@ -1321,11 +1322,11 @@ std::unique_ptr<Matrix> initialize(
         vals,
     std::shared_ptr<const Executor> exec, TArgs&&... create_args)
 {
-    using dense = matrix::MultiVector<typename Matrix::value_type>;
+    using multi_vector = matrix::MultiVector<typename Matrix::value_type>;
     size_type num_rows = vals.size();
     size_type num_cols = num_rows > 0 ? begin(vals)->size() : 1;
-    auto tmp =
-        dense::create(exec->get_master(), dim<2>{num_rows, num_cols}, stride);
+    auto tmp = multi_vector::create(exec->get_master(),
+                                    dim<2>{num_rows, num_cols}, stride);
     size_type ridx = 0;
     for (const auto& row : vals) {
         size_type cidx = 0;

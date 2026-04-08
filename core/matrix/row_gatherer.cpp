@@ -5,7 +5,7 @@
 #include "ginkgo/core/matrix/row_gatherer.hpp"
 
 #include <ginkgo/core/base/types.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/base/dispatch_helper.hpp"
 

@@ -16,9 +16,9 @@
 #include <ginkgo/core/base/math.hpp>
 #include <ginkgo/core/base/std_extensions.hpp>
 #include <ginkgo/core/matrix/coo.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
 #include <ginkgo/core/matrix/ell.hpp>
 #include <ginkgo/core/matrix/hybrid.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 #include <ginkgo/core/matrix/sellp.hpp>
 
 #include "accessor/sycl_helper.hpp"
@@ -30,7 +30,7 @@
 #include "core/components/prefix_sum_kernels.hpp"
 #include "core/matrix/csr_accessor_helper.hpp"
 #include "core/matrix/csr_builder.hpp"
-#include "core/matrix/dense_kernels.hpp"
+#include "core/matrix/multivector_kernels.hpp"
 #include "core/synthesizer/implementation_selection.hpp"
 #include "dpcpp/base/config.hpp"
 #include "dpcpp/base/dim3.dp.hpp"
@@ -1399,9 +1399,9 @@ bool load_balance_spmv(
         return false;
     } else {
         if (beta) {
-            dense::scale(exec, *beta, c);
+            multivector::scale(exec, *beta, c);
         } else {
-            dense::fill(exec, c, zero<OutputValueType>());
+            multivector::fill(exec, c, zero<OutputValueType>());
         }
         const IndexType nwarps = a->get_num_srow_elements();
         if (nwarps > 0) {
@@ -1546,7 +1546,7 @@ void spmv(std::shared_ptr<const DpcppExecutor> exec,
     }
     if (b.size[0] == 0 || a->get_num_stored_elements() == 0) {
         // empty input: zero output
-        dense::fill(exec, c, zero<OutputValueType>());
+        multivector::fill(exec, c, zero<OutputValueType>());
         return;
     }
     if (a->get_strategy()->get_name() == "merge_path") {
@@ -1615,7 +1615,7 @@ void advanced_spmv(std::shared_ptr<const DpcppExecutor> exec,
     }
     if (b.size[0] == 0 || a->get_num_stored_elements() == 0) {
         // empty input: scale output
-        dense::scale(exec, beta, c);
+        multivector::scale(exec, beta, c);
         return;
     }
     if (a->get_strategy()->get_name() == "merge_path") {
