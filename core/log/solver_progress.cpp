@@ -290,14 +290,13 @@ private:
         store_generic<
 #if GINKGO_ENABLE_HALF
             gko::matrix::MultiVector<gko::float16>,
-            gko::matrix::MultiVector<std::complex<gko::float16>>
+            gko::matrix::MultiVector<std::complex<gko::float16>>,
 #endif
 #if GINKGO_ENABLE_BFLOAT16
-                gko::matrix::MultiVector<gko::bfloat16>,
-            gko::matrix::MultiVector<std::complex<gko::bfloat16>>
+            gko::matrix::MultiVector<gko::bfloat16>,
+            gko::matrix::MultiVector<std::complex<gko::bfloat16>>,
 #endif
-                gko::matrix::MultiVector<double>,
-            gko::matrix::MultiVector<float>,
+            gko::matrix::MultiVector<double>, gko::matrix::MultiVector<float>,
             gko::matrix::MultiVector<std::complex<double>>,
             gko::matrix::MultiVector<std::complex<float>>>(value, name);
     }
