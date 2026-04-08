@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -40,7 +40,7 @@ namespace gko {
  * {
  *     auto omp = create<OmpExecutor>();
  *     auto A = randn_fill<matrix::Csr<float>>(5, 5, 0f, 1f, omp);
- *     auto x = fill<matrix::Dense<float>>(6, 1, 1f, omp);
+ *     auto x = fill<matrix::MultiVector<float>>(6, 1, 1f, omp);
  *     try {
  *         auto y = apply(A, x);
  *     } catch(Error e) {

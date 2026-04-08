@@ -458,7 +458,7 @@ void Matrix<ValueType, LocalIndexType, GlobalIndexType>::apply_impl(
             auto dense_x = as<Vector<x_value_type>>(x_);
             auto dense_b = as<Vector<b_value_type>>(b_);
             auto x_exec = dense_x->get_executor();
-            auto local_x = gko::matrix::Dense<x_value_type>::create(
+            auto local_x = gko::matrix::MultiVector<x_value_type>::create(
                 x_exec, dense_x->get_local_vector()->get_size(),
                 gko::make_array_view(
                     x_exec,
@@ -526,7 +526,7 @@ void Matrix<ValueType, LocalIndexType, GlobalIndexType>::apply_impl(
             auto dense_alpha = converted_alpha.get();
             auto dense_beta = converted_beta.get();
             const auto x_exec = dense_x->get_executor();
-            auto local_x = gko::matrix::Dense<x_value_type>::create(
+            auto local_x = gko::matrix::MultiVector<x_value_type>::create(
                 x_exec, dense_x->get_local_vector()->get_size(),
                 gko::make_array_view(
                     x_exec,

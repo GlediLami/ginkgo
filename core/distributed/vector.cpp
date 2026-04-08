@@ -148,7 +148,7 @@ template <typename OtherValueType>
 gko::detail::temporary_conversion<Vector<OtherValueType>>
 Vector<ValueType>::as_precision()
 {
-    // See the implementation of Dense::as_precision for details
+    // See the implementation of MultiVector::as_precision for details
     if constexpr (is_complex<ValueType>() == is_complex<OtherValueType>()) {
         return gko::detail::temporary_conversion<
             Vector<OtherValueType>>::create(this);
@@ -176,7 +176,7 @@ template <typename OtherValueType>
 gko::detail::temporary_conversion<const Vector<OtherValueType>>
 Vector<ValueType>::as_precision() const
 {
-    // See the implementation of Dense::as_precision for details
+    // See the implementation of MultiVector::as_precision for details
     if constexpr (is_complex<ValueType>() == is_complex<OtherValueType>()) {
         return gko::detail::temporary_conversion<
             const Vector<OtherValueType>>::create(this);
@@ -567,7 +567,7 @@ void Vector<ValueType>::compute_dot_impl(const Vector* b,
     auto exec = this->get_executor();
     const auto comm = this->get_communicator();
     auto dense_res =
-        make_temporary_clone(exec, as<matrix::Dense<value_type>>(result));
+        make_temporary_clone(exec, as<matrix::MultiVector<value_type>>(result));
     this->get_local_vector()->compute_dot(as<Vector>(b)->get_local_vector(),
                                           dense_res.get(), tmp);
     exec->synchronize();
@@ -603,7 +603,7 @@ void Vector<ValueType>::compute_conj_dot_impl(const Vector* b,
     auto exec = this->get_executor();
     const auto comm = this->get_communicator();
     auto dense_res =
-        make_temporary_clone(exec, as<matrix::Dense<value_type>>(result));
+        make_temporary_clone(exec, as<matrix::MultiVector<value_type>>(result));
     this->get_local_vector()->compute_conj_dot(
         as<Vector>(b)->get_local_vector(), dense_res.get(), tmp);
     exec->synchronize();
@@ -741,7 +741,7 @@ void Vector<ValueType>::compute_mean(ptr_param<IMultiVector> result,
     this->get_local_vector()->compute_mean(dense_res.get());
 
     // scale by its weight ie ratio of local to global size
-    auto weight = initialize<matrix::Dense<remove_complex<value_type>>>(
+    auto weight = initialize<matrix::MultiVector<remove_complex<value_type>>>(
         {static_cast<remove_complex<value_type>>(local_size) / global_size},
         this->get_executor());
     dense_res->scale(weight.get());

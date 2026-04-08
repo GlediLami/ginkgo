@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -72,7 +72,7 @@ public:
 
     using value_type = ValueType;
     using index_type = int32;
-    using unbatch_type = gko::matrix::Dense<ValueType>;
+    using unbatch_type = gko::matrix::MultiVector<ValueType>;
     using absolute_type = remove_complex<MultiVector<ValueType>>;
     using complex_type = to_complex<MultiVector<ValueType>>;
 
@@ -113,14 +113,14 @@ public:
 #endif
 
     /**
-     * Creates a mutable view (of matrix::Dense type) of one item of the Batch
-     * MultiVector object. Does not perform any deep copies, but only returns a
-     * view of the data.
+     * Creates a mutable view (of matrix::MultiVector type) of one item of the
+     * Batch MultiVector object. Does not perform any deep copies, but only
+     * returns a view of the data.
      *
      * @param item_id  The index of the batch item
      *
-     * @return  a matrix::Dense object with the data from the batch item at the
-     *          given index.
+     * @return  a matrix::MultiVector object with the data from the batch item
+     * at the given index.
      */
     std::unique_ptr<unbatch_type> create_view_for_item(size_type item_id);
 

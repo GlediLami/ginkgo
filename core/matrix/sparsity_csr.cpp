@@ -215,7 +215,7 @@ void SparsityCsr<ValueType, IndexType>::move_to(
 
 template <typename ValueType, typename IndexType>
 void SparsityCsr<ValueType, IndexType>::convert_to(
-    Dense<ValueType>* result) const
+    MultiVector<ValueType>* result) const
 {
     auto exec = this->get_executor();
     auto tmp_result = make_temporary_output_clone(exec, result);
@@ -227,7 +227,7 @@ void SparsityCsr<ValueType, IndexType>::convert_to(
 
 
 template <typename ValueType, typename IndexType>
-void SparsityCsr<ValueType, IndexType>::move_to(Dense<ValueType>* result)
+void SparsityCsr<ValueType, IndexType>::move_to(MultiVector<ValueType>* result)
 {
     this->convert_to(result);
 }

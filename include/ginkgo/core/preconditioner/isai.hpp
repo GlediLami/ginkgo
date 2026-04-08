@@ -97,7 +97,7 @@ public:
              ValueType, IndexType>;
     using Comp = Composition<ValueType>;
     using Csr = matrix::Csr<ValueType, IndexType>;
-    using Dense = matrix::Dense<ValueType>;
+    using MultiVector = matrix::MultiVector<ValueType>;
     static constexpr isai_type type{IsaiType};
 
     /**

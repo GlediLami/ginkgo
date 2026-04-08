@@ -41,8 +41,8 @@ class Partition;
  * vectors in a dense storage format.
  *
  * The (multi-)vector is distributed by row, which is described by a @see
- * Partition. The local vectors are stored using the @see Dense format. The
- * vector should be filled using the read_distributed method, e.g.
+ * Partition. The local vectors are stored using the @see MultiVector format.
+ * The vector should be filled using the read_distributed method, e.g.
  * ```
  * auto part = Partition<...>::build_from_mapping(...);
  * auto vector = Vector<...>::create(exec, comm);
@@ -91,8 +91,9 @@ public:
     using absolute_type = remove_complex<Vector>;
     using real_type = absolute_type;
     using complex_type = Vector<to_complex<value_type>>;
-    using local_vector_type = gko::matrix::Dense<value_type>;
-    using local_absolute_vector_type = gko::matrix::Dense<absolute_value_type>;
+    using local_vector_type = gko::matrix::MultiVector<value_type>;
+    using local_absolute_vector_type =
+        gko::matrix::MultiVector<absolute_value_type>;
     using typename EnableMultiVector<Vector>::device_view;
     using typename EnableMultiVector<Vector>::const_device_view;
 
@@ -168,7 +169,7 @@ public:
      * Computes the column-wise mean of this (multi-)vector using a global
      * reduction.
      *
-     * @param result  a Dense row matrix, used to store the mean
+     * @param result  a MultiVector row matrix, used to store the mean
      *                (the number of columns in result must match the number
      *                of columns of this)
      */
@@ -178,7 +179,7 @@ public:
      * Computes the column-wise arithmetic mean of this (multi-)vector using a
      * global reduction.
      *
-     * @param result  a Dense row matrix, used to store the mean
+     * @param result  a MultiVector row matrix, used to store the mean
      *                (the number of columns in result must match the number
      *                of columns of this)
      * @param tmp  the temporary storage to use for partial sums during the
@@ -403,8 +404,8 @@ protected:
      *
      * @param exec  the executor of the new vector.
      * @param global_size  global_size of the vector.
-     * @param local_size  the size of the local Dense vector.
-     * @param stride  the stride of the local Dense vector.
+     * @param local_size  the size of the local MultiVector vector.
+     * @param stride  the stride of the local MultiVector vector.
      *
      * @returns a Vector with the same type as the caller.
      */

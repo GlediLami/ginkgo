@@ -26,8 +26,8 @@ namespace matrix {
 
 
 /**
- * Dense is a batch matrix format which explicitly stores all values of the
- * matrix in each of the batches.
+ * MultiVector is a batch matrix format which explicitly stores all values of
+ * the matrix in each of the batches.
  *
  * The values in each of the batches are stored in row-major format (values
  * belonging to the same row appear consecutive in the memory and the values of
@@ -65,7 +65,7 @@ public:
     using value_type = ValueType;
     using index_type = int32;
     using transposed_type = Dense<ValueType>;
-    using unbatch_type = gko::matrix::Dense<ValueType>;
+    using unbatch_type = gko::matrix::MultiVector<ValueType>;
     using absolute_type = remove_complex<Dense>;
     using complex_type = to_complex<Dense>;
 
@@ -94,14 +94,14 @@ public:
 #endif
 
     /**
-     * Creates a mutable view (of gko::matrix::Dense type) of one item of the
-     * batch::matrix::Dense<value_type> object. Does not perform any deep
-     * copies, but only returns a view of the data.
+     * Creates a mutable view (of gko::matrix::MultiVector type) of one item of
+     * the batch::matrix::MultiVector<value_type> object. Does not perform any
+     * deep copies, but only returns a view of the data.
      *
      * @param item_id  The index of the batch item
      *
-     * @return  a gko::matrix::Dense object with the data from the batch item
-     * at the given index.
+     * @return  a gko::matrix::MultiVector object with the data from the batch
+     * item at the given index.
      */
     std::unique_ptr<unbatch_type> create_view_for_item(size_type item_id);
 
@@ -152,8 +152,8 @@ public:
      * @param col  the column of the requested element
      *
      * @note  the method has to be called on the same Executor the matrix is
-     *        stored at (e.g. trying to call this method on a GPU Dense object
-     *        from the OMP may result in incorrect behaviour)
+     *        stored at (e.g. trying to call this method on a GPU MultiVector
+     * object from the OMP may result in incorrect behaviour)
      */
     value_type& at(size_type batch_id, size_type row, size_type col)
     {
@@ -162,7 +162,7 @@ public:
     }
 
     /**
-     * @copydoc Dense::at(size_type, size_type, size_type)
+     * @copydoc MultiVector::at(size_type, size_type, size_type)
      */
     value_type at(size_type batch_id, size_type row, size_type col) const
     {
@@ -181,8 +181,8 @@ public:
      * @param idx  a linear index of the requested element
      *
      * @note  the method has to be called on the same Executor the matrix is
-     *        stored at (e.g. trying to call this method on a GPU Dense object
-     *        from the OMP may result in incorrect behaviour)
+     *        stored at (e.g. trying to call this method on a GPU MultiVector
+     * object from the OMP may result in incorrect behaviour)
      */
     ValueType& at(size_type batch_id, size_type idx) noexcept
     {
@@ -191,7 +191,7 @@ public:
     }
 
     /**
-     * @copydoc Dense::at(size_type, size_type, size_type)
+     * @copydoc MultiVector::at(size_type, size_type, size_type)
      */
     ValueType at(size_type batch_id, size_type idx) const noexcept
     {
@@ -250,7 +250,7 @@ public:
     }
 
     /**
-     * Creates an uninitialized Dense matrix of the specified size.
+     * Creates an uninitialized MultiVector matrix of the specified size.
      *
      * @param exec  Executor associated to the matrix
      * @param size  size of the matrix
@@ -262,7 +262,7 @@ public:
         const batch_dim<2>& size = batch_dim<2>{});
 
     /**
-     * Creates a Dense matrix from an already allocated (and initialized)
+     * Creates a MultiVector matrix from an already allocated (and initialized)
      * array.
      *
      * @param exec  Executor associated to the matrix
@@ -280,8 +280,8 @@ public:
                                          array<value_type> values);
 
     /**
-     * @copydoc std::unique_ptr<Dense> create(std::shared_ptr<const Executor>,
-     * const batch_dim<2>&, array<value_type>)
+     * @copydoc std::unique_ptr<MultiVector> create(std::shared_ptr<const
+     * Executor>, const batch_dim<2>&, array<value_type>)
      */
     template <typename InputValueType>
     GKO_DEPRECATED(

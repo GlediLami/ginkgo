@@ -207,7 +207,7 @@ void Papi<ValueType>::on_criterion_check_completed(
     const bool& setFinalized, const array<stopping_status>* status,
     const bool& oneChanged, const bool& converged) const
 {
-    using Vector = matrix::Dense<ValueType>;
+    using Vector = matrix::MultiVector<ValueType>;
     double residual_norm_d = 0.0;
     if (residual_norm != nullptr) {
         auto dense_r_norm = as<Vector>(residual_norm);

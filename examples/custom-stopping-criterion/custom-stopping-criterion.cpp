@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -70,8 +70,8 @@ void run_solver(volatile bool* stop_iteration_process,
     using IndexType = int;
 
     using mtx = gko::matrix::Csr<ValueType, IndexType>;
-    using vec = gko::matrix::Dense<ValueType>;
-    using real_vec = gko::matrix::Dense<RealValueType>;
+    using vec = gko::matrix::MultiVector<ValueType>;
+    using real_vec = gko::matrix::MultiVector<RealValueType>;
     using bicg = gko::solver::Bicgstab<ValueType>;
 
     // Read Data

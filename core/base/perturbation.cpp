@@ -73,7 +73,7 @@ Perturbation<ValueType>::Perturbation(std::shared_ptr<const Executor> exec)
 
 template <typename ValueType>
 Perturbation<ValueType>::Perturbation(
-    std::shared_ptr<const matrix::Dense<ValueType>> scalar,
+    std::shared_ptr<const matrix::MultiVector<ValueType>> scalar,
     std::shared_ptr<const LinOp> basis)
     : Perturbation(std::move(scalar),
                    // basis can not be std::move(basis). Otherwise, Program
@@ -85,7 +85,7 @@ Perturbation<ValueType>::Perturbation(
 
 template <typename ValueType>
 Perturbation<ValueType>::Perturbation(
-    std::shared_ptr<const matrix::Dense<ValueType>> scalar,
+    std::shared_ptr<const matrix::MultiVector<ValueType>> scalar,
     std::shared_ptr<const LinOp> basis, std::shared_ptr<const LinOp> projector)
     : EnableLinOp<Perturbation>(basis->get_executor(),
                                 gko::dim<2>{basis->get_size()[0]}),
@@ -107,7 +107,7 @@ std::unique_ptr<Perturbation<ValueType>> Perturbation<ValueType>::create(
 
 template <typename ValueType>
 std::unique_ptr<Perturbation<ValueType>> Perturbation<ValueType>::create(
-    std::shared_ptr<const matrix::Dense<ValueType>> scalar,
+    std::shared_ptr<const matrix::MultiVector<ValueType>> scalar,
     std::shared_ptr<const LinOp> basis)
 {
     return std::unique_ptr<Perturbation>{new Perturbation{scalar, basis}};
@@ -116,7 +116,7 @@ std::unique_ptr<Perturbation<ValueType>> Perturbation<ValueType>::create(
 
 template <typename ValueType>
 std::unique_ptr<Perturbation<ValueType>> Perturbation<ValueType>::create(
-    std::shared_ptr<const matrix::Dense<ValueType>> scalar,
+    std::shared_ptr<const matrix::MultiVector<ValueType>> scalar,
     std::shared_ptr<const LinOp> basis, std::shared_ptr<const LinOp> projector)
 {
     return std::unique_ptr<Perturbation>{
@@ -138,7 +138,7 @@ void Perturbation<ValueType>::cache_struct::allocate(
     std::shared_ptr<const Executor> exec, dim<2> size)
 
 {
-    using vec = gko::matrix::Dense<ValueType>;
+    using vec = gko::matrix::MultiVector<ValueType>;
     if (one == nullptr) {
         one = initialize<vec>({gko::one<ValueType>()}, exec);
     }

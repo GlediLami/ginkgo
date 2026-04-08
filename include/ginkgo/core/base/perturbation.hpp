@@ -16,7 +16,7 @@ namespace matrix {
 
 
 template <typename ValueType>
-class Dense;
+class MultiVector;
 
 
 }
@@ -76,7 +76,7 @@ public:
      *
      * @return the scalar of the perturbation
      */
-    const std::shared_ptr<const matrix::Dense<ValueType>> get_scalar()
+    const std::shared_ptr<const matrix::MultiVector<ValueType>> get_scalar()
         const noexcept
     {
         return scalar_;
@@ -111,7 +111,7 @@ public:
      * @return A smart pointer to the newly created perturbation.
      */
     static std::unique_ptr<Perturbation> create(
-        std::shared_ptr<const matrix::Dense<ValueType>> scalar,
+        std::shared_ptr<const matrix::MultiVector<ValueType>> scalar,
         std::shared_ptr<const LinOp> basis);
 
     /**
@@ -124,7 +124,7 @@ public:
      * @return A smart pointer to the newly created perturbation.
      */
     static std::unique_ptr<Perturbation> create(
-        std::shared_ptr<const matrix::Dense<ValueType>> scalar,
+        std::shared_ptr<const matrix::MultiVector<ValueType>> scalar,
         std::shared_ptr<const LinOp> basis,
         std::shared_ptr<const LinOp> projector);
 
@@ -132,11 +132,11 @@ protected:
     explicit Perturbation(std::shared_ptr<const Executor> exec);
 
     explicit Perturbation(
-        std::shared_ptr<const matrix::Dense<ValueType>> scalar,
+        std::shared_ptr<const matrix::MultiVector<ValueType>> scalar,
         std::shared_ptr<const LinOp> basis);
 
     explicit Perturbation(
-        std::shared_ptr<const matrix::Dense<ValueType>> scalar,
+        std::shared_ptr<const matrix::MultiVector<ValueType>> scalar,
         std::shared_ptr<const LinOp> basis,
         std::shared_ptr<const LinOp> projector);
 
@@ -155,7 +155,7 @@ protected:
 private:
     std::shared_ptr<const LinOp> basis_;
     std::shared_ptr<const LinOp> projector_;
-    std::shared_ptr<const matrix::Dense<ValueType>> scalar_;
+    std::shared_ptr<const matrix::MultiVector<ValueType>> scalar_;
 
     // TODO: solve race conditions when multithreading
     mutable struct cache_struct {
@@ -170,8 +170,8 @@ private:
         void allocate(std::shared_ptr<const Executor> exec, dim<2> size);
 
         std::unique_ptr<IMultiVector> intermediate;
-        std::unique_ptr<matrix::Dense<ValueType>> one;
-        std::unique_ptr<matrix::Dense<ValueType>> alpha_scalar;
+        std::unique_ptr<matrix::MultiVector<ValueType>> one;
+        std::unique_ptr<matrix::MultiVector<ValueType>> alpha_scalar;
     } cache_;
 };
 

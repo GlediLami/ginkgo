@@ -119,7 +119,7 @@ void IMultiVector::fill(any_scalar value) { this->fill_impl(value); }
         bool is_dense = std::visit(                                          \
             [alpha](auto p) {                                                \
                 using value_type = std::decay_t<decltype(p)>;                \
-                return dynamic_cast<const matrix::Dense<value_type>*>(       \
+                return dynamic_cast<const matrix::MultiVector<value_type>*>( \
                            alpha.get()) != nullptr;                          \
             },                                                               \
             precision_to_variant(alpha->get_precision()));                   \

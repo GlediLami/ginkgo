@@ -207,10 +207,10 @@ void Jacobi<ValueType, IndexType>::apply_impl(const IMultiVector* alpha,
 
 template <typename ValueType, typename IndexType>
 void Jacobi<ValueType, IndexType>::convert_to(
-    matrix::Dense<ValueType>* result) const
+    matrix::MultiVector<ValueType>* result) const
 {
     auto exec = this->get_executor();
-    auto tmp = matrix::Dense<ValueType>::create(exec, this->get_size());
+    auto tmp = matrix::MultiVector<ValueType>::create(exec, this->get_size());
     if (parameters_.max_block_size == 1) {
         exec->run(jacobi::make_scalar_convert_to_dense(blocks_,
                                                        tmp->get_device_view()));
@@ -225,7 +225,8 @@ void Jacobi<ValueType, IndexType>::convert_to(
 
 
 template <typename ValueType, typename IndexType>
-void Jacobi<ValueType, IndexType>::move_to(matrix::Dense<ValueType>* result)
+void Jacobi<ValueType, IndexType>::move_to(
+    matrix::MultiVector<ValueType>* result)
 {
     this->convert_to(result);  // no special optimization possible here
 }

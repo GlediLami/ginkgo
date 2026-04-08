@@ -131,7 +131,7 @@ template <typename ValueType, typename IndexType>
 void ScaledPermutation<ValueType, IndexType>::apply_impl(const IMultiVector* b,
                                                          IMultiVector* x) const
 {
-    using dense_type = Dense<ValueType>;
+    using dense_type = MultiVector<ValueType>;
     as<dense_type>(b->as_precision(this))
         ->scale_permute(this, as<dense_type>(x->as_precision(this).get()),
                         permute_mode::rows);
@@ -143,7 +143,7 @@ void ScaledPermutation<ValueType, IndexType>::apply_impl(
     const IMultiVector* alpha, const IMultiVector* b, const IMultiVector* beta,
     IMultiVector* x) const
 {
-    using dense_type = Dense<ValueType>;
+    using dense_type = MultiVector<ValueType>;
     auto tmp = as<dense_type>(b->as_precision(this))
                    ->scale_permute(this, permute_mode::rows);
     auto converted_x = as<dense_type>(x->as_precision(this));

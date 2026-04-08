@@ -90,9 +90,9 @@ void LinOp::apply_impl(const IMultiVector* alpha, const IMultiVector* b,
         [&](auto p) {
             using value_type = std::decay_t<decltype(p)>;
             auto dense_alpha =
-                as<matrix::Dense<value_type>>(alpha->as_precision(this));
+                as<matrix::MultiVector<value_type>>(alpha->as_precision(this));
             auto dense_beta =
-                as<matrix::Dense<value_type>>(beta->as_precision(this));
+                as<matrix::MultiVector<value_type>>(beta->as_precision(this));
             auto x_clone = converted_x->clone();
             this->apply_impl(converted_b.get(), x_clone.get());
             converted_x->scale(dense_beta.get());

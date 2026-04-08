@@ -334,18 +334,20 @@ void Idr<ValueType>::apply_impl(const IMultiVector* b, IMultiVector* x) const
     if (!this->get_system_matrix()) {
         return;
     }
-    auto converted_b = as<matrix::Dense<ValueType>>(b->as_precision(this));
+    auto converted_b =
+        as<matrix::MultiVector<ValueType>>(b->as_precision(this));
     if (!is_complex<ValueType>() && this->get_complex_subspace()) {
-        auto converted_x =
-            as<matrix::Dense<remove_complex<ValueType>>>(x->as_precision(this));
+        auto converted_x = as<matrix::MultiVector<remove_complex<ValueType>>>(
+            x->as_precision(this));
         auto complex_b = converted_b->make_complex();
         auto complex_x = converted_x->make_complex();
         this->iterate(
-            as<matrix::Dense<to_complex<ValueType>>>(complex_b.get()),
-            as<matrix::Dense<to_complex<ValueType>>>(complex_x.get()));
+            as<matrix::MultiVector<to_complex<ValueType>>>(complex_b.get()),
+            as<matrix::MultiVector<to_complex<ValueType>>>(complex_x.get()));
         complex_x->get_real(converted_x.get());
     } else {
-        auto converted_x = as<matrix::Dense<ValueType>>(x->as_precision(this));
+        auto converted_x =
+            as<matrix::MultiVector<ValueType>>(x->as_precision(this));
         this->iterate(converted_b.get(), converted_x.get());
     }
 }

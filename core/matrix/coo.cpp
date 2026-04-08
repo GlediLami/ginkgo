@@ -185,7 +185,7 @@ void Coo<ValueType, IndexType>::apply2_impl(const IMultiVector* alpha,
                                             const IMultiVector* b,
                                             IMultiVector* x) const
 {
-    auto dense_alpha = as<Dense<ValueType>>(alpha->as_precision(this));
+    auto dense_alpha = as<MultiVector<ValueType>>(alpha->as_precision(this));
     apply_precision_dispatch<ValueType>(
         [this, &dense_alpha](auto view_b, auto view_x, auto...) {
             this->get_executor()->run(coo::make_advanced_spmv2(
@@ -291,7 +291,7 @@ void Coo<ValueType, IndexType>::move_to(Csr<ValueType, IndexType>* result)
 
 
 template <typename ValueType, typename IndexType>
-void Coo<ValueType, IndexType>::convert_to(Dense<ValueType>* result) const
+void Coo<ValueType, IndexType>::convert_to(MultiVector<ValueType>* result) const
 {
     auto exec = this->get_executor();
     auto tmp_result = make_temporary_output_clone(exec, result);
@@ -303,7 +303,7 @@ void Coo<ValueType, IndexType>::convert_to(Dense<ValueType>* result) const
 
 
 template <typename ValueType, typename IndexType>
-void Coo<ValueType, IndexType>::move_to(Dense<ValueType>* result)
+void Coo<ValueType, IndexType>::move_to(MultiVector<ValueType>* result)
 {
     this->convert_to(result);
 }

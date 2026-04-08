@@ -294,8 +294,8 @@ void apply_precision_dispatch(Fn&& fn, const IMultiVector* b, IMultiVector* x)
  * additional alpha and beta scalars.
  *
  * Note: the function needs to have the following signature:
- *       fn(Dense<ValueType>*, device_view_type<ValueType>, Dense<ValueType>*,
- *          device_view_type<ValueType>)
+ *       fn(MultiVector<ValueType>*, device_view_type<ValueType>,
+ * MultiVector<ValueType>*, device_view_type<ValueType>)
  */
 template <typename ValueType, typename Fn>
 void apply_precision_dispatch(Fn&& fn, const IMultiVector* alpha,
@@ -303,8 +303,9 @@ void apply_precision_dispatch(Fn&& fn, const IMultiVector* alpha,
                               IMultiVector* x)
 {
     auto p = type_to_precision<ValueType>;
-    auto dense_alpha = as<matrix::Dense<ValueType>>(alpha->as_precision(p));
-    auto dense_beta = as<matrix::Dense<ValueType>>(beta->as_precision(p));
+    auto dense_alpha =
+        as<matrix::MultiVector<ValueType>>(alpha->as_precision(p));
+    auto dense_beta = as<matrix::MultiVector<ValueType>>(beta->as_precision(p));
     precision_dispatch<ValueType>(
         [&fn, &dense_alpha, &dense_beta](auto b_, auto x_) {
             fn(dense_alpha.get(),
@@ -400,8 +401,8 @@ void apply_mixed_precision_dispatch(Fn&& fn, const IMultiVector* b,
  * except for the additional alpha and beta scalars.
  *
  * @note the function needs to have the following signature:
- *       fn(Dense<ValueType>, device_view_type<ValueTypeIn>,
- *          Dense<ValueTypeOut>, device_view_type<ValueTypeOut>,
+ *       fn(MultiVector<ValueType>, device_view_type<ValueTypeIn>,
+ *          MultiVector<ValueTypeOut>, device_view_type<ValueTypeOut>,
  *          ValueTypeIn, ValueTypeOut)
  *
  * @param alpha input scalar converted to precision ValueType if necessary
@@ -413,14 +414,14 @@ void apply_mixed_precision_dispatch(Fn&& fn, const IMultiVector* alpha,
                                     const IMultiVector* beta, IMultiVector* x)
 {
 #ifdef GINKGO_MIXED_PRECISION
-    auto dense_alpha = as<matrix::Dense<ValueType>>(
+    auto dense_alpha = as<matrix::MultiVector<ValueType>>(
         alpha->as_precision(type_to_precision<ValueType>));
 
     mixed_precision_dispatch<ValueType>(
         [&fn, &dense_alpha, beta](auto b_, auto x_, auto p_b, auto p_x) {
             using fst_value_type = std::decay_t<decltype(p_b)>;
             using snd_value_type = std::decay_t<decltype(p_x)>;
-            auto dense_beta = as<matrix::Dense<snd_value_type>>(
+            auto dense_beta = as<matrix::MultiVector<snd_value_type>>(
                 beta->as_precision(type_to_precision<snd_value_type>));
             fn(dense_alpha.get(),
                b_->template get_const_local_device_view<fst_value_type>(),

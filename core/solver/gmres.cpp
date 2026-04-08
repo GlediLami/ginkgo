@@ -129,8 +129,9 @@ template <typename ValueType, typename = void>
 struct help_compute_norm {
     static void compute_next_krylov_norm_into_hessenberg(
         const IMultiVector* next_krylov,
-        matrix::Dense<ValueType>* hessenberg_norm_entry,
-        matrix::Dense<remove_complex<ValueType>>*, array<char>& reduction_tmp)
+        matrix::MultiVector<ValueType>* hessenberg_norm_entry,
+        matrix::MultiVector<remove_complex<ValueType>>*,
+        array<char>& reduction_tmp)
     {
         next_krylov->compute_norm2(hessenberg_norm_entry, reduction_tmp);
     }
@@ -139,7 +140,7 @@ struct help_compute_norm {
 
 // Orthogonalization helper functions
 template <typename ValueType>
-void orthogonalize_mgs(matrix::Dense<ValueType>* hessenberg_iter,
+void orthogonalize_mgs(matrix::MultiVector<ValueType>* hessenberg_iter,
                        IMultiVector* krylov_bases, IMultiVector* next_krylov,
                        array<char>& reduction_tmp, size_type restart_iter,
                        size_type num_rows, size_type num_rhs,
@@ -164,7 +165,7 @@ void orthogonalize_mgs(matrix::Dense<ValueType>* hessenberg_iter,
 
 
 template <typename ValueType>
-void finish_reduce(matrix::Dense<ValueType>* hessenberg_iter,
+void finish_reduce(matrix::MultiVector<ValueType>* hessenberg_iter,
                    IMultiVector* next_krylov, const size_type num_rhs,
                    const size_type restart_iter)
 {
@@ -205,7 +206,7 @@ void finish_reduce(matrix::Dense<ValueType>* hessenberg_iter,
 
 
 template <typename ValueType>
-void orthogonalize_cgs(matrix::Dense<ValueType>* hessenberg_iter,
+void orthogonalize_cgs(matrix::MultiVector<ValueType>* hessenberg_iter,
                        IMultiVector* krylov_bases, IMultiVector* next_krylov,
                        size_type restart_iter, size_type num_rows,
                        size_type num_rhs, size_type local_num_rows)
@@ -235,10 +236,10 @@ void orthogonalize_cgs(matrix::Dense<ValueType>* hessenberg_iter,
 
 
 template <typename ValueType>
-void orthogonalize_cgs2(matrix::Dense<ValueType>* hessenberg_iter,
+void orthogonalize_cgs2(matrix::MultiVector<ValueType>* hessenberg_iter,
                         IMultiVector* krylov_bases, IMultiVector* next_krylov,
-                        matrix::Dense<ValueType>* hessenberg_aux,
-                        const matrix::Dense<ValueType>* one_op,
+                        matrix::MultiVector<ValueType>* hessenberg_aux,
+                        const matrix::MultiVector<ValueType>* one_op,
                         size_type restart_iter, size_type num_rows,
                         size_type num_rhs, size_type local_num_rows)
 {
@@ -293,8 +294,8 @@ struct help_compute_norm<ValueType,
                          std::enable_if_t<is_complex_s<ValueType>::value>> {
     static void compute_next_krylov_norm_into_hessenberg(
         const IMultiVector* next_krylov,
-        matrix::Dense<ValueType>* hessenberg_norm_entry,
-        matrix::Dense<remove_complex<ValueType>>* next_krylov_norm_tmp,
+        matrix::MultiVector<ValueType>* hessenberg_norm_entry,
+        matrix::MultiVector<remove_complex<ValueType>>* next_krylov_norm_tmp,
         array<char>& reduction_tmp)
     {
         next_krylov->compute_norm2(next_krylov_norm_tmp, reduction_tmp);
@@ -315,7 +316,7 @@ void Gmres<ValueType>::apply_impl(const IMultiVector* b, IMultiVector* x) const
     auto dense_b = converted_b.get();
     auto dense_x = converted_x.get();
 
-    using LocalVector = matrix::Dense<ValueType>;
+    using LocalVector = matrix::MultiVector<ValueType>;
     using NormVector = typename LocalVector::absolute_type;
     using ws = workspace_traits<Gmres>;
 

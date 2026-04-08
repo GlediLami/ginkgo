@@ -24,14 +24,14 @@ namespace detail {
 
 
 template <typename ValueType>
-matrix::Dense<ValueType>* get_local_mutable(Vector<ValueType>* mtx)
+matrix::MultiVector<ValueType>* get_local_mutable(Vector<ValueType>* mtx)
 {
-    return const_cast<matrix::Dense<ValueType>*>(mtx->get_local_vector());
+    return const_cast<matrix::MultiVector<ValueType>*>(mtx->get_local_vector());
 }
 
 
 template <typename ValueType>
-const matrix::Dense<ValueType>* get_local(const Vector<ValueType>* mtx)
+const matrix::MultiVector<ValueType>* get_local(const Vector<ValueType>* mtx)
 {
     return mtx->get_local_vector();
 }

@@ -135,11 +135,11 @@ void ScaledReordered<ValueType, IndexType>::set_cache_to(
         cache_.inner_b->get_size() != b->get_size()) {
         const auto size = b->get_size();
         cache_.inner_b =
-            matrix::Dense<value_type>::create(this->get_executor(), size);
+            matrix::MultiVector<value_type>::create(this->get_executor(), size);
         cache_.inner_x =
-            matrix::Dense<value_type>::create(this->get_executor(), size);
+            matrix::MultiVector<value_type>::create(this->get_executor(), size);
         cache_.intermediate =
-            matrix::Dense<value_type>::create(this->get_executor(), size);
+            matrix::MultiVector<value_type>::create(this->get_executor(), size);
     }
     cache_.inner_b->copy_from(b);
     if (inner_operator_->apply_uses_initial_guess()) {

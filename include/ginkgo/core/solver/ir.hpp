@@ -218,7 +218,7 @@ protected:
                                        initial_guess_mode guess) const override;
 
     void set_relaxation_factor(
-        std::shared_ptr<const matrix::Dense<ValueType>> new_factor);
+        std::shared_ptr<const matrix::MultiVector<ValueType>> new_factor);
 
     explicit Ir(std::shared_ptr<const Executor> exec);
 
@@ -227,7 +227,7 @@ protected:
 
 private:
     std::shared_ptr<const LinOp> solver_{};
-    std::shared_ptr<const matrix::Dense<ValueType>> relaxation_factor_{};
+    std::shared_ptr<const matrix::MultiVector<ValueType>> relaxation_factor_{};
 };
 
 

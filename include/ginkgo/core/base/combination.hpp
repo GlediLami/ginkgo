@@ -45,7 +45,7 @@ public:
      *
      * @return a list of coefficients
      */
-    const std::vector<std::shared_ptr<const matrix::Dense<ValueType>>>&
+    const std::vector<std::shared_ptr<const matrix::MultiVector<ValueType>>>&
     get_coefficients() const noexcept
     {
         return coefficients_;
@@ -97,8 +97,9 @@ protected:
     void add_operators() {}
 
     template <typename... Rest>
-    void add_operators(std::shared_ptr<const matrix::Dense<ValueType>> coef,
-                       std::shared_ptr<const LinOp> oper, Rest&&... rest)
+    void add_operators(
+        std::shared_ptr<const matrix::MultiVector<ValueType>> coef,
+        std::shared_ptr<const LinOp> oper, Rest&&... rest)
     {
         GKO_ASSERT_EQUAL_DIMENSIONS(coef, dim<2>(1, 1));
         GKO_ASSERT_EQUAL_DIMENSIONS(oper, this->get_size());
@@ -191,7 +192,8 @@ protected:
                     const IMultiVector* beta, IMultiVector* x) const override;
 
 private:
-    std::vector<std::shared_ptr<const matrix::Dense<ValueType>>> coefficients_;
+    std::vector<std::shared_ptr<const matrix::MultiVector<ValueType>>>
+        coefficients_;
     std::vector<std::shared_ptr<const LinOp>> operators_;
 
     // TODO: solve race conditions when multithreading
@@ -201,8 +203,8 @@ private:
         cache_struct(const cache_struct& other) {}
         cache_struct& operator=(const cache_struct& other) { return *this; }
 
-        std::unique_ptr<matrix::Dense<ValueType>> zero;
-        std::unique_ptr<matrix::Dense<ValueType>> one;
+        std::unique_ptr<matrix::MultiVector<ValueType>> zero;
+        std::unique_ptr<matrix::MultiVector<ValueType>> one;
         std::unique_ptr<IMultiVector> intermediate_x;
     } cache_;
 };

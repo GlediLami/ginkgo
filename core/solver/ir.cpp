@@ -79,7 +79,7 @@ void Ir<ValueType>::set_solver(std::shared_ptr<const LinOp> new_solver)
 
 template <typename ValueType>
 void Ir<ValueType>::set_relaxation_factor(
-    std::shared_ptr<const matrix::Dense<ValueType>> new_factor)
+    std::shared_ptr<const matrix::MultiVector<ValueType>> new_factor)
 {
     auto exec = this->get_executor();
     if (new_factor && new_factor->get_executor() != exec) {
@@ -115,7 +115,7 @@ Ir<ValueType>::Ir(const Factory* factory,
             this->get_executor(), this->get_size()[0]));
     }
     this->set_default_initial_guess(parameters_.default_initial_guess);
-    relaxation_factor_ = gko::initialize<matrix::Dense<ValueType>>(
+    relaxation_factor_ = gko::initialize<matrix::MultiVector<ValueType>>(
         {parameters_.relaxation_factor}, this->get_executor());
 }
 
@@ -212,7 +212,7 @@ void Ir<ValueType>::apply_with_initial_guess_impl(
 
     precision_dispatch<ValueType>(
         [this, guess](auto converted_b, auto converted_x) {
-            using Vector = matrix::Dense<ValueType>;
+            using Vector = matrix::MultiVector<ValueType>;
             using ws = workspace_traits<Ir>;
 
             auto exec = this->get_executor();

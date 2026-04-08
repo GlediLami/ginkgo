@@ -28,8 +28,8 @@ namespace gko {
 namespace kernels {
 namespace reference {
 /**
- * @brief The Dense matrix format namespace.
- * @ref Dense
+ * @brief The MultiVector matrix format namespace.
+ * @ref MultiVector
  * @ingroup dense
  */
 namespace dense {

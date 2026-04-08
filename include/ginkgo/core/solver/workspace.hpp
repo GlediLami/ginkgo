@@ -100,7 +100,7 @@ public:
     {
         GKO_ASSERT(op_id >= 0 && op_id < vectors_.size());
         // does the existing object have the wrong type?
-        // vector types may vary e.g. if users derive from Dense
+        // vector types may vary e.g. if users derive from MultiVector
         auto stored_op = vectors_[op_id].get();
         IMultiVector* op{};
         if (!stored_op || typeid(*stored_op) != expected_type) {

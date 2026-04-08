@@ -22,7 +22,8 @@ namespace {
 
 
 template <typename ValueType = default_precision>
-std::ostream& operator<<(std::ostream& os, const matrix::Dense<ValueType>* mtx)
+std::ostream& operator<<(std::ostream& os,
+                         const matrix::MultiVector<ValueType>* mtx)
 {
     auto exec = mtx->get_executor();
     auto tmp = make_temporary_clone(exec->get_master(), mtx);
@@ -252,11 +253,11 @@ void Stream<ValueType>::on_linop_apply_started(const LinOp* A,
     *os_ << prefix_ << "apply started on A " << demangle_name(A) << " with b "
          << demangle_name(b) << " and x " << demangle_name(x) << std::endl;
     if (verbose_) {
-        *os_ << demangle_name(A) << as<gko::matrix::Dense<ValueType>>(A)
+        *os_ << demangle_name(A) << as<gko::matrix::MultiVector<ValueType>>(A)
              << std::endl;
-        *os_ << demangle_name(b) << as<gko::matrix::Dense<ValueType>>(b)
+        *os_ << demangle_name(b) << as<gko::matrix::MultiVector<ValueType>>(b)
              << std::endl;
-        *os_ << demangle_name(x) << as<gko::matrix::Dense<ValueType>>(x)
+        *os_ << demangle_name(x) << as<gko::matrix::MultiVector<ValueType>>(x)
              << std::endl;
     }
 }
@@ -270,11 +271,11 @@ void Stream<ValueType>::on_linop_apply_completed(const LinOp* A,
     *os_ << prefix_ << "apply completed on A " << demangle_name(A) << " with b "
          << demangle_name(b) << " and x " << demangle_name(x) << std::endl;
     if (verbose_) {
-        *os_ << demangle_name(A) << as<gko::matrix::Dense<ValueType>>(A)
+        *os_ << demangle_name(A) << as<gko::matrix::MultiVector<ValueType>>(A)
              << std::endl;
-        *os_ << demangle_name(b) << as<gko::matrix::Dense<ValueType>>(b)
+        *os_ << demangle_name(b) << as<gko::matrix::MultiVector<ValueType>>(b)
              << std::endl;
-        *os_ << demangle_name(x) << as<gko::matrix::Dense<ValueType>>(x)
+        *os_ << demangle_name(x) << as<gko::matrix::MultiVector<ValueType>>(x)
              << std::endl;
     }
 }
@@ -290,15 +291,15 @@ void Stream<ValueType>::on_linop_advanced_apply_started(
          << " beta " << demangle_name(beta) << " and x " << demangle_name(x)
          << std::endl;
     if (verbose_) {
-        *os_ << demangle_name(A) << as<gko::matrix::Dense<ValueType>>(A)
+        *os_ << demangle_name(A) << as<gko::matrix::MultiVector<ValueType>>(A)
              << std::endl;
-        *os_ << demangle_name(alpha) << as<gko::matrix::Dense<ValueType>>(alpha)
+        *os_ << demangle_name(alpha)
+             << as<gko::matrix::MultiVector<ValueType>>(alpha) << std::endl;
+        *os_ << demangle_name(b) << as<gko::matrix::MultiVector<ValueType>>(b)
              << std::endl;
-        *os_ << demangle_name(b) << as<gko::matrix::Dense<ValueType>>(b)
-             << std::endl;
-        *os_ << demangle_name(beta) << as<gko::matrix::Dense<ValueType>>(beta)
-             << std::endl;
-        *os_ << demangle_name(x) << as<gko::matrix::Dense<ValueType>>(x)
+        *os_ << demangle_name(beta)
+             << as<gko::matrix::MultiVector<ValueType>>(beta) << std::endl;
+        *os_ << demangle_name(x) << as<gko::matrix::MultiVector<ValueType>>(x)
              << std::endl;
     }
 }
@@ -314,15 +315,15 @@ void Stream<ValueType>::on_linop_advanced_apply_completed(
          << " beta " << demangle_name(beta) << " and x " << demangle_name(x)
          << std::endl;
     if (verbose_) {
-        *os_ << demangle_name(A) << as<gko::matrix::Dense<ValueType>>(A)
+        *os_ << demangle_name(A) << as<gko::matrix::MultiVector<ValueType>>(A)
              << std::endl;
-        *os_ << demangle_name(alpha) << as<gko::matrix::Dense<ValueType>>(alpha)
+        *os_ << demangle_name(alpha)
+             << as<gko::matrix::MultiVector<ValueType>>(alpha) << std::endl;
+        *os_ << demangle_name(b) << as<gko::matrix::MultiVector<ValueType>>(b)
              << std::endl;
-        *os_ << demangle_name(b) << as<gko::matrix::Dense<ValueType>>(b)
-             << std::endl;
-        *os_ << demangle_name(beta) << as<gko::matrix::Dense<ValueType>>(beta)
-             << std::endl;
-        *os_ << demangle_name(x) << as<gko::matrix::Dense<ValueType>>(x)
+        *os_ << demangle_name(beta)
+             << as<gko::matrix::MultiVector<ValueType>>(beta) << std::endl;
+        *os_ << demangle_name(x) << as<gko::matrix::MultiVector<ValueType>>(x)
              << std::endl;
     }
 }
@@ -361,16 +362,18 @@ void Stream<ValueType>::on_criterion_check_started(
     if (verbose_) {
         if (residual != nullptr) {
             *os_ << demangle_name(residual)
-                 << as<gko::matrix::Dense<ValueType>>(residual) << std::endl;
+                 << as<gko::matrix::MultiVector<ValueType>>(residual)
+                 << std::endl;
         }
         if (residual_norm != nullptr) {
             *os_ << demangle_name(residual_norm)
-                 << as<gko::matrix::Dense<ValueType>>(residual_norm)
+                 << as<gko::matrix::MultiVector<ValueType>>(residual_norm)
                  << std::endl;
         }
         if (solution != nullptr) {
             *os_ << demangle_name(solution)
-                 << as<gko::matrix::Dense<ValueType>>(solution) << std::endl;
+                 << as<gko::matrix::MultiVector<ValueType>>(solution)
+                 << std::endl;
         }
     }
 }
@@ -396,16 +399,18 @@ void Stream<ValueType>::on_criterion_check_completed(
         *os_ << tmp.get_const_data();
         if (residual != nullptr) {
             *os_ << demangle_name(residual)
-                 << as<gko::matrix::Dense<ValueType>>(residual) << std::endl;
+                 << as<gko::matrix::MultiVector<ValueType>>(residual)
+                 << std::endl;
         }
         if (residual_norm != nullptr) {
             *os_ << demangle_name(residual_norm)
-                 << as<gko::matrix::Dense<ValueType>>(residual_norm)
+                 << as<gko::matrix::MultiVector<ValueType>>(residual_norm)
                  << std::endl;
         }
         if (solution != nullptr) {
             *os_ << demangle_name(solution)
-                 << as<gko::matrix::Dense<ValueType>>(solution) << std::endl;
+                 << as<gko::matrix::MultiVector<ValueType>>(solution)
+                 << std::endl;
         }
     }
 }
@@ -433,17 +438,17 @@ void Stream<ValueType>::on_iteration_complete(
 
     if (verbose_) {
         *os_ << demangle_name(residual)
-             << as<gko::matrix::Dense<ValueType>>(residual) << std::endl;
+             << as<gko::matrix::MultiVector<ValueType>>(residual) << std::endl;
         *os_ << demangle_name(solution)
-             << as<gko::matrix::Dense<ValueType>>(solution) << std::endl;
+             << as<gko::matrix::MultiVector<ValueType>>(solution) << std::endl;
         if (residual_norm != nullptr) {
             *os_ << demangle_name(residual_norm)
-                 << as<gko::matrix::Dense<ValueType>>(residual_norm)
+                 << as<gko::matrix::MultiVector<ValueType>>(residual_norm)
                  << std::endl;
         }
         if (implicit_resnorm_sq != nullptr) {
             *os_ << demangle_name(implicit_resnorm_sq)
-                 << as<gko::matrix::Dense<ValueType>>(implicit_resnorm_sq)
+                 << as<gko::matrix::MultiVector<ValueType>>(implicit_resnorm_sq)
                  << std::endl;
         }
         if (status != nullptr) {
@@ -452,7 +457,8 @@ void Stream<ValueType>::on_iteration_complete(
             *os_ << tmp.get_const_data();
         }
         *os_ << demangle_name(right_hand_side)
-             << as<gko::matrix::Dense<ValueType>>(right_hand_side) << std::endl;
+             << as<gko::matrix::MultiVector<ValueType>>(right_hand_side)
+             << std::endl;
     }
 }
 

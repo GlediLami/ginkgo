@@ -91,13 +91,13 @@ class IMultiVector;
  * fixed-point iteration routine $x_{k+1} = Lx_k + b$ as follows:
  *
  * ```cpp
- * std::unique_ptr<matrix::Dense<>> calculate_fixed_point(
- *         int iters, const LinOp *L, const matrix::Dense<> *x0
- *         const matrix::Dense<> *b)
+ * std::unique_ptr<matrix::MultiVector<>> calculate_fixed_point(
+ *         int iters, const LinOp *L, const matrix::MultiVector<> *x0
+ *         const matrix::MultiVector<> *b)
  * {
  *     auto x = gko::clone(x0);
  *     auto tmp = gko::clone(x0);
- *     auto one = Dense<>::create(L->get_executor(), {1.0,});
+ *     auto one = MultiVector<>::create(L->get_executor(), {1.0,});
  *     for (int i = 0; i < iters; ++i) {
  *         L->apply(tmp, x);
  *         x->add_scaled(one, b);

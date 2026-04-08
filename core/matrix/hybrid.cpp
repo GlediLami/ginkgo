@@ -265,7 +265,8 @@ void Hybrid<ValueType, IndexType>::move_to(
 
 
 template <typename ValueType, typename IndexType>
-void Hybrid<ValueType, IndexType>::convert_to(Dense<ValueType>* result) const
+void Hybrid<ValueType, IndexType>::convert_to(
+    MultiVector<ValueType>* result) const
 {
     auto exec = this->get_executor();
     result->resize(this->get_size());
@@ -281,7 +282,7 @@ void Hybrid<ValueType, IndexType>::convert_to(Dense<ValueType>* result) const
 
 
 template <typename ValueType, typename IndexType>
-void Hybrid<ValueType, IndexType>::move_to(Dense<ValueType>* result)
+void Hybrid<ValueType, IndexType>::move_to(MultiVector<ValueType>* result)
 {
     this->convert_to(result);
 }

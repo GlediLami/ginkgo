@@ -78,9 +78,11 @@ void Diagonal<ValueType>::apply_impl(const IMultiVector* alpha,
     auto converted_x = x->as_precision(this);
     auto x_clone = converted_x->clone();
     this->apply_impl(b, x_clone.get());
-    converted_x->scale(as<Dense<ValueType>>(beta->as_precision(this)).get());
+    converted_x->scale(
+        as<MultiVector<ValueType>>(beta->as_precision(this)).get());
     converted_x->add_scaled(
-        as<Dense<ValueType>>(alpha->as_precision(this)).get(), x_clone.get());
+        as<MultiVector<ValueType>>(alpha->as_precision(this)).get(),
+        x_clone.get());
 }
 
 

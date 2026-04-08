@@ -27,8 +27,9 @@ namespace {
 
 bool is_dense(const IMultiVector* value)
 {
-    using conv_to_double = ConvertibleTo<matrix::Dense<double>>;
-    using conv_to_complex = ConvertibleTo<matrix::Dense<std::complex<double>>>;
+    using conv_to_double = ConvertibleTo<matrix::MultiVector<double>>;
+    using conv_to_complex =
+        ConvertibleTo<matrix::MultiVector<std::complex<double>>>;
     return dynamic_cast<const conv_to_double*>(value) ||
            dynamic_cast<const conv_to_complex*>(value);
 }
@@ -140,8 +141,8 @@ private:
             stream << "<vector>";
         } else if (is_dense(value)) {
             auto host_exec = value->get_executor()->get_master();
-            run<ConvertibleTo<matrix::Dense<double>>,
-                ConvertibleTo<matrix::Dense<std::complex<double>>>>(
+            run<ConvertibleTo<matrix::MultiVector<double>>,
+                ConvertibleTo<matrix::MultiVector<std::complex<double>>>>(
                 value, [&](auto vector) {
                     using vector_type =
                         typename detail::pointee<decltype(vector)>::result_type;
@@ -288,16 +289,17 @@ private:
     {
         store_generic<
 #if GINKGO_ENABLE_HALF
-            gko::matrix::Dense<gko::float16>,
-            gko::matrix::Dense<std::complex<gko::float16>>
+            gko::matrix::MultiVector<gko::float16>,
+            gko::matrix::MultiVector<std::complex<gko::float16>>
 #endif
 #if GINKGO_ENABLE_BFLOAT16
-                gko::matrix::Dense<gko::bfloat16>,
-            gko::matrix::Dense<std::complex<gko::bfloat16>>
+                gko::matrix::MultiVector<gko::bfloat16>,
+            gko::matrix::MultiVector<std::complex<gko::bfloat16>>
 #endif
-                gko::matrix::Dense<double>,
-            gko::matrix::Dense<float>, gko::matrix::Dense<std::complex<double>>,
-            gko::matrix::Dense<std::complex<float>>>(value, name);
+                gko::matrix::MultiVector<double>,
+            gko::matrix::MultiVector<float>,
+            gko::matrix::MultiVector<std::complex<double>>,
+            gko::matrix::MultiVector<std::complex<float>>>(value, name);
     }
 
     void store_vector(const IMultiVector* value, size_type iteration,

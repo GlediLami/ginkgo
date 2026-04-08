@@ -69,7 +69,7 @@ void RowGatherer<IndexType>::apply_impl(const IMultiVector* in,
     std::visit(
         [this, in, out](auto p) {
             using value_type = std::decay_t<decltype(p)>;
-            as<Dense<value_type>>(in)->row_gather(&row_idxs_, out);
+            as<MultiVector<value_type>>(in)->row_gather(&row_idxs_, out);
         },
         precision_to_variant(in->get_precision()));
 }
@@ -83,7 +83,8 @@ void RowGatherer<IndexType>::apply_impl(const IMultiVector* alpha,
     std::visit(
         [=](auto p) {
             using value_type = std::decay_t<decltype(p)>;
-            as<Dense<value_type>>(in)->row_gather(alpha, &row_idxs_, beta, out);
+            as<MultiVector<value_type>>(in)->row_gather(alpha, &row_idxs_, beta,
+                                                        out);
         },
         precision_to_variant(in->get_precision()));
 }

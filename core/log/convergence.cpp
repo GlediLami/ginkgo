@@ -76,7 +76,7 @@ void Convergence<ValueType>::on_iteration_complete(
         if (residual_norm != nullptr) {
             this->residual_norm_.reset(residual_norm->clone().release());
         } else if (residual != nullptr) {
-            using NormVector = matrix::Dense<remove_complex<ValueType>>;
+            using NormVector = matrix::MultiVector<remove_complex<ValueType>>;
             this->residual_norm_ = NormVector::create(
                 residual->get_executor(), dim<2>{1, residual->get_size()[1]});
             residual->compute_norm2(this->residual_norm_);
@@ -86,8 +86,8 @@ void Convergence<ValueType>::on_iteration_complete(
             auto system_mtx =
                 dynamic_cast<const solver::detail::SolverBaseLinOp*>(solver)
                     ->get_system_matrix();
-            using Vector = matrix::Dense<ValueType>;
-            using NormVector = matrix::Dense<remove_complex<ValueType>>;
+            using Vector = matrix::MultiVector<ValueType>;
+            using NormVector = matrix::MultiVector<remove_complex<ValueType>>;
             auto converted_b = b->as_precision(type_to_precision<ValueType>);
             auto exec = system_mtx->get_executor();
             auto residual_tmp = converted_b->clone();

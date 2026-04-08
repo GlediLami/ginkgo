@@ -12,17 +12,18 @@ namespace {
 
 
 template <typename ValueType>
-inline void initialize_scalars(std::shared_ptr<const Executor> exec,
-                               std::unique_ptr<matrix::Dense<ValueType>>& zero,
-                               std::unique_ptr<matrix::Dense<ValueType>>& one)
+inline void initialize_scalars(
+    std::shared_ptr<const Executor> exec,
+    std::unique_ptr<matrix::MultiVector<ValueType>>& zero,
+    std::unique_ptr<matrix::MultiVector<ValueType>>& one)
 {
     if (zero == nullptr) {
-        zero = initialize<matrix::Dense<ValueType>>({gko::zero<ValueType>()},
-                                                    exec);
+        zero = initialize<matrix::MultiVector<ValueType>>(
+            {gko::zero<ValueType>()}, exec);
     }
     if (one == nullptr) {
-        one =
-            initialize<matrix::Dense<ValueType>>({gko::one<ValueType>()}, exec);
+        one = initialize<matrix::MultiVector<ValueType>>(
+            {gko::one<ValueType>()}, exec);
     }
 }
 
@@ -118,7 +119,7 @@ std::unique_ptr<LinOp> Combination<ValueType>::conj_transpose() const
     // conjugate coefficients!
     for (auto& coef : get_coefficients()) {
         transposed->coefficients_.push_back(
-            share(as<matrix::Dense<ValueType>>(coef)->conj_transpose()));
+            share(as<matrix::MultiVector<ValueType>>(coef)->conj_transpose()));
     }
     // conjugate-transpose operators
     for (auto& op : get_operators()) {

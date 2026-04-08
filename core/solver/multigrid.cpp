@@ -368,7 +368,7 @@ void MultigridState::generate(const LinOp* system_matrix_in,
                 {
                     using value_type =
                         typename std::decay_t<decltype(*mg_level)>::value_type;
-                    using VectorType = matrix::Dense<value_type>;
+                    using VectorType = matrix::MultiVector<value_type>;
                     this->allocate_memory<VectorType>(i, cycle, current_nrows,
                                                       next_nrows);
                 }
@@ -386,7 +386,7 @@ void MultigridState::allocate_memory(int level, multigrid::cycle cycle,
                                      size_type next_nrows)
 {
     using value_type = typename VectorType::value_type;
-    using vec = matrix::Dense<value_type>;
+    using vec = matrix::MultiVector<value_type>;
 
     auto exec =
         as<LinOp>(multigrid->get_mg_level_list().at(level))->get_executor();
@@ -421,7 +421,7 @@ void MultigridState::allocate_memory(
 {
     using value_type = typename VectorType::value_type;
     using vec = VectorType;
-    using dense_vec = matrix::Dense<value_type>;
+    using dense_vec = matrix::MultiVector<value_type>;
 
     auto exec =
         as<LinOp>(multigrid->get_mg_level_list().at(level))->get_executor();
@@ -491,7 +491,7 @@ void MultigridState::run_mg_cycle(multigrid::cycle cycle, size_type level,
             {
                 using value_type =
                     typename std::decay_t<decltype(*mg_level)>::value_type;
-                this->run_cycle<typename matrix::Dense<value_type>>(
+                this->run_cycle<typename matrix::MultiVector<value_type>>(
                     cycle, level, matrix, b, x, mode);
             }
         });

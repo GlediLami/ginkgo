@@ -83,7 +83,7 @@ void PipeCg<ValueType>::apply_impl(const IMultiVector* b, IMultiVector* x) const
     precision_dispatch<ValueType>(
         [this](auto converted_b, auto converted_x) {
             using std::swap;
-            using LocalVector = matrix::Dense<ValueType>;
+            using LocalVector = matrix::MultiVector<ValueType>;
 
             constexpr uint8 RelativeStoppingId{1};
 

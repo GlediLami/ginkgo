@@ -247,15 +247,17 @@ class ResidualNormFactory
     {
         std::unique_ptr<Criterion> result;
         auto exec = this->get_executor();
-        run<matrix::Dense<double>, matrix::Dense<std::complex<double>>,
-            matrix::Dense<float>, matrix::Dense<std::complex<float>>
+        run<matrix::MultiVector<double>,
+            matrix::MultiVector<std::complex<double>>,
+            matrix::MultiVector<float>, matrix::MultiVector<std::complex<float>>
 #if GINKGO_ENABLE_HALF
             ,
-            matrix::Dense<half>, matrix::Dense<std::complex<half>>
+            matrix::MultiVector<half>, matrix::MultiVector<std::complex<half>>
 #endif
 #if GINKGO_ENABLE_BFLOAT16
             ,
-            matrix::Dense<bfloat16>, matrix::Dense<std::complex<bfloat16>>
+            matrix::MultiVector<bfloat16>,
+            matrix::MultiVector<std::complex<bfloat16>>
 #endif
 #if GINKGO_BUILD_MPI
             ,
@@ -282,7 +284,7 @@ class ResidualNormFactory
                                experimental::distributed::Vector<value_type>>;
             using vector_type = std::conditional_t<
                 is_distributed, experimental::distributed::Vector<value_type>,
-                matrix::Dense<value_type>>;
+                matrix::MultiVector<value_type>>;
             auto dense_x = as<vector_type>(args.x);
             auto dense_r = as<vector_type>(args.initial_residual);
             auto cast_threshold = static_cast<remove_complex<value_type>>(

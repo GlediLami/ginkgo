@@ -29,7 +29,7 @@ namespace gko {
 namespace kernels {
 namespace omp {
 /**
- * @brief The Dense matrix format namespace.
+ * @brief The MultiVector matrix format namespace.
  *
  * @ingroup dense
  */

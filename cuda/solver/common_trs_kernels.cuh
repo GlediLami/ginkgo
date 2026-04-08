@@ -322,7 +322,7 @@ void solve_kernel(std::shared_ptr<const CudaExecutor> exec,
     if (matrix->get_size()[0] == 0 || b.size[1] == 0) {
         return;
     }
-    using vec = matrix::Dense<ValueType>;
+    using vec = matrix::MultiVector<ValueType>;
 
     if (sparselib::is_supported<ValueType, IndexType>::value) {
         if (auto cuda_solve_struct =

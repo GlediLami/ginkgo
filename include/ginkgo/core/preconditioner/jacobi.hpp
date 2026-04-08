@@ -185,7 +185,7 @@ struct block_interleaved_storage_scheme {
  */
 template <typename ValueType = default_precision, typename IndexType = int32>
 class Jacobi : public EnableLinOp<Jacobi<ValueType, IndexType>>,
-               public ConvertibleTo<matrix::Dense<ValueType>>,
+               public ConvertibleTo<matrix::MultiVector<ValueType>>,
                public WritableToMatrixData<ValueType, IndexType>,
                public Transposable {
     friend class EnableLinOp<Jacobi>;
@@ -195,8 +195,8 @@ class Jacobi : public EnableLinOp<Jacobi<ValueType, IndexType>>,
 public:
     using EnableLinOp<Jacobi>::convert_to;
     using EnableLinOp<Jacobi>::move_to;
-    using ConvertibleTo<matrix::Dense<ValueType>>::convert_to;
-    using ConvertibleTo<matrix::Dense<ValueType>>::move_to;
+    using ConvertibleTo<matrix::MultiVector<ValueType>>::convert_to;
+    using ConvertibleTo<matrix::MultiVector<ValueType>>::move_to;
     using value_type = ValueType;
     using index_type = IndexType;
     using mat_data = matrix_data<ValueType, IndexType>;
@@ -266,9 +266,9 @@ public:
         return blocks_.get_size();
     }
 
-    void convert_to(matrix::Dense<value_type>* result) const override;
+    void convert_to(matrix::MultiVector<value_type>* result) const override;
 
-    void move_to(matrix::Dense<value_type>* result) override;
+    void move_to(matrix::MultiVector<value_type>* result) override;
 
     void write(mat_data& data) const override;
 

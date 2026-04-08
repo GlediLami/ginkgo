@@ -193,7 +193,7 @@ void Chebyshev<ValueType>::apply_with_initial_guess_impl(
     }
     precision_dispatch<ValueType>(
         [this, guess](auto converted_b, auto converted_x) {
-            using Vector = matrix::Dense<ValueType>;
+            using Vector = matrix::MultiVector<ValueType>;
             using ws = workspace_traits<Chebyshev>;
             using coeff_type = solver::detail::coeff_type<ValueType>;
 

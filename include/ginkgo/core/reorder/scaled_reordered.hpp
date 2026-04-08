@@ -153,9 +153,9 @@ private:
 
         cache_struct& operator=(cache_struct&&) { return *this; }
 
-        std::unique_ptr<matrix::Dense<value_type>> inner_b{};
-        std::unique_ptr<matrix::Dense<value_type>> inner_x{};
-        std::unique_ptr<matrix::Dense<value_type>> intermediate{};
+        std::unique_ptr<matrix::MultiVector<value_type>> inner_b{};
+        std::unique_ptr<matrix::MultiVector<value_type>> inner_x{};
+        std::unique_ptr<matrix::MultiVector<value_type>> intermediate{};
     } cache_;
 };
 

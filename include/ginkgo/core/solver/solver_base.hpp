@@ -462,31 +462,33 @@ protected:
     }
 
     template <typename ValueType>
-    matrix::Dense<ValueType>* create_workspace_scalar(int vector_id,
-                                                      size_type size) const
+    matrix::MultiVector<ValueType>* create_workspace_scalar(
+        int vector_id, size_type size) const
     {
-        return as<matrix::Dense<ValueType>>(workspace_.create_or_get_vector(
-            vector_id,
-            [&] {
-                return matrix::Dense<ValueType>::create(
-                    workspace_.get_executor(), dim<2>{1, size});
-            },
-            typeid(matrix::Dense<ValueType>), gko::dim<2>{1, size}));
+        return as<matrix::MultiVector<ValueType>>(
+            workspace_.create_or_get_vector(
+                vector_id,
+                [&] {
+                    return matrix::MultiVector<ValueType>::create(
+                        workspace_.get_executor(), dim<2>{1, size});
+                },
+                typeid(matrix::MultiVector<ValueType>), gko::dim<2>{1, size}));
     }
 
     template <typename ValueType>
-    const matrix::Dense<ValueType>* create_workspace_fixed_scalar(
+    const matrix::MultiVector<ValueType>* create_workspace_fixed_scalar(
         int vector_id, size_type size, ValueType val) const
     {
-        return as<matrix::Dense<ValueType>>(workspace_.create_or_get_vector(
-            vector_id,
-            [&] {
-                auto mat = matrix::Dense<ValueType>::create(
-                    workspace_.get_executor(), dim<2>{1, size});
-                mat->fill(val);
-                return mat;
-            },
-            typeid(matrix::Dense<ValueType>), gko::dim<2>{1, size}));
+        return as<matrix::MultiVector<ValueType>>(
+            workspace_.create_or_get_vector(
+                vector_id,
+                [&] {
+                    auto mat = matrix::MultiVector<ValueType>::create(
+                        workspace_.get_executor(), dim<2>{1, size});
+                    mat->fill(val);
+                    return mat;
+                },
+                typeid(matrix::MultiVector<ValueType>), gko::dim<2>{1, size}));
     }
 
     template <typename ValueType>

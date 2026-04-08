@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -99,17 +99,17 @@ double timing(std::shared_ptr<const gko::Executor> exec,
 
 int main(int argc, char* argv[])
 {
-    // Use some shortcuts. In Ginkgo, vectors are seen as a gko::matrix::Dense
-    // with one column/one row. The advantage of this concept is that using
-    // multiple vectors is a now a natural extension of adding columns/rows are
-    // necessary.
+    // Use some shortcuts. In Ginkgo, vectors are seen as a
+    // gko::matrix::MultiVector with one column/one row. The advantage of this
+    // concept is that using multiple vectors is a now a natural extension of
+    // adding columns/rows are necessary.
     using HighPrecision = double;
     using RealValueType = gko::remove_complex<HighPrecision>;
     using LowPrecision = float;
     using IndexType = int;
-    using hp_vec = gko::matrix::Dense<HighPrecision>;
-    using lp_vec = gko::matrix::Dense<LowPrecision>;
-    using real_vec = gko::matrix::Dense<RealValueType>;
+    using hp_vec = gko::matrix::MultiVector<HighPrecision>;
+    using lp_vec = gko::matrix::MultiVector<LowPrecision>;
+    using real_vec = gko::matrix::MultiVector<RealValueType>;
     // The gko::matrix::Ell class is used here, but any other matrix class such
     // as gko::matrix::Coo, gko::matrix::Hybrid, gko::matrix::Csr or
     // gko::matrix::Sellp could also be used.

@@ -248,7 +248,7 @@ Pgm<ValueType, IndexType>::generate_local(
     // compute weight_mtx = (abs(mtx) + abs(mtx'))/2;
     auto abs_mtx = local_matrix->compute_absolute();
     // abs_mtx is already real valuetype, so transpose is enough
-    auto half_scalar = initialize<matrix::Dense<real_type>>({0.5}, exec);
+    auto half_scalar = initialize<matrix::MultiVector<real_type>>({0.5}, exec);
     // W = (abs_mtx + transpose(abs_mtx))/2
     auto weight_mtx = abs_mtx->scale_add(
         half_scalar, half_scalar, as<weight_csr_type>(abs_mtx->transpose()));

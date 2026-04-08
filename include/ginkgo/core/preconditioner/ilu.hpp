@@ -264,7 +264,7 @@ private:
         cache_struct(cache_struct&&) {}
         cache_struct& operator=(const cache_struct&) { return *this; }
         cache_struct& operator=(cache_struct&&) { return *this; }
-        std::unique_ptr<matrix::Dense<ValueType>> intermediate{};
+        std::unique_ptr<matrix::MultiVector<ValueType>> intermediate{};
     } cache_;
 };
 

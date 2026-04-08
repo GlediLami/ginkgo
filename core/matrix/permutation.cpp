@@ -267,9 +267,9 @@ void Permutation<IndexType>::apply_impl(const IMultiVector* in,
 {
     std::visit(
         [this, in, out](auto p) {
-            using DenseType = Dense<std::decay_t<decltype(p)>>;
-            as<DenseType>(in)->permute(
-                this, as<DenseType>(out->as_precision(in)).get(),
+            using MultiVectorType = MultiVector<std::decay_t<decltype(p)>>;
+            as<MultiVectorType>(in)->permute(
+                this, as<MultiVectorType>(out->as_precision(in)).get(),
                 permute_mode::rows);
         },
         precision_to_variant(in->get_precision()));
@@ -284,9 +284,10 @@ void Permutation<IndexType>::apply_impl(const IMultiVector* alpha,
 {
     std::visit(
         [this, in, out, alpha, beta](auto p) {
-            using DenseType = Dense<std::decay_t<decltype(p)>>;
-            auto converted_out = as<DenseType>(out->as_precision(in));
-            auto tmp = as<DenseType>(in)->permute(this, permute_mode::rows);
+            using MultiVectorType = MultiVector<std::decay_t<decltype(p)>>;
+            auto converted_out = as<MultiVectorType>(out->as_precision(in));
+            auto tmp =
+                as<MultiVectorType>(in)->permute(this, permute_mode::rows);
             converted_out->scale(beta);
             converted_out->add_scaled(alpha, tmp);
         },

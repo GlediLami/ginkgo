@@ -279,7 +279,8 @@ void Sellp<ValueType, IndexType>::move_to(
 
 
 template <typename ValueType, typename IndexType>
-void Sellp<ValueType, IndexType>::convert_to(Dense<ValueType>* result) const
+void Sellp<ValueType, IndexType>::convert_to(
+    MultiVector<ValueType>* result) const
 {
     auto exec = this->get_executor();
     auto tmp_result = make_temporary_output_clone(exec, result);
@@ -291,7 +292,7 @@ void Sellp<ValueType, IndexType>::convert_to(Dense<ValueType>* result) const
 
 
 template <typename ValueType, typename IndexType>
-void Sellp<ValueType, IndexType>::move_to(Dense<ValueType>* result)
+void Sellp<ValueType, IndexType>::move_to(MultiVector<ValueType>* result)
 {
     this->convert_to(result);
 }

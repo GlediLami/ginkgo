@@ -103,11 +103,11 @@ void Bicg<ValueType>::apply_impl(const IMultiVector* b, IMultiVector* x) const
 
     precision_dispatch<ValueType>(
         [this](auto converted_b, auto converted_x) {
-            auto dense_b = as<matrix::Dense<ValueType>>(converted_b);
-            auto dense_x = as<matrix::Dense<ValueType>>(converted_x);
+            auto dense_b = as<matrix::MultiVector<ValueType>>(converted_b);
+            auto dense_x = as<matrix::MultiVector<ValueType>>(converted_x);
 
             using std::swap;
-            using Vector = matrix::Dense<ValueType>;
+            using Vector = matrix::MultiVector<ValueType>;
             constexpr uint8 RelativeStoppingId{1};
 
             auto exec = this->get_executor();

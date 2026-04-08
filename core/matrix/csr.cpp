@@ -388,7 +388,7 @@ void Csr<ValueType, IndexType>::move_to(Coo<ValueType, IndexType>* result)
 
 
 template <typename ValueType, typename IndexType>
-void Csr<ValueType, IndexType>::convert_to(Dense<ValueType>* result) const
+void Csr<ValueType, IndexType>::convert_to(MultiVector<ValueType>* result) const
 {
     auto exec = this->get_executor();
     auto tmp_result = make_temporary_output_clone(exec, result);
@@ -399,7 +399,7 @@ void Csr<ValueType, IndexType>::convert_to(Dense<ValueType>* result) const
 
 
 template <typename ValueType, typename IndexType>
-void Csr<ValueType, IndexType>::move_to(Dense<ValueType>* result)
+void Csr<ValueType, IndexType>::move_to(MultiVector<ValueType>* result)
 {
     this->convert_to(result);
 }
@@ -744,8 +744,9 @@ Csr<ValueType, IndexType>::multiply_reuse(ptr_param<const Csr> other) const
 template <typename ValueType, typename IndexType>
 std::unique_ptr<Csr<ValueType, IndexType>>
 Csr<ValueType, IndexType>::multiply_add(
-    ptr_param<const Dense<value_type>> scale_mult,
-    ptr_param<const Csr> mtx_mult, ptr_param<const Dense<value_type>> scale_add,
+    ptr_param<const MultiVector<value_type>> scale_mult,
+    ptr_param<const Csr> mtx_mult,
+    ptr_param<const MultiVector<value_type>> scale_add,
     ptr_param<const Csr> mtx_add) const
 {
     GKO_ASSERT_CONFORMANT(this, mtx_mult);
@@ -811,8 +812,8 @@ Csr<ValueType, IndexType>::multiply_add_reuse_info::multiply_add_reuse_info(
 
 template <typename ValueType, typename IndexType>
 void Csr<ValueType, IndexType>::multiply_add_reuse_info::update_values(
-    ptr_param<const Csr> mtx1, ptr_param<const Dense<value_type>> alpha,
-    ptr_param<const Csr> mtx2, ptr_param<const Dense<value_type>> beta,
+    ptr_param<const Csr> mtx1, ptr_param<const MultiVector<value_type>> alpha,
+    ptr_param<const Csr> mtx2, ptr_param<const MultiVector<value_type>> beta,
     ptr_param<const Csr> mtx3, ptr_param<Csr> out) const
 {
     if (!internal) {
@@ -848,8 +849,9 @@ template <typename ValueType, typename IndexType>
 std::pair<std::unique_ptr<Csr<ValueType, IndexType>>,
           typename Csr<ValueType, IndexType>::multiply_add_reuse_info>
 Csr<ValueType, IndexType>::multiply_add_reuse(
-    ptr_param<const Dense<value_type>> scale_mult,
-    ptr_param<const Csr> mtx_mult, ptr_param<const Dense<value_type>> scale_add,
+    ptr_param<const MultiVector<value_type>> scale_mult,
+    ptr_param<const Csr> mtx_mult,
+    ptr_param<const MultiVector<value_type>> scale_add,
     ptr_param<const Csr> mtx_add) const
 {
     GKO_ASSERT_CONFORMANT(this, mtx_mult);
@@ -883,8 +885,8 @@ Csr<ValueType, IndexType>::multiply_add_reuse(
 
 template <typename ValueType, typename IndexType>
 std::unique_ptr<Csr<ValueType, IndexType>> Csr<ValueType, IndexType>::scale_add(
-    ptr_param<const Dense<value_type>> scale_this,
-    ptr_param<const Dense<value_type>> scale_other,
+    ptr_param<const MultiVector<value_type>> scale_this,
+    ptr_param<const MultiVector<value_type>> scale_other,
     ptr_param<const Csr> mtx_other) const
 {
     auto exec = this->get_executor();
@@ -932,8 +934,8 @@ Csr<ValueType, IndexType>::scale_add_reuse_info::operator=(
 
 template <typename ValueType, typename IndexType>
 void Csr<ValueType, IndexType>::scale_add_reuse_info::update_values(
-    ptr_param<const Dense<value_type>> scale1, ptr_param<const Csr> mtx1,
-    ptr_param<const Dense<value_type>> scale2, ptr_param<const Csr> mtx2,
+    ptr_param<const MultiVector<value_type>> scale1, ptr_param<const Csr> mtx1,
+    ptr_param<const MultiVector<value_type>> scale2, ptr_param<const Csr> mtx2,
     ptr_param<Csr> out) const
 {
     if (!internal) {
@@ -977,8 +979,8 @@ template <typename ValueType, typename IndexType>
 std::pair<std::unique_ptr<Csr<ValueType, IndexType>>,
           typename Csr<ValueType, IndexType>::scale_add_reuse_info>
 Csr<ValueType, IndexType>::add_scale_reuse(
-    ptr_param<const Dense<value_type>> scale_this,
-    ptr_param<const Dense<value_type>> scale_other,
+    ptr_param<const MultiVector<value_type>> scale_this,
+    ptr_param<const MultiVector<value_type>> scale_other,
     ptr_param<const Csr> mtx_other) const
 {
     auto exec = this->get_executor();
@@ -1483,23 +1485,24 @@ Csr<ValueType, IndexType>::create_submatrix(
 
 
 template <typename ValueType, typename IndexType>
-std::unique_ptr<Dense<ValueType>> Csr<ValueType, IndexType>::create_value_view()
+std::unique_ptr<MultiVector<ValueType>>
+Csr<ValueType, IndexType>::create_value_view()
 {
     const auto nnz = this->get_num_stored_elements();
     const auto exec = this->get_executor();
-    return Dense<ValueType>::create(
+    return MultiVector<ValueType>::create(
         exec, gko::dim<2>{nnz, 1},
         make_array_view(exec, nnz, this->get_values()), 1);
 }
 
 
 template <typename ValueType, typename IndexType>
-std::unique_ptr<const Dense<ValueType>>
+std::unique_ptr<const MultiVector<ValueType>>
 Csr<ValueType, IndexType>::create_const_value_view() const
 {
     const auto nnz = this->get_num_stored_elements();
     const auto exec = this->get_executor();
-    return Dense<ValueType>::create_const(
+    return MultiVector<ValueType>::create_const(
         exec, gko::dim<2>{nnz, 1},
         make_const_array_view(exec, nnz, this->get_const_values()), 1);
 }
@@ -1554,9 +1557,10 @@ template <typename ValueType, typename IndexType>
 void Csr<ValueType, IndexType>::scale_impl(const IMultiVector* alpha)
 {
     auto exec = this->get_executor();
-    exec->run(csr::make_scale(as<Dense<ValueType>>(alpha->as_precision(this))
-                                  ->get_const_device_view(),
-                              this));
+    exec->run(
+        csr::make_scale(as<MultiVector<ValueType>>(alpha->as_precision(this))
+                            ->get_const_device_view(),
+                        this));
 }
 
 
@@ -1564,10 +1568,10 @@ template <typename ValueType, typename IndexType>
 void Csr<ValueType, IndexType>::inv_scale_impl(const IMultiVector* alpha)
 {
     auto exec = this->get_executor();
-    exec->run(
-        csr::make_inv_scale(as<Dense<ValueType>>(alpha->as_precision(this))
-                                ->get_const_device_view(),
-                            this));
+    exec->run(csr::make_inv_scale(
+        as<MultiVector<ValueType>>(alpha->as_precision(this))
+            ->get_const_device_view(),
+        this));
 }
 
 

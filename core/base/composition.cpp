@@ -29,7 +29,7 @@ std::unique_ptr<IMultiVector> apply_inner_operators(
     const std::vector<std::shared_ptr<const LinOp>>& operators,
     array<ValueType>& storage, const IMultiVector* rhs)
 {
-    using Dense = matrix::Dense<ValueType>;
+    using MultiVector = matrix::MultiVector<ValueType>;
     // determine amount of necessary storage:
     // maximum sum of two subsequent intermediate vectors
     // (and the out dimension of the last op if we only have one operator)
@@ -50,13 +50,13 @@ std::unique_ptr<IMultiVector> apply_inner_operators(
     auto op_size = operators.back()->get_size();
     auto out_dim = gko::dim<2>{op_size[0], num_rhs};
     auto out_size = out_dim[0] * num_rhs;
-    auto out = Dense::create(exec, out_dim,
-                             make_array_view(exec, out_size, data), num_rhs);
+    auto out = MultiVector::create(
+        exec, out_dim, make_array_view(exec, out_size, data), num_rhs);
     // for operators with initial guess: set initial guess
     if (operators.back()->apply_uses_initial_guess()) {
         if (op_size[0] == op_size[1]) {
             // square matrix: we can use the previous output
-            exec->copy(out_size, as<Dense>(rhs)->get_const_values(),
+            exec->copy(out_size, as<MultiVector>(rhs)->get_const_values(),
                        out->get_values());
         } else {
             // rectangular matrix: we can't do better than zeros
@@ -78,8 +78,8 @@ std::unique_ptr<IMultiVector> apply_inner_operators(
         auto out_data =
             data + (reversed_storage ? storage_size - out_size : size_type{});
         reversed_storage = !reversed_storage;
-        out = Dense::create(exec, out_dim,
-                            make_array_view(exec, out_size, out_data), num_rhs);
+        out = MultiVector::create(
+            exec, out_dim, make_array_view(exec, out_size, out_data), num_rhs);
         // for operators with initial guess: set initial guess
         if (operators[i]->apply_uses_initial_guess()) {
             if (op_size[0] == op_size[1]) {

@@ -149,7 +149,7 @@ void LowerTrs<ValueType, IndexType>::apply_impl(const IMultiVector* b,
     }
     apply_precision_dispatch<ValueType>(
         [this](auto view_b, auto view_x) {
-            using Vector = matrix::Dense<ValueType>;
+            using Vector = matrix::MultiVector<ValueType>;
             using ws = workspace_traits<LowerTrs>;
             const auto exec = this->get_executor();
             this->setup_workspace();

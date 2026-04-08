@@ -165,7 +165,7 @@ std::unique_ptr<LinOp> Rcm<IndexType>::generate_impl(
         using ValueType = std::decay_t<decltype(value_type)>;
         using Identity = matrix::Identity<ValueType>;
         using Mtx = matrix::Csr<ValueType, IndexType>;
-        using Scalar = matrix::Dense<ValueType>;
+        using Scalar = matrix::MultiVector<ValueType>;
         auto conv_csr = Mtx::create(work_exec);
         as<ConvertibleTo<Mtx>>(op)->convert_to(conv_csr);
         if (!parameters_.skip_symmetrize) {

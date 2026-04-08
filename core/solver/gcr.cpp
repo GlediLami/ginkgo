@@ -88,7 +88,7 @@ void Gcr<ValueType>::apply_impl(const IMultiVector* b, IMultiVector* x) const
     }
     precision_dispatch<ValueType>(
         [this](auto converted_b, auto converted_x) {
-            using LocalVector = matrix::Dense<ValueType>;
+            using LocalVector = matrix::MultiVector<ValueType>;
             using NormVector = typename LocalVector::absolute_type;
             using ws = workspace_traits<Gcr>;
 

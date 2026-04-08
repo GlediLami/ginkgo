@@ -209,8 +209,10 @@ void Direct<ValueType, IndexType>::apply_impl(const IMultiVector* alpha,
     this->setup_workspace();
     auto converted_b = b->as_precision(this);
     auto converted_x = x->as_precision(this);
-    auto dense_alpha = as<matrix::Dense<ValueType>>(alpha->as_precision(this));
-    auto dense_beta = as<matrix::Dense<ValueType>>(beta->as_precision(this));
+    auto dense_alpha =
+        as<matrix::MultiVector<ValueType>>(alpha->as_precision(this));
+    auto dense_beta =
+        as<matrix::MultiVector<ValueType>>(beta->as_precision(this));
     auto intermediate = this->create_workspace_op_with_config_of(
         ws::intermediate, converted_b.get());
     lower_solver_->apply(converted_b.get(), intermediate);

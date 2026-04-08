@@ -91,8 +91,8 @@ std::unique_ptr<LinOp> Amd<IndexType>::generate_impl(
     const auto exec = this->get_executor();
     const auto host_exec = exec->get_master();
     const auto num_rows = system_matrix->get_size()[0];
-    using complex_scalar = matrix::Dense<std::complex<float>>;
-    using real_scalar = matrix::Dense<float>;
+    using complex_scalar = matrix::MultiVector<std::complex<float>>;
+    using real_scalar = matrix::MultiVector<float>;
     using complex_identity = matrix::Identity<std::complex<float>>;
     using real_identity = matrix::Identity<float>;
     using complex_mtx = matrix::Csr<std::complex<float>, IndexType>;

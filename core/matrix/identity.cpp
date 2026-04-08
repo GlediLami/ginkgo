@@ -28,8 +28,8 @@ void Identity<ValueType>::apply_impl(const IMultiVector* alpha,
                                      const IMultiVector* beta,
                                      IMultiVector* x) const
 {
-    auto dense_alpha = as<Dense<ValueType>>(alpha->as_precision(this));
-    auto dense_beta = as<Dense<ValueType>>(beta->as_precision(this));
+    auto dense_alpha = as<MultiVector<ValueType>>(alpha->as_precision(this));
+    auto dense_beta = as<MultiVector<ValueType>>(beta->as_precision(this));
     auto converted_x = x->as_precision(this);
 
     converted_x->scale(dense_beta.get());

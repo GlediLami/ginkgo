@@ -262,7 +262,7 @@ void Ilu<ValueType, ReverseApply, IndexType>::set_cache_to(
 {
     if (cache_.intermediate == nullptr) {
         cache_.intermediate =
-            matrix::Dense<value_type>::create(this->get_executor());
+            matrix::MultiVector<value_type>::create(this->get_executor());
     }
     // Use b as the initial guess for the first triangular solve
     cache_.intermediate->copy_from(b);

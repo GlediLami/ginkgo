@@ -220,7 +220,7 @@ void CbGmres<ValueType>::apply_impl(const IMultiVector* b,
     }
     precision_dispatch<ValueType>(
         [this](auto converted_b, auto converted_x) {
-            using Vector = matrix::Dense<ValueType>;
+            using Vector = matrix::MultiVector<ValueType>;
 
             auto dense_b = as<Vector>(converted_b);
             auto dense_x = as<Vector>(converted_x);
@@ -230,7 +230,8 @@ void CbGmres<ValueType>::apply_impl(const IMultiVector* b,
             auto apply_templated = [&](auto value) {
                 using storage_type = decltype(value);
 
-                using VectorNorms = matrix::Dense<remove_complex<ValueType>>;
+                using VectorNorms =
+                    matrix::MultiVector<remove_complex<ValueType>>;
                 using Range3dHelper =
                     gko::cb_gmres::Range3dHelper<ValueType, storage_type>;
 
@@ -258,7 +259,7 @@ void CbGmres<ValueType>::apply_impl(const IMultiVector* b,
                 auto krylov_bases_range = helper.get_range();
 
                 auto next_krylov_basis = Vector::create_with_config_of(dense_b);
-                std::shared_ptr<matrix::Dense<ValueType>>
+                std::shared_ptr<matrix::MultiVector<ValueType>>
                     preconditioned_vector =
                         Vector::create_with_config_of(dense_b);
                 auto hessenberg = Vector::create(
@@ -337,9 +338,11 @@ void CbGmres<ValueType>::apply_impl(const IMultiVector* b,
                 size_type restart_iter = 0;
 
                 auto before_preconditioner =
-                    matrix::Dense<ValueType>::create_with_config_of(dense_x);
+                    matrix::MultiVector<ValueType>::create_with_config_of(
+                        dense_x);
                 auto after_preconditioner =
-                    matrix::Dense<ValueType>::create_with_config_of(dense_x);
+                    matrix::MultiVector<ValueType>::create_with_config_of(
+                        dense_x);
 
                 array<bool> stop_encountered_rhs(exec->get_master(), num_rhs);
                 array<bool> fully_converged_rhs(exec->get_master(), num_rhs);
