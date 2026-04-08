@@ -160,8 +160,8 @@ Jacobi<ValueType, IndexType>::Jacobi(Jacobi&& other)
 
 
 template <typename ValueType, typename IndexType>
-void Jacobi<ValueType, IndexType>::apply_impl(const MultiVector* b,
-                                              MultiVector* x) const
+void Jacobi<ValueType, IndexType>::apply_impl(const IMultiVector* b,
+                                              IMultiVector* x) const
 {
     apply_precision_dispatch<ValueType>(
         [this](auto view_b, auto view_x, auto...) {
@@ -180,10 +180,10 @@ void Jacobi<ValueType, IndexType>::apply_impl(const MultiVector* b,
 
 
 template <typename ValueType, typename IndexType>
-void Jacobi<ValueType, IndexType>::apply_impl(const MultiVector* alpha,
-                                              const MultiVector* b,
-                                              const MultiVector* beta,
-                                              MultiVector* x) const
+void Jacobi<ValueType, IndexType>::apply_impl(const IMultiVector* alpha,
+                                              const IMultiVector* b,
+                                              const IMultiVector* beta,
+                                              IMultiVector* x) const
 {
     apply_precision_dispatch<ValueType>(
         [this](auto dense_alpha, auto view_b, auto dense_beta, auto view_x,

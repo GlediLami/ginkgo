@@ -149,7 +149,7 @@ dim<1> Fft::get_fft_size() const { return dim<1>{this->get_size()[0]}; }
 
 bool Fft::is_inverse() const { return inverse_; }
 
-void check_fft_inputs(const MultiVector* b, const MultiVector* x)
+void check_fft_inputs(const IMultiVector* b, const IMultiVector* x)
 {
     if (b->get_precision() != precision::complex_fp32 &&
         b->get_precision() != precision::complex_fp64 &&
@@ -161,7 +161,7 @@ void check_fft_inputs(const MultiVector* b, const MultiVector* x)
 }
 
 
-void Fft::apply_impl(const MultiVector* b, MultiVector* x) const
+void Fft::apply_impl(const IMultiVector* b, IMultiVector* x) const
 {
     check_fft_inputs(b, x);
     if (b->get_precision() == precision::complex_fp32) {
@@ -178,8 +178,8 @@ void Fft::apply_impl(const MultiVector* b, MultiVector* x) const
 }
 
 
-void Fft::apply_impl(const MultiVector* alpha, const MultiVector* b,
-                     const MultiVector* beta, MultiVector* x) const
+void Fft::apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                     const IMultiVector* beta, IMultiVector* x) const
 {
     auto clone_x = x->clone();
     this->apply_impl(b, clone_x.get());
@@ -250,7 +250,7 @@ dim<2> Fft2::get_fft_size() const { return fft_size_; }
 bool Fft2::is_inverse() const { return inverse_; }
 
 
-void Fft2::apply_impl(const MultiVector* b, MultiVector* x) const
+void Fft2::apply_impl(const IMultiVector* b, IMultiVector* x) const
 {
     check_fft_inputs(b, x);
 
@@ -268,8 +268,8 @@ void Fft2::apply_impl(const MultiVector* b, MultiVector* x) const
 }
 
 
-void Fft2::apply_impl(const MultiVector* alpha, const MultiVector* b,
-                      const MultiVector* beta, MultiVector* x) const
+void Fft2::apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                      const IMultiVector* beta, IMultiVector* x) const
 {
     auto clone_x = x->clone();
     this->apply_impl(b, clone_x.get());
@@ -356,7 +356,7 @@ dim<3> Fft3::get_fft_size() const { return fft_size_; }
 bool Fft3::is_inverse() const { return inverse_; }
 
 
-void Fft3::apply_impl(const MultiVector* b, MultiVector* x) const
+void Fft3::apply_impl(const IMultiVector* b, IMultiVector* x) const
 {
     check_fft_inputs(b, x);
 
@@ -374,8 +374,8 @@ void Fft3::apply_impl(const MultiVector* b, MultiVector* x) const
 }
 
 
-void Fft3::apply_impl(const MultiVector* alpha, const MultiVector* b,
-                      const MultiVector* beta, MultiVector* x) const
+void Fft3::apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                      const IMultiVector* beta, IMultiVector* x) const
 {
     auto clone_x = x->clone();
     this->apply_impl(b, clone_x.get());

@@ -329,7 +329,7 @@ Idr<ValueType>::Idr(const Factory* factory,
 
 
 template <typename ValueType>
-void Idr<ValueType>::apply_impl(const MultiVector* b, MultiVector* x) const
+void Idr<ValueType>::apply_impl(const IMultiVector* b, IMultiVector* x) const
 {
     if (!this->get_system_matrix()) {
         return;
@@ -352,8 +352,9 @@ void Idr<ValueType>::apply_impl(const MultiVector* b, MultiVector* x) const
 
 
 template <typename ValueType>
-void Idr<ValueType>::apply_impl(const MultiVector* alpha, const MultiVector* b,
-                                const MultiVector* beta, MultiVector* x) const
+void Idr<ValueType>::apply_impl(const IMultiVector* alpha,
+                                const IMultiVector* b, const IMultiVector* beta,
+                                IMultiVector* x) const
 {
     if (!this->get_system_matrix()) {
         return;

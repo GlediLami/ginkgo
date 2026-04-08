@@ -115,7 +115,7 @@ class Dense : public EnableMultiVector<Dense<ValueType>>,
               public WritableToMatrixData<ValueType, int32>,
               public WritableToMatrixData<ValueType, int64>,
               public ScaledIdentityAddable {
-    friend class EnablePolymorphicObject<Dense, MultiVector>;
+    friend class EnablePolymorphicObject<Dense, IMultiVector>;
     friend class Coo<ValueType, int32>;
     friend class Coo<ValueType, int64>;
     friend class Csr<ValueType, int32>;
@@ -585,13 +585,13 @@ public:
      *                        matrix and `gather_indices->get_size()` rows.
      */
     void row_gather(const array<int32>* gather_indices,
-                    ptr_param<MultiVector> row_collection) const;
+                    ptr_param<IMultiVector> row_collection) const;
 
     /**
      * @copydoc row_gather(const array<int32>*, LinOp*) const
      */
     void row_gather(const array<int64>* gather_indices,
-                    ptr_param<MultiVector> row_collection) const;
+                    ptr_param<IMultiVector> row_collection) const;
 
     /**
      * Copies the given rows from this matrix into `row_collection` with scaling
@@ -606,19 +606,19 @@ public:
      *             It must have the same number of columns as this
      *             matrix and `gather_indices->get_size()` rows.
      */
-    void row_gather(ptr_param<const MultiVector> alpha,
+    void row_gather(ptr_param<const IMultiVector> alpha,
                     const array<int32>* gather_indices,
-                    ptr_param<const MultiVector> beta,
-                    ptr_param<MultiVector> row_collection) const;
+                    ptr_param<const IMultiVector> beta,
+                    ptr_param<IMultiVector> row_collection) const;
 
     /**
      * @copydoc row_gather(const LinOp*, const array<int32>*, const LinOp*,
      * LinOp*) const
      */
-    void row_gather(ptr_param<const MultiVector> alpha,
+    void row_gather(ptr_param<const IMultiVector> alpha,
                     const array<int64>* gather_indices,
-                    ptr_param<const MultiVector> beta,
-                    ptr_param<MultiVector> row_collection) const;
+                    ptr_param<const IMultiVector> beta,
+                    ptr_param<IMultiVector> row_collection) const;
 
     std::unique_ptr<Dense> column_permute(
         const array<int32>* permutation_indices) const;
@@ -800,7 +800,7 @@ public:
      *                (the number of columns in the vector must match the number
      *                of columns of this)
      */
-    void compute_mean(ptr_param<MultiVector> result) const;
+    void compute_mean(ptr_param<IMultiVector> result) const;
 
     /**
      * Computes the column-wise arithmetic mean of this matrix.
@@ -812,7 +812,7 @@ public:
      *             reduction computation. It may be resized and/or reset to the
      *             correct executor.
      */
-    void compute_mean(ptr_param<MultiVector> result, array<char>& tmp) const;
+    void compute_mean(ptr_param<IMultiVector> result, array<char>& tmp) const;
 
     template <typename OtherValueType>
     [[nodiscard]] gko::detail::temporary_conversion<Dense<OtherValueType>>
@@ -1005,7 +1005,7 @@ protected:
     /**
      * @copydoc compute_mean(LinOp*) const
      */
-    virtual void compute_mean_impl(MultiVector* result) const;
+    virtual void compute_mean_impl(IMultiVector* result) const;
 
     /**
      * Resizes the matrix to the given size.
@@ -1145,8 +1145,8 @@ private:
     size_type stride_;
     array<value_type> values_;
 
-    void add_scaled_identity_impl(const MultiVector* a,
-                                  const MultiVector* b) override;
+    void add_scaled_identity_impl(const IMultiVector* a,
+                                  const IMultiVector* b) override;
 };
 
 

@@ -114,10 +114,10 @@ protected:
     RowGatherer(std::shared_ptr<const Executor> exec, const dim<2>& size,
                 array<index_type> row_idxs);
 
-    void apply_impl(const MultiVector* in, MultiVector* out) const override;
+    void apply_impl(const IMultiVector* in, IMultiVector* out) const override;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* in,
-                    const MultiVector* beta, MultiVector* out) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* in,
+                    const IMultiVector* beta, IMultiVector* out) const override;
 
 private:
     gko::array<index_type> row_idxs_;

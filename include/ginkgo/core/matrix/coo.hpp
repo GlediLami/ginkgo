@@ -239,13 +239,15 @@ public:
      * @param b  the input vector(s) on which the operator is applied
      * @param x  the output vector(s) where the result is stored
      */
-    void apply2(ptr_param<const MultiVector> b, ptr_param<MultiVector> x) const;
+    void apply2(ptr_param<const IMultiVector> b,
+                ptr_param<IMultiVector> x) const;
 
     /**
      * @copydoc apply2(const LinOp *, const LinOp *, LinOp *)
      */
-    void apply2(ptr_param<const MultiVector> alpha,
-                ptr_param<const MultiVector> b, ptr_param<MultiVector> x) const;
+    void apply2(ptr_param<const IMultiVector> alpha,
+                ptr_param<const IMultiVector> b,
+                ptr_param<IMultiVector> x) const;
 
     /**
      * Creates an uninitialized COO matrix of the specified size.
@@ -342,15 +344,15 @@ protected:
      */
     void resize(dim<2> new_size, size_type nnz);
 
-    void apply_impl(const MultiVector* b, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* b, IMultiVector* x) const override;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                    const MultiVector* beta, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                    const IMultiVector* beta, IMultiVector* x) const override;
 
-    void apply2_impl(const MultiVector* b, MultiVector* x) const;
+    void apply2_impl(const IMultiVector* b, IMultiVector* x) const;
 
-    void apply2_impl(const MultiVector* alpha, const MultiVector* b,
-                     MultiVector* x) const;
+    void apply2_impl(const IMultiVector* alpha, const IMultiVector* b,
+                     IMultiVector* x) const;
 
 private:
     array<value_type> values_;

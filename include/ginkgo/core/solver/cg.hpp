@@ -95,14 +95,14 @@ public:
                                  const config::type_descriptor& td_for_child =
                                      config::make_type_descriptor<ValueType>());
 
-    void apply_mv(ptr_param<const MultiVector> b,
-                  ptr_param<MultiVector> x) const;
+    void apply_mv(ptr_param<const IMultiVector> b,
+                  ptr_param<IMultiVector> x) const;
 
 protected:
-    void apply_impl(const MultiVector* b, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* b, IMultiVector* x) const override;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                    const MultiVector* beta, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                    const IMultiVector* beta, IMultiVector* x) const override;
 
     explicit Cg(std::shared_ptr<const Executor> exec);
 

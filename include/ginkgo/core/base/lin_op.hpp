@@ -35,7 +35,7 @@ class Diagonal;
 }  // namespace matrix
 
 
-class MultiVector;
+class IMultiVector;
 
 
 /**
@@ -128,7 +128,8 @@ public:
      * @param b  the input vector(s) on which the operator is applied
      * @param x  the output vector(s) where the result is stored
      */
-    void apply(ptr_param<const MultiVector> b, ptr_param<MultiVector> x) const;
+    void apply(ptr_param<const IMultiVector> b,
+               ptr_param<IMultiVector> x) const;
 
     /**
      * Performs the operation x = alpha * op(b) + beta * x.
@@ -138,10 +139,10 @@ public:
      * @param beta  scaling of the input x
      * @param x  output vector(s)
      */
-    void apply(ptr_param<const MultiVector> alpha,
-               ptr_param<const MultiVector> b,
-               ptr_param<const MultiVector> beta,
-               ptr_param<MultiVector> x) const;
+    void apply(ptr_param<const IMultiVector> alpha,
+               ptr_param<const IMultiVector> b,
+               ptr_param<const IMultiVector> beta,
+               ptr_param<IMultiVector> x) const;
 
     /**
      * Returns the size of the operator.
@@ -209,7 +210,7 @@ protected:
      * @param b  the input vector(s) on which the operator is applied
      * @param x  the output vector(s) where the result is stored
      */
-    virtual void apply_impl(const MultiVector* b, MultiVector* x) const = 0;
+    virtual void apply_impl(const IMultiVector* b, IMultiVector* x) const = 0;
 
     /**
      * Default implementation of apply(const MultiVector*, const MultiVector*,
@@ -221,8 +222,8 @@ protected:
      * @param beta  scaling of the input x
      * @param x  output vector(s)
      */
-    virtual void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                            const MultiVector* beta, MultiVector* x) const;
+    virtual void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                            const IMultiVector* beta, IMultiVector* x) const;
 
     /**
      * Throws a DimensionMismatch exception if the parameters to `apply` are of
@@ -231,8 +232,8 @@ protected:
      * @param b  vector(s) on which the operator is applied
      * @param x  output vector(s)
      */
-    void validate_application_parameters(const MultiVector* b,
-                                         const MultiVector* x) const;
+    void validate_application_parameters(const IMultiVector* b,
+                                         const IMultiVector* x) const;
 
     /**
      * @copydoc validate_application_parameters
@@ -248,10 +249,10 @@ protected:
      * @param beta  scaling of the input x
      * @param x  output vector(s)
      */
-    void validate_application_parameters(const MultiVector* alpha,
-                                         const MultiVector* b,
-                                         const MultiVector* beta,
-                                         const MultiVector* x) const;
+    void validate_application_parameters(const IMultiVector* alpha,
+                                         const IMultiVector* b,
+                                         const IMultiVector* beta,
+                                         const IMultiVector* x) const;
 
 private:
     dim<2> size_{};
@@ -758,12 +759,12 @@ public:
      * @param b  Scalar to multiply this before adding the scaled identity to
      *           it.
      */
-    void add_scaled_identity(ptr_param<const MultiVector> a,
-                             ptr_param<const MultiVector> b);
+    void add_scaled_identity(ptr_param<const IMultiVector> a,
+                             ptr_param<const IMultiVector> b);
 
 private:
-    virtual void add_scaled_identity_impl(const MultiVector* a,
-                                          const MultiVector* b) = 0;
+    virtual void add_scaled_identity_impl(const IMultiVector* a,
+                                          const IMultiVector* b) = 0;
 };
 
 

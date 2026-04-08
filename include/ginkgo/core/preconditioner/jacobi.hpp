@@ -585,10 +585,10 @@ protected:
      */
     void detect_blocks(const matrix::Csr<ValueType, IndexType>* system_matrix);
 
-    void apply_impl(const MultiVector* b, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* b, IMultiVector* x) const override;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                    const MultiVector* beta, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                    const IMultiVector* beta, IMultiVector* x) const override;
 
 private:
     block_interleaved_storage_scheme<index_type> storage_scheme_{};

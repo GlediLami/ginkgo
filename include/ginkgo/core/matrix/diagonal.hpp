@@ -149,7 +149,8 @@ public:
      * @param b  the input vector(s) on which the diagonal matrix is applied
      * @param x  the output vector(s) where the result is stored
      */
-    void rapply(ptr_param<const MultiVector> b, ptr_param<MultiVector> x) const;
+    void rapply(ptr_param<const IMultiVector> b,
+                ptr_param<IMultiVector> x) const;
 
     void rapply(ptr_param<const Csr<ValueType, int32>> b,
                 ptr_param<Csr<ValueType, int32>> x) const;
@@ -166,8 +167,8 @@ public:
      * is applied
      * @param x  the output vector(s) where the result is stored
      */
-    void inverse_apply(ptr_param<const MultiVector> b,
-                       ptr_param<MultiVector> x) const;
+    void inverse_apply(ptr_param<const IMultiVector> b,
+                       ptr_param<IMultiVector> x) const;
 
     void inverse_apply(ptr_param<const Csr<ValueType, int32>> b,
                        ptr_param<Csr<ValueType, int32>> x) const;
@@ -261,10 +262,10 @@ protected:
     Diagonal(std::shared_ptr<const Executor> exec, const size_type size,
              array<value_type> values);
 
-    void apply_impl(const MultiVector* b, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* b, IMultiVector* x) const override;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                    const MultiVector* beta, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                    const IMultiVector* beta, IMultiVector* x) const override;
 
 private:
     array<value_type> values_;

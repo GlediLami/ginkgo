@@ -38,7 +38,7 @@ public:
     static double get_value(const ScalarCache& cache);
 
     // access to the scalars
-    static const std::map<std::string, std::shared_ptr<const MultiVector>>&
+    static const std::map<std::string, std::shared_ptr<const IMultiVector>>&
     get_scalars(const ScalarCache& cache);
 };
 

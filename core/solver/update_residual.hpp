@@ -17,9 +17,9 @@ namespace solver {
 
 
 template <typename SolverType, typename LogFunc>
-bool update_residual(SolverType* solver, int iter, const MultiVector* dense_b,
-                     MultiVector* dense_x, MultiVector* residual,
-                     const MultiVector*& residual_ptr,
+bool update_residual(SolverType* solver, int iter, const IMultiVector* dense_b,
+                     IMultiVector* dense_x, IMultiVector* residual,
+                     const IMultiVector*& residual_ptr,
                      std::unique_ptr<gko::stop::Criterion>& stop_criterion,
                      array<stopping_status>& stop_status, LogFunc log)
 {

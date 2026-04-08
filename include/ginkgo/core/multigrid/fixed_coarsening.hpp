@@ -85,10 +85,10 @@ public:
     GKO_ENABLE_BUILD_METHOD(Factory);
 
 protected:
-    void apply_impl(const MultiVector* b, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* b, IMultiVector* x) const override;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                    const MultiVector* beta, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                    const IMultiVector* beta, IMultiVector* x) const override;
 
     explicit FixedCoarsening(std::shared_ptr<const Executor> exec);
 

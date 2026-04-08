@@ -37,7 +37,8 @@ GKO_REGISTER_OPERATION(outplace_absolute_array,
 
 
 template <typename ValueType>
-void Diagonal<ValueType>::apply_impl(const MultiVector* b, MultiVector* x) const
+void Diagonal<ValueType>::apply_impl(const IMultiVector* b,
+                                     IMultiVector* x) const
 {
     apply_precision_dispatch<ValueType>(
         [this](auto view_b, auto view_x, auto...) {
@@ -69,10 +70,10 @@ void Diagonal<ValueType>::apply(ptr_param<const Csr<ValueType, int64>> b,
 
 
 template <typename ValueType>
-void Diagonal<ValueType>::apply_impl(const MultiVector* alpha,
-                                     const MultiVector* b,
-                                     const MultiVector* beta,
-                                     MultiVector* x) const
+void Diagonal<ValueType>::apply_impl(const IMultiVector* alpha,
+                                     const IMultiVector* b,
+                                     const IMultiVector* beta,
+                                     IMultiVector* x) const
 {
     auto converted_x = x->as_precision(this);
     auto x_clone = converted_x->clone();
@@ -312,8 +313,8 @@ void validate_reverse_application_parameters(const Diagonal<ValueType>* op, T b,
 
 
 template <typename ValueType>
-void Diagonal<ValueType>::rapply(ptr_param<const MultiVector> b,
-                                 ptr_param<MultiVector> x) const
+void Diagonal<ValueType>::rapply(ptr_param<const IMultiVector> b,
+                                 ptr_param<IMultiVector> x) const
 {
     validate_reverse_application_parameters(this, b, x);
     apply_precision_dispatch<ValueType>(
@@ -356,8 +357,8 @@ void validate_inverse_application_parameters(const Diagonal<ValueType>* op, T b,
 
 
 template <typename ValueType>
-void Diagonal<ValueType>::inverse_apply(ptr_param<const MultiVector> b,
-                                        ptr_param<MultiVector> x) const
+void Diagonal<ValueType>::inverse_apply(ptr_param<const IMultiVector> b,
+                                        ptr_param<IMultiVector> x) const
 {
     validate_inverse_application_parameters(this, b, x);
     apply_precision_dispatch<ValueType>(

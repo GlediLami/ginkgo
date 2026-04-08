@@ -72,7 +72,7 @@ std::unique_ptr<LinOp> Fcg<ValueType>::conj_transpose() const
 
 
 template <typename ValueType>
-void Fcg<ValueType>::apply_impl(const MultiVector* b, MultiVector* x) const
+void Fcg<ValueType>::apply_impl(const IMultiVector* b, IMultiVector* x) const
 {
     if (!this->get_system_matrix()) {
         return;
@@ -122,8 +122,8 @@ void Fcg<ValueType>::apply_impl(const MultiVector* b, MultiVector* x) const
                                              r);
             auto stop_criterion = this->get_stop_criterion_factory()->generate(
                 this->get_system_matrix(),
-                std::shared_ptr<const MultiVector>(converted_b,
-                                                   [](const MultiVector*) {}),
+                std::shared_ptr<const IMultiVector>(converted_b,
+                                                    [](const IMultiVector*) {}),
                 converted_x, r);
 
             int iter = -1;
@@ -186,8 +186,9 @@ void Fcg<ValueType>::apply_impl(const MultiVector* b, MultiVector* x) const
 
 
 template <typename ValueType>
-void Fcg<ValueType>::apply_impl(const MultiVector* alpha, const MultiVector* b,
-                                const MultiVector* beta, MultiVector* x) const
+void Fcg<ValueType>::apply_impl(const IMultiVector* alpha,
+                                const IMultiVector* b, const IMultiVector* beta,
+                                IMultiVector* x) const
 {
     if (!this->get_system_matrix()) {
         return;

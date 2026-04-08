@@ -73,7 +73,7 @@ class Vector : public EnableMultiVector<Vector<ValueType>>,
                public ConvertibleTo<Vector<next_precision<ValueType, 3>>>,
 #endif
                public DistributedBase {
-    friend class EnablePolymorphicObject<Vector, MultiVector>;
+    friend class EnablePolymorphicObject<Vector, IMultiVector>;
     friend class Vector<to_complex<ValueType>>;
     friend class Vector<remove_complex<ValueType>>;
     friend class Vector<previous_precision<ValueType>>;
@@ -172,7 +172,7 @@ public:
      *                (the number of columns in result must match the number
      *                of columns of this)
      */
-    void compute_mean(ptr_param<MultiVector> result) const;
+    void compute_mean(ptr_param<IMultiVector> result) const;
 
     /**
      * Computes the column-wise arithmetic mean of this (multi-)vector using a
@@ -185,7 +185,7 @@ public:
      *             reduction computation. It may be resized and/or reset to the
      *             correct executor.
      */
-    void compute_mean(ptr_param<MultiVector> result, array<char>& tmp) const;
+    void compute_mean(ptr_param<IMultiVector> result, array<char>& tmp) const;
 
     /**
      * Returns a single element of the multi-vector.

@@ -15,17 +15,18 @@ namespace matrix {
 
 
 template <typename ValueType>
-void Identity<ValueType>::apply_impl(const MultiVector* b, MultiVector* x) const
+void Identity<ValueType>::apply_impl(const IMultiVector* b,
+                                     IMultiVector* x) const
 {
     x->copy_from(b);
 }
 
 
 template <typename ValueType>
-void Identity<ValueType>::apply_impl(const MultiVector* alpha,
-                                     const MultiVector* b,
-                                     const MultiVector* beta,
-                                     MultiVector* x) const
+void Identity<ValueType>::apply_impl(const IMultiVector* alpha,
+                                     const IMultiVector* b,
+                                     const IMultiVector* beta,
+                                     IMultiVector* x) const
 {
     auto dense_alpha = as<Dense<ValueType>>(alpha->as_precision(this));
     auto dense_beta = as<Dense<ValueType>>(beta->as_precision(this));

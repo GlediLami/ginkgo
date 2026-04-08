@@ -127,7 +127,7 @@ Csr<ValueType, IndexType>::create_const(
 
 
 template <typename ValueType, typename IndexType>
-void Csr<ValueType, IndexType>::scale(ptr_param<const MultiVector> alpha)
+void Csr<ValueType, IndexType>::scale(ptr_param<const IMultiVector> alpha)
 
 {
     auto exec = this->get_executor();
@@ -137,7 +137,7 @@ void Csr<ValueType, IndexType>::scale(ptr_param<const MultiVector> alpha)
 
 
 template <typename ValueType, typename IndexType>
-void Csr<ValueType, IndexType>::inv_scale(ptr_param<const MultiVector> alpha)
+void Csr<ValueType, IndexType>::inv_scale(ptr_param<const IMultiVector> alpha)
 
 {
     auto exec = this->get_executor();
@@ -274,8 +274,8 @@ Csr<ValueType, IndexType>::Csr(Csr<ValueType, IndexType>&& other)
 
 
 template <typename ValueType, typename IndexType>
-void Csr<ValueType, IndexType>::apply_impl(const MultiVector* b,
-                                           MultiVector* x) const
+void Csr<ValueType, IndexType>::apply_impl(const IMultiVector* b,
+                                           IMultiVector* x) const
 {
     apply_mixed_precision_dispatch<ValueType>(
         [this](auto view_b, auto view_x, auto...) {
@@ -286,10 +286,10 @@ void Csr<ValueType, IndexType>::apply_impl(const MultiVector* b,
 
 
 template <typename ValueType, typename IndexType>
-void Csr<ValueType, IndexType>::apply_impl(const MultiVector* alpha,
-                                           const MultiVector* b,
-                                           const MultiVector* beta,
-                                           MultiVector* x) const
+void Csr<ValueType, IndexType>::apply_impl(const IMultiVector* alpha,
+                                           const IMultiVector* b,
+                                           const IMultiVector* beta,
+                                           IMultiVector* x) const
 {
     apply_mixed_precision_dispatch<ValueType>(
         [this](auto dense_alpha, auto view_b, auto dense_beta, auto view_x,
@@ -1551,7 +1551,7 @@ Csr<ValueType, IndexType>::compute_absolute() const
 
 
 template <typename ValueType, typename IndexType>
-void Csr<ValueType, IndexType>::scale_impl(const MultiVector* alpha)
+void Csr<ValueType, IndexType>::scale_impl(const IMultiVector* alpha)
 {
     auto exec = this->get_executor();
     exec->run(csr::make_scale(as<Dense<ValueType>>(alpha->as_precision(this))
@@ -1561,7 +1561,7 @@ void Csr<ValueType, IndexType>::scale_impl(const MultiVector* alpha)
 
 
 template <typename ValueType, typename IndexType>
-void Csr<ValueType, IndexType>::inv_scale_impl(const MultiVector* alpha)
+void Csr<ValueType, IndexType>::inv_scale_impl(const IMultiVector* alpha)
 {
     auto exec = this->get_executor();
     exec->run(
@@ -1572,8 +1572,8 @@ void Csr<ValueType, IndexType>::inv_scale_impl(const MultiVector* alpha)
 
 
 template <typename ValueType, typename IndexType>
-void Csr<ValueType, IndexType>::add_scaled_identity_impl(const MultiVector* a,
-                                                         const MultiVector* b)
+void Csr<ValueType, IndexType>::add_scaled_identity_impl(const IMultiVector* a,
+                                                         const IMultiVector* b)
 {
     bool has_diags{false};
     this->get_executor()->run(

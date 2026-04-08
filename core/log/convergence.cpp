@@ -22,8 +22,8 @@ namespace log {
 template <typename ValueType>
 void Convergence<ValueType>::on_criterion_check_completed(
     const stop::Criterion* criterion, const size_type& num_iterations,
-    const MultiVector* residual, const MultiVector* residual_norm,
-    const MultiVector* implicit_sq_resnorm, const MultiVector* solution,
+    const IMultiVector* residual, const IMultiVector* residual_norm,
+    const IMultiVector* implicit_sq_resnorm, const IMultiVector* solution,
     const uint8& stopping_id, const bool& set_finalized,
     const array<stopping_status>* status, const bool& one_changed,
     const bool& stopped) const
@@ -37,8 +37,8 @@ void Convergence<ValueType>::on_criterion_check_completed(
 template <typename ValueType>
 void Convergence<ValueType>::on_criterion_check_completed(
     const stop::Criterion* criterion, const size_type& num_iterations,
-    const MultiVector* residual, const MultiVector* residual_norm,
-    const MultiVector* solution, const uint8& stopping_id,
+    const IMultiVector* residual, const IMultiVector* residual_norm,
+    const IMultiVector* solution, const uint8& stopping_id,
     const bool& set_finalized, const array<stopping_status>* status,
     const bool& one_changed, const bool& stopped) const
 {
@@ -50,9 +50,9 @@ void Convergence<ValueType>::on_criterion_check_completed(
 
 template <typename ValueType>
 void Convergence<ValueType>::on_iteration_complete(
-    const LinOp* solver, const MultiVector* b, const MultiVector* x,
-    const size_type& num_iterations, const MultiVector* residual,
-    const MultiVector* residual_norm, const MultiVector* implicit_resnorm_sq,
+    const LinOp* solver, const IMultiVector* b, const IMultiVector* x,
+    const size_type& num_iterations, const IMultiVector* residual,
+    const IMultiVector* residual_norm, const IMultiVector* implicit_resnorm_sq,
     const array<stopping_status>* status, const bool stopped) const
 {
     if (stopped) {
@@ -144,14 +144,14 @@ const size_type& Convergence<ValueType>::get_num_iterations() const noexcept
 
 
 template <typename ValueType>
-const MultiVector* Convergence<ValueType>::get_residual() const noexcept
+const IMultiVector* Convergence<ValueType>::get_residual() const noexcept
 {
     return residual_.get();
 }
 
 
 template <typename ValueType>
-const MultiVector* Convergence<ValueType>::get_residual_norm() const noexcept
+const IMultiVector* Convergence<ValueType>::get_residual_norm() const noexcept
 
 {
     return residual_norm_.get();
@@ -159,7 +159,7 @@ const MultiVector* Convergence<ValueType>::get_residual_norm() const noexcept
 
 
 template <typename ValueType>
-const MultiVector* Convergence<ValueType>::get_implicit_sq_resnorm()
+const IMultiVector* Convergence<ValueType>::get_implicit_sq_resnorm()
     const noexcept
 
 {

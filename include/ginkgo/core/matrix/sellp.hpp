@@ -381,10 +381,10 @@ protected:
     Sellp(std::shared_ptr<const Executor> exec, const dim<2>& size,
           size_type slice_size, size_type stride_factor, size_type total_cols);
 
-    void apply_impl(const MultiVector* b, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* b, IMultiVector* x) const override;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                    const MultiVector* beta, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                    const IMultiVector* beta, IMultiVector* x) const override;
 
     size_type linearize_index(size_type row, size_type slice_set,
                               size_type col) const noexcept

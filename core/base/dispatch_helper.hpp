@@ -259,7 +259,7 @@ auto run(std::shared_ptr<T> obj, Func&& f, Args&&... args)
  * @param x Output vector
  */
 template <typename ValueType, typename Fn>
-void precision_dispatch(Fn&& fn, const MultiVector* b, MultiVector* x)
+void precision_dispatch(Fn&& fn, const IMultiVector* b, IMultiVector* x)
 {
     auto p = type_to_precision<ValueType>;
     if constexpr (!is_complex<ValueType>()) {
@@ -278,7 +278,7 @@ void precision_dispatch(Fn&& fn, const MultiVector* b, MultiVector* x)
  *       fn(device_view_type<ValueType>, device_view_type<ValueType>)
  */
 template <typename ValueType, typename Fn>
-void apply_precision_dispatch(Fn&& fn, const MultiVector* b, MultiVector* x)
+void apply_precision_dispatch(Fn&& fn, const IMultiVector* b, IMultiVector* x)
 {
     precision_dispatch<ValueType>(
         [&fn](auto b_, auto x_) {
@@ -298,9 +298,9 @@ void apply_precision_dispatch(Fn&& fn, const MultiVector* b, MultiVector* x)
  *          device_view_type<ValueType>)
  */
 template <typename ValueType, typename Fn>
-void apply_precision_dispatch(Fn&& fn, const MultiVector* alpha,
-                              const MultiVector* b, const MultiVector* beta,
-                              MultiVector* x)
+void apply_precision_dispatch(Fn&& fn, const IMultiVector* alpha,
+                              const IMultiVector* b, const IMultiVector* beta,
+                              IMultiVector* x)
 {
     auto p = type_to_precision<ValueType>;
     auto dense_alpha = as<matrix::Dense<ValueType>>(alpha->as_precision(p));
@@ -335,7 +335,7 @@ void apply_precision_dispatch(Fn&& fn, const MultiVector* alpha,
  * @param x Output vector
  */
 template <typename ValueType, typename Fn>
-void mixed_precision_dispatch(Fn&& fn, const MultiVector* b, MultiVector* x)
+void mixed_precision_dispatch(Fn&& fn, const IMultiVector* b, IMultiVector* x)
 {
 #ifdef GINKGO_MIXED_PRECISION
     auto precision_b = precision_to_variant(b->get_precision());
@@ -381,8 +381,8 @@ void mixed_precision_dispatch(Fn&& fn, const MultiVector* b, MultiVector* x)
  *          ValueTypeIn, ValueTypeOut)
  */
 template <typename ValueType, typename Fn>
-void apply_mixed_precision_dispatch(Fn&& fn, const MultiVector* b,
-                                    MultiVector* x)
+void apply_mixed_precision_dispatch(Fn&& fn, const IMultiVector* b,
+                                    IMultiVector* x)
 {
     mixed_precision_dispatch<ValueType>(
         [&fn](auto b_, auto x_, auto p_b, auto p_x) {
@@ -408,9 +408,9 @@ void apply_mixed_precision_dispatch(Fn&& fn, const MultiVector* b,
  * @param beta input scalar converted to precision of x if necessary
  */
 template <typename ValueType, typename Fn>
-void apply_mixed_precision_dispatch(Fn&& fn, const MultiVector* alpha,
-                                    const MultiVector* b,
-                                    const MultiVector* beta, MultiVector* x)
+void apply_mixed_precision_dispatch(Fn&& fn, const IMultiVector* alpha,
+                                    const IMultiVector* b,
+                                    const IMultiVector* beta, IMultiVector* x)
 {
 #ifdef GINKGO_MIXED_PRECISION
     auto dense_alpha = as<matrix::Dense<ValueType>>(

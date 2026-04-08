@@ -9,33 +9,33 @@
 namespace gko {
 
 
-MultiVector::MultiVector(std::shared_ptr<const Executor> exec,
-                         const dim<2>& size, precision p)
+IMultiVector::IMultiVector(std::shared_ptr<const Executor> exec,
+                           const dim<2>& size, precision p)
     : EnableAbstractPolymorphicObject(std::move(exec)),
       size_(size),
       precision_(p)
 {}
 
 
-void MultiVector::set_size(const dim<2>& value) noexcept { size_ = value; }
+void IMultiVector::set_size(const dim<2>& value) noexcept { size_ = value; }
 
 
-std::unique_ptr<MultiVector> MultiVector::create_with_config_of(
-    ptr_param<const MultiVector> other)
+std::unique_ptr<IMultiVector> IMultiVector::create_with_config_of(
+    ptr_param<const IMultiVector> other)
 {
     return other->create_generic_with_same_config_impl();
 }
 
 
-std::unique_ptr<MultiVector> MultiVector::create_with_type_of(
-    ptr_param<const MultiVector> other, std::shared_ptr<const Executor> exec)
+std::unique_ptr<IMultiVector> IMultiVector::create_with_type_of(
+    ptr_param<const IMultiVector> other, std::shared_ptr<const Executor> exec)
 {
     return other->create_generic_with_type_of_impl(std::move(exec), {}, {}, 0);
 }
 
 
-std::unique_ptr<MultiVector> MultiVector::create_with_type_of(
-    ptr_param<const MultiVector> other, std::shared_ptr<const Executor> exec,
+std::unique_ptr<IMultiVector> IMultiVector::create_with_type_of(
+    ptr_param<const IMultiVector> other, std::shared_ptr<const Executor> exec,
     const dim<2>& global_size, const dim<2>& local_size)
 {
     GKO_ASSERT_EQUAL_COLS(global_size, local_size);
@@ -44,8 +44,8 @@ std::unique_ptr<MultiVector> MultiVector::create_with_type_of(
 }
 
 
-std::unique_ptr<MultiVector> MultiVector::create_with_type_of(
-    ptr_param<const MultiVector> other, std::shared_ptr<const Executor> exec,
+std::unique_ptr<IMultiVector> IMultiVector::create_with_type_of(
+    ptr_param<const IMultiVector> other, std::shared_ptr<const Executor> exec,
     const dim<2>& global_size, const dim<2>& local_size, size_type stride)
 {
     return other->create_generic_with_type_of_impl(std::move(exec), global_size,
@@ -53,65 +53,65 @@ std::unique_ptr<MultiVector> MultiVector::create_with_type_of(
 }
 
 
-std::unique_ptr<MultiVector> MultiVector::compute_absolute() const
+std::unique_ptr<IMultiVector> IMultiVector::compute_absolute() const
 {
     return this->compute_absolute_generic_impl();
 }
 
 
-void MultiVector::compute_absolute(ptr_param<MultiVector> output) const
+void IMultiVector::compute_absolute(ptr_param<IMultiVector> output) const
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(this, output);
     this->compute_absolute_generic_impl(output.get());
 }
 
 
-void MultiVector::compute_absolute_inplace()
+void IMultiVector::compute_absolute_inplace()
 {
     this->compute_absolute_inplace_impl();
 }
 
 
-std::unique_ptr<MultiVector> MultiVector::make_complex() const
+std::unique_ptr<IMultiVector> IMultiVector::make_complex() const
 {
     return this->make_complex_generic_impl();
 }
 
 
-void MultiVector::make_complex(ptr_param<MultiVector> result) const
+void IMultiVector::make_complex(ptr_param<IMultiVector> result) const
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(this, result);
     this->make_complex_generic_impl(result.get());
 }
 
 
-std::unique_ptr<MultiVector> MultiVector::get_real() const
+std::unique_ptr<IMultiVector> IMultiVector::get_real() const
 {
     return this->get_real_generic_impl();
 }
 
 
-void MultiVector::get_real(ptr_param<MultiVector> result) const
+void IMultiVector::get_real(ptr_param<IMultiVector> result) const
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(this, result);
     this->get_real_generic_impl(result.get());
 }
 
 
-std::unique_ptr<MultiVector> MultiVector::get_imag() const
+std::unique_ptr<IMultiVector> IMultiVector::get_imag() const
 {
     return this->get_imag_generic_impl();
 }
 
 
-void MultiVector::get_imag(ptr_param<MultiVector> result) const
+void IMultiVector::get_imag(ptr_param<IMultiVector> result) const
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(this, result);
     this->get_imag_generic_impl(result.get());
 }
 
 
-void MultiVector::fill(any_scalar value) { this->fill_impl(value); }
+void IMultiVector::fill(any_scalar value) { this->fill_impl(value); }
 
 
 #define GKO_ASSERT_IS_DENSE(alpha)                                           \
@@ -132,7 +132,7 @@ void MultiVector::fill(any_scalar value) { this->fill_impl(value); }
                   "semi-colon warnings")
 
 
-void MultiVector::scale(ptr_param<const MultiVector> alpha)
+void IMultiVector::scale(ptr_param<const IMultiVector> alpha)
 {
     GKO_ASSERT_IS_DENSE(alpha);
     GKO_ASSERT_EQUAL_ROWS(alpha, dim<2>(1, 1));
@@ -144,7 +144,7 @@ void MultiVector::scale(ptr_param<const MultiVector> alpha)
 }
 
 
-void MultiVector::inv_scale(ptr_param<const MultiVector> alpha)
+void IMultiVector::inv_scale(ptr_param<const IMultiVector> alpha)
 {
     GKO_ASSERT_IS_DENSE(alpha);
     GKO_ASSERT_EQUAL_ROWS(alpha, dim<2>(1, 1));
@@ -156,8 +156,8 @@ void MultiVector::inv_scale(ptr_param<const MultiVector> alpha)
 }
 
 
-void MultiVector::add_scaled(ptr_param<const MultiVector> alpha,
-                             ptr_param<const MultiVector> b)
+void IMultiVector::add_scaled(ptr_param<const IMultiVector> alpha,
+                              ptr_param<const IMultiVector> b)
 {
     GKO_ASSERT_IS_DENSE(alpha);
     GKO_ASSERT_EQUAL_ROWS(alpha, dim<2>(1, 1));
@@ -170,8 +170,8 @@ void MultiVector::add_scaled(ptr_param<const MultiVector> alpha,
 }
 
 
-void MultiVector::sub_scaled(ptr_param<const MultiVector> alpha,
-                             ptr_param<const MultiVector> b)
+void IMultiVector::sub_scaled(ptr_param<const IMultiVector> alpha,
+                              ptr_param<const IMultiVector> b)
 {
     GKO_ASSERT_IS_DENSE(alpha);
     GKO_ASSERT_EQUAL_ROWS(alpha, dim<2>(1, 1));
@@ -184,8 +184,8 @@ void MultiVector::sub_scaled(ptr_param<const MultiVector> alpha,
 }
 
 
-void MultiVector::compute_dot(ptr_param<const MultiVector> b,
-                              ptr_param<MultiVector> result) const
+void IMultiVector::compute_dot(ptr_param<const IMultiVector> b,
+                               ptr_param<IMultiVector> result) const
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(this, b);
     GKO_ASSERT_EQUAL_DIMENSIONS(result, dim<2>(1, this->get_size()[1]));
@@ -193,9 +193,9 @@ void MultiVector::compute_dot(ptr_param<const MultiVector> b,
 }
 
 
-void MultiVector::compute_dot(ptr_param<const MultiVector> b,
-                              ptr_param<MultiVector> result,
-                              array<char>& tmp) const
+void IMultiVector::compute_dot(ptr_param<const IMultiVector> b,
+                               ptr_param<IMultiVector> result,
+                               array<char>& tmp) const
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(this, b);
     GKO_ASSERT_EQUAL_DIMENSIONS(result, dim<2>(1, this->get_size()[1]));
@@ -203,8 +203,8 @@ void MultiVector::compute_dot(ptr_param<const MultiVector> b,
 }
 
 
-void MultiVector::compute_conj_dot(ptr_param<const MultiVector> b,
-                                   ptr_param<MultiVector> result) const
+void IMultiVector::compute_conj_dot(ptr_param<const IMultiVector> b,
+                                    ptr_param<IMultiVector> result) const
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(this, b);
     GKO_ASSERT_EQUAL_DIMENSIONS(result, dim<2>(1, this->get_size()[1]));
@@ -212,9 +212,9 @@ void MultiVector::compute_conj_dot(ptr_param<const MultiVector> b,
 }
 
 
-void MultiVector::compute_conj_dot(ptr_param<const MultiVector> b,
-                                   ptr_param<MultiVector> result,
-                                   array<char>& tmp) const
+void IMultiVector::compute_conj_dot(ptr_param<const IMultiVector> b,
+                                    ptr_param<IMultiVector> result,
+                                    array<char>& tmp) const
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(this, b);
     GKO_ASSERT_EQUAL_DIMENSIONS(result, dim<2>(1, this->get_size()[1]));
@@ -222,155 +222,155 @@ void MultiVector::compute_conj_dot(ptr_param<const MultiVector> b,
 }
 
 
-void MultiVector::compute_norm2(ptr_param<MultiVector> result) const
+void IMultiVector::compute_norm2(ptr_param<IMultiVector> result) const
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(result, dim<2>(1, this->get_size()[1]));
     this->compute_norm2_impl(result.get());
 }
 
 
-void MultiVector::compute_norm2(ptr_param<MultiVector> result,
-                                array<char>& tmp) const
+void IMultiVector::compute_norm2(ptr_param<IMultiVector> result,
+                                 array<char>& tmp) const
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(result, dim<2>(1, this->get_size()[1]));
     this->compute_norm2_impl(result.get(), tmp);
 }
 
 
-void MultiVector::compute_squared_norm2(ptr_param<MultiVector> result) const
+void IMultiVector::compute_squared_norm2(ptr_param<IMultiVector> result) const
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(result, dim<2>(1, this->get_size()[1]));
     this->compute_squared_norm2_impl(result.get());
 }
 
 
-void MultiVector::compute_squared_norm2(ptr_param<MultiVector> result,
-                                        array<char>& tmp) const
+void IMultiVector::compute_squared_norm2(ptr_param<IMultiVector> result,
+                                         array<char>& tmp) const
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(result, dim<2>(1, this->get_size()[1]));
     this->compute_squared_norm2_impl(result.get(), tmp);
 }
 
 
-void MultiVector::compute_norm1(ptr_param<MultiVector> result) const
+void IMultiVector::compute_norm1(ptr_param<IMultiVector> result) const
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(result, dim<2>(1, this->get_size()[1]));
     this->compute_norm1_impl(result.get());
 }
 
 
-void MultiVector::compute_norm1(ptr_param<MultiVector> result,
-                                array<char>& tmp) const
+void IMultiVector::compute_norm1(ptr_param<IMultiVector> result,
+                                 array<char>& tmp) const
 {
     GKO_ASSERT_EQUAL_DIMENSIONS(result, dim<2>(1, this->get_size()[1]));
     this->compute_norm1_impl(result.get(), tmp);
 }
 
 
-std::unique_ptr<const MultiVector> MultiVector::create_real_view() const
+std::unique_ptr<const IMultiVector> IMultiVector::create_real_view() const
 {
     return this->create_real_view_generic_impl();
 }
 
 
-std::unique_ptr<MultiVector> MultiVector::create_real_view()
+std::unique_ptr<IMultiVector> IMultiVector::create_real_view()
 {
     return this->create_real_view_generic_impl();
 }
 
 
-std::unique_ptr<MultiVector> MultiVector::create_subview(local_span rows,
-                                                         local_span columns)
+std::unique_ptr<IMultiVector> IMultiVector::create_subview(local_span rows,
+                                                           local_span columns)
 {
     return this->create_subview_generic_impl(rows, columns);
 }
 
 
-std::unique_ptr<const MultiVector> MultiVector::create_subview(
+std::unique_ptr<const IMultiVector> IMultiVector::create_subview(
     local_span rows, local_span columns) const
 {
     return this->create_subview_generic_impl(rows, columns);
 }
 
 
-std::unique_ptr<const MultiVector> MultiVector::create_subview(
+std::unique_ptr<const IMultiVector> IMultiVector::create_subview(
     local_span rows, local_span columns, dim<2> global_size) const
 {
     return this->create_subview_generic_impl(rows, columns, global_size);
 }
 
 
-std::unique_ptr<MultiVector> MultiVector::create_subview(local_span rows,
-                                                         local_span columns,
-                                                         dim<2> global_size)
+std::unique_ptr<IMultiVector> IMultiVector::create_subview(local_span rows,
+                                                           local_span columns,
+                                                           dim<2> global_size)
 {
     return this->create_subview_generic_impl(rows, columns, global_size);
 }
 
 
-gko::detail::temporary_conversion<MultiVector> MultiVector::as_precision(
+gko::detail::temporary_conversion<IMultiVector> IMultiVector::as_precision(
     precision p)
 {
     return this->as_precision_impl(p);
 }
 
 
-detail::temporary_conversion<MultiVector> MultiVector::as_precision(
-    ptr_param<const MultiVector> p)
+detail::temporary_conversion<IMultiVector> IMultiVector::as_precision(
+    ptr_param<const IMultiVector> p)
 {
     return this->as_precision_impl(p->get_precision());
 }
 
 
-detail::temporary_conversion<MultiVector> MultiVector::as_precision(
+detail::temporary_conversion<IMultiVector> IMultiVector::as_precision(
     ptr_param<const LinOp> p)
 {
     return this->as_precision_impl(p->get_precision());
 }
 
 
-gko::detail::temporary_conversion<const MultiVector> MultiVector::as_precision(
-    precision p) const
+gko::detail::temporary_conversion<const IMultiVector>
+IMultiVector::as_precision(precision p) const
 {
     return this->as_precision_impl(p);
 }
 
 
-detail::temporary_conversion<const MultiVector> MultiVector::as_precision(
-    ptr_param<const MultiVector> p) const
+detail::temporary_conversion<const IMultiVector> IMultiVector::as_precision(
+    ptr_param<const IMultiVector> p) const
 {
     return this->as_precision_impl(p->get_precision());
 }
 
 
-detail::temporary_conversion<const MultiVector> MultiVector::as_precision(
+detail::temporary_conversion<const IMultiVector> IMultiVector::as_precision(
     ptr_param<const LinOp> p) const
 {
     return this->as_precision_impl(p->get_precision());
 }
 
 
-precision MultiVector::get_precision() const noexcept { return precision_; }
+precision IMultiVector::get_precision() const noexcept { return precision_; }
 
 
-dim<2> MultiVector::get_size() const noexcept { return size_; }
+dim<2> IMultiVector::get_size() const noexcept { return size_; }
 
 
-MultiVector::MultiVector(const MultiVector& other)
+IMultiVector::IMultiVector(const IMultiVector& other)
     : EnableAbstractPolymorphicObject(other),
       size_(other.size_),
       precision_(other.precision_)
 {}
 
 
-MultiVector::MultiVector(MultiVector&& other)
+IMultiVector::IMultiVector(IMultiVector&& other)
     : EnableAbstractPolymorphicObject(std::move(other)),
       size_(std::exchange(other.size_, {})),
       precision_(other.precision_)
 {}
 
 
-MultiVector& MultiVector::operator=(const MultiVector& other)
+IMultiVector& IMultiVector::operator=(const IMultiVector& other)
 {
     if (this != &other) {
         EnableAbstractPolymorphicObject::operator=(other);
@@ -380,7 +380,7 @@ MultiVector& MultiVector::operator=(const MultiVector& other)
 }
 
 
-MultiVector& MultiVector::operator=(MultiVector&& other)
+IMultiVector& IMultiVector::operator=(IMultiVector&& other)
 {
     if (this != &other) {
         EnableAbstractPolymorphicObject::operator=(std::move(other));
@@ -391,7 +391,7 @@ MultiVector& MultiVector::operator=(MultiVector&& other)
 
 
 template <typename ValueType>
-MultiVector::device_view<ValueType> MultiVector::get_local_device_view()
+IMultiVector::device_view<ValueType> IMultiVector::get_local_device_view()
 {
     if (this->get_precision() != type_to_precision<ValueType>) {
         GKO_INVALID_STATE("Multivector doesn't have the requested precision");
@@ -402,13 +402,13 @@ MultiVector::device_view<ValueType> MultiVector::get_local_device_view()
 }
 
 #define GKO_DECLARE_MULTIVECTOR_CREATE_LOCAL_VIEW(ValueType) \
-    MultiVector::device_view<ValueType> MultiVector::get_local_device_view()
+    IMultiVector::device_view<ValueType> IMultiVector::get_local_device_view()
 GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(GKO_DECLARE_MULTIVECTOR_CREATE_LOCAL_VIEW);
 
 
 template <typename ValueType>
-MultiVector::device_view<const ValueType>
-MultiVector::get_const_local_device_view() const
+IMultiVector::device_view<const ValueType>
+IMultiVector::get_const_local_device_view() const
 {
     if (this->get_precision() != type_to_precision<ValueType>) {
         GKO_INVALID_STATE("Multivector doesn't have the requested precision");
@@ -419,8 +419,8 @@ MultiVector::get_const_local_device_view() const
 }
 
 #define GKO_DECLARE_MULTIVECTOR_CREATE_LOCAL_VIEW_CONST(ValueType) \
-    MultiVector::device_view<const ValueType>                      \
-    MultiVector::get_const_local_device_view() const
+    IMultiVector::device_view<const ValueType>                     \
+    IMultiVector::get_const_local_device_view() const
 GKO_INSTANTIATE_FOR_EACH_VALUE_TYPE(
     GKO_DECLARE_MULTIVECTOR_CREATE_LOCAL_VIEW_CONST);
 

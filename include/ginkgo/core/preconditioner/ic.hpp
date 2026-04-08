@@ -210,10 +210,10 @@ public:
     Ic(Ic&& other);
 
 protected:
-    void apply_impl(const MultiVector* b, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* b, IMultiVector* x) const override;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                    const MultiVector* beta, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                    const IMultiVector* beta, IMultiVector* x) const override;
 
     explicit Ic(std::shared_ptr<const Executor> exec);
 
@@ -226,7 +226,7 @@ protected:
      * @param b  Right hand side of the first solve. Also acts as the
      * initial guess, meaning the intermediate value will be a copy of b
      */
-    void set_cache_to(const MultiVector* b) const;
+    void set_cache_to(const IMultiVector* b) const;
 
 private:
     std::shared_ptr<const LinOp> l_solver_{};

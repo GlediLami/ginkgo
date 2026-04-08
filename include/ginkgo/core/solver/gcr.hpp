@@ -112,13 +112,13 @@ public:
                                      config::make_type_descriptor<ValueType>());
 
 protected:
-    void apply_impl(const MultiVector* b, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* b, IMultiVector* x) const override;
 
     template <typename VectorType>
     void apply_dense_impl(const VectorType* b, VectorType* x) const;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                    const MultiVector* beta, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                    const IMultiVector* beta, IMultiVector* x) const override;
 
     explicit Gcr(std::shared_ptr<const Executor> exec);
 

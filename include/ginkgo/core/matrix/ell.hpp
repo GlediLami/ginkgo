@@ -387,10 +387,10 @@ protected:
      */
     void resize(dim<2> new_size, size_type max_row_nnz);
 
-    void apply_impl(const MultiVector* b, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* b, IMultiVector* x) const override;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                    const MultiVector* beta, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                    const IMultiVector* beta, IMultiVector* x) const override;
 
     size_type linearize_index(size_type row, size_type col) const noexcept
     {

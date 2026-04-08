@@ -36,18 +36,17 @@ GKO_REGISTER_OPERATION(fill_seq_array, components::fill_seq_array);
 
 
 template <typename ValueType, typename IndexType>
-void FixedCoarsening<ValueType, IndexType>::apply_impl(const MultiVector* b,
-                                                       MultiVector* x) const
+void FixedCoarsening<ValueType, IndexType>::apply_impl(const IMultiVector* b,
+                                                       IMultiVector* x) const
 {
     this->get_composition()->apply(b, x);
 }
 
 
 template <typename ValueType, typename IndexType>
-void FixedCoarsening<ValueType, IndexType>::apply_impl(const MultiVector* alpha,
-                                                       const MultiVector* b,
-                                                       const MultiVector* beta,
-                                                       MultiVector* x) const
+void FixedCoarsening<ValueType, IndexType>::apply_impl(
+    const IMultiVector* alpha, const IMultiVector* b, const IMultiVector* beta,
+    IMultiVector* x) const
 {
     this->get_composition()->apply(alpha, b, beta, x);
 }

@@ -154,8 +154,8 @@ Ilu<ValueType, ReverseApply, IndexType>::Ilu(Ilu&& other)
 
 
 template <typename ValueType, bool ReverseApply, typename IndexType>
-void Ilu<ValueType, ReverseApply, IndexType>::apply_impl(const MultiVector* b,
-                                                         MultiVector* x) const
+void Ilu<ValueType, ReverseApply, IndexType>::apply_impl(const IMultiVector* b,
+                                                         IMultiVector* x) const
 
 {
     auto converted_x = x->as_precision(this);
@@ -180,8 +180,8 @@ void Ilu<ValueType, ReverseApply, IndexType>::apply_impl(const MultiVector* b,
 
 template <typename ValueType, bool ReverseApply, typename IndexType>
 void Ilu<ValueType, ReverseApply, IndexType>::apply_impl(
-    const MultiVector* alpha, const MultiVector* b, const MultiVector* beta,
-    MultiVector* x) const
+    const IMultiVector* alpha, const IMultiVector* b, const IMultiVector* beta,
+    IMultiVector* x) const
 {
     if (!ReverseApply) {
         l_solver_->apply(b, cache_.intermediate);
@@ -257,7 +257,7 @@ Ilu<ValueType, ReverseApply, IndexType>::Ilu(
 
 template <typename ValueType, bool ReverseApply, typename IndexType>
 void Ilu<ValueType, ReverseApply, IndexType>::set_cache_to(
-    const MultiVector* b) const
+    const IMultiVector* b) const
 
 {
     if (cache_.intermediate == nullptr) {

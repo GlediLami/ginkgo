@@ -289,7 +289,7 @@ void Dense<ValueType>::compute_squared_norm2_impl(absolute_type* result) const
 
 
 template <typename ValueType>
-void Dense<ValueType>::compute_mean(ptr_param<MultiVector> result) const
+void Dense<ValueType>::compute_mean(ptr_param<IMultiVector> result) const
 {
     auto exec = this->get_executor();
     this->compute_mean_impl(make_temporary_output_clone(exec, result).get());
@@ -297,7 +297,7 @@ void Dense<ValueType>::compute_mean(ptr_param<MultiVector> result) const
 
 
 template <typename ValueType>
-void Dense<ValueType>::compute_mean(ptr_param<MultiVector> result,
+void Dense<ValueType>::compute_mean(ptr_param<IMultiVector> result,
                                     array<char>& tmp) const
 {
     GKO_ASSERT_EQUAL_COLS(result, this);
@@ -314,7 +314,7 @@ void Dense<ValueType>::compute_mean(ptr_param<MultiVector> result,
 
 
 template <typename ValueType>
-void Dense<ValueType>::compute_mean_impl(MultiVector* result) const
+void Dense<ValueType>::compute_mean_impl(IMultiVector* result) const
 {
     auto exec = this->get_executor();
     array<char> tmp{exec};
@@ -1540,7 +1540,7 @@ namespace {
 
 
 template <typename ValueType, typename Function>
-void gather_mixed_real_complex(Function fn, MultiVector* out)
+void gather_mixed_real_complex(Function fn, IMultiVector* out)
 {
 #ifdef GINKGO_MIXED_PRECISION
     run<matrix::Dense, ValueType, next_precision<ValueType>,
@@ -1557,7 +1557,7 @@ void gather_mixed_real_complex(Function fn, MultiVector* out)
 
 template <typename ValueType>
 void Dense<ValueType>::row_gather(const array<int32>* row_idxs,
-                                  ptr_param<MultiVector> row_collection) const
+                                  ptr_param<IMultiVector> row_collection) const
 {
     gather_mixed_real_complex<ValueType>(
         [&](auto dense) { this->row_gather_impl(row_idxs, dense); },
@@ -1567,7 +1567,7 @@ void Dense<ValueType>::row_gather(const array<int32>* row_idxs,
 
 template <typename ValueType>
 void Dense<ValueType>::row_gather(const array<int64>* row_idxs,
-                                  ptr_param<MultiVector> row_collection) const
+                                  ptr_param<IMultiVector> row_collection) const
 {
     gather_mixed_real_complex<ValueType>(
         [&](auto dense) { this->row_gather_impl(row_idxs, dense); },
@@ -1576,10 +1576,10 @@ void Dense<ValueType>::row_gather(const array<int64>* row_idxs,
 
 
 template <typename ValueType>
-void Dense<ValueType>::row_gather(ptr_param<const MultiVector> alpha,
+void Dense<ValueType>::row_gather(ptr_param<const IMultiVector> alpha,
                                   const array<int32>* gather_indices,
-                                  ptr_param<const MultiVector> beta,
-                                  ptr_param<MultiVector> out) const
+                                  ptr_param<const IMultiVector> beta,
+                                  ptr_param<IMultiVector> out) const
 {
     auto dense_alpha = alpha->as_precision(this);
     auto dense_beta = beta->as_precision(this);
@@ -1594,10 +1594,10 @@ void Dense<ValueType>::row_gather(ptr_param<const MultiVector> alpha,
 }
 
 template <typename ValueType>
-void Dense<ValueType>::row_gather(ptr_param<const MultiVector> alpha,
+void Dense<ValueType>::row_gather(ptr_param<const IMultiVector> alpha,
                                   const array<int64>* gather_indices,
-                                  ptr_param<const MultiVector> beta,
-                                  ptr_param<MultiVector> out) const
+                                  ptr_param<const IMultiVector> beta,
+                                  ptr_param<IMultiVector> out) const
 {
     auto dense_alpha = alpha->as_precision(this);
     auto dense_beta = beta->as_precision(this);
@@ -1951,8 +1951,8 @@ Dense<ValueType>::get_const_device_view() const
 
 
 template <typename ValueType>
-void Dense<ValueType>::add_scaled_identity_impl(const MultiVector* a,
-                                                const MultiVector* b)
+void Dense<ValueType>::add_scaled_identity_impl(const IMultiVector* a,
+                                                const IMultiVector* b)
 {
     this->get_executor()->run(dense::make_add_scaled_identity(
         a->as_precision(this)

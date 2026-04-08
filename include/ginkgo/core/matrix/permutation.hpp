@@ -264,10 +264,10 @@ protected:
     Permutation(std::shared_ptr<const Executor> exec,
                 array<IndexType> permutation_indices);
 
-    void apply_impl(const MultiVector* in, MultiVector* out) const override;
+    void apply_impl(const IMultiVector* in, IMultiVector* out) const override;
 
-    void apply_impl(const MultiVector*, const MultiVector* in,
-                    const MultiVector*, MultiVector* out) const override;
+    void apply_impl(const IMultiVector*, const IMultiVector* in,
+                    const IMultiVector*, IMultiVector* out) const override;
 
 private:
     array<index_type> permutation_;

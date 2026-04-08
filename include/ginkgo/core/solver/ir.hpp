@@ -203,17 +203,18 @@ public:
                                      config::make_type_descriptor<ValueType>());
 
 protected:
-    void apply_impl(const MultiVector* b, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* b, IMultiVector* x) const override;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                    const MultiVector* beta, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                    const IMultiVector* beta, IMultiVector* x) const override;
 
-    void apply_with_initial_guess_impl(const MultiVector* b, MultiVector* x,
+    void apply_with_initial_guess_impl(const IMultiVector* b, IMultiVector* x,
                                        initial_guess_mode guess) const override;
 
-    void apply_with_initial_guess_impl(const MultiVector* alpha,
-                                       const MultiVector* b,
-                                       const MultiVector* beta, MultiVector* x,
+    void apply_with_initial_guess_impl(const IMultiVector* alpha,
+                                       const IMultiVector* b,
+                                       const IMultiVector* beta,
+                                       IMultiVector* x,
                                        initial_guess_mode guess) const override;
 
     void set_relaxation_factor(

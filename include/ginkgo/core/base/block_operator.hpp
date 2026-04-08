@@ -127,10 +127,10 @@ private:
         std::shared_ptr<const Executor> exec,
         std::vector<std::vector<std::shared_ptr<const LinOp>>> blocks);
 
-    void apply_impl(const MultiVector* b, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* b, IMultiVector* x) const override;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                    const MultiVector* beta, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                    const IMultiVector* beta, IMultiVector* x) const override;
 
     dim<2> block_size_;
     std::vector<local_span> row_spans_;

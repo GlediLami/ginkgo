@@ -268,7 +268,7 @@ public:
      */
     void run_mg_cycle(multigrid::cycle cycle, size_type level,
                       const std::shared_ptr<const LinOp>& matrix,
-                      const MultiVector* b, MultiVector* x, cycle_mode mode);
+                      const IMultiVector* b, IMultiVector* x, cycle_mode mode);
 
     /**
      * @copydoc run_cycle
@@ -280,17 +280,17 @@ public:
     template <typename VectorType>
     void run_cycle(multigrid::cycle cycle, size_type level,
                    const std::shared_ptr<const LinOp>& matrix,
-                   const MultiVector* b, MultiVector* x, cycle_mode mode);
+                   const IMultiVector* b, IMultiVector* x, cycle_mode mode);
 
     // current level's nrows x nrhs
-    std::vector<std::shared_ptr<MultiVector>> r_list;
+    std::vector<std::shared_ptr<IMultiVector>> r_list;
     // next level's nrows x nrhs
-    std::vector<std::shared_ptr<MultiVector>> g_list;
-    std::vector<std::shared_ptr<MultiVector>> e_list;
+    std::vector<std::shared_ptr<IMultiVector>> g_list;
+    std::vector<std::shared_ptr<IMultiVector>> e_list;
     // constant 1 x 1
-    std::vector<std::shared_ptr<const MultiVector>> one_list;
-    std::vector<std::shared_ptr<const MultiVector>> next_one_list;
-    std::vector<std::shared_ptr<const MultiVector>> neg_one_list;
+    std::vector<std::shared_ptr<const IMultiVector>> one_list;
+    std::vector<std::shared_ptr<const IMultiVector>> next_one_list;
+    std::vector<std::shared_ptr<const IMultiVector>> neg_one_list;
     const LinOp* system_matrix;
     const Multigrid* multigrid;
     size_type nrhs;
@@ -461,7 +461,7 @@ void MultigridState::allocate_memory(
 
 void MultigridState::run_mg_cycle(multigrid::cycle cycle, size_type level,
                                   const std::shared_ptr<const LinOp>& matrix,
-                                  const MultiVector* b, MultiVector* x,
+                                  const IMultiVector* b, IMultiVector* x,
                                   cycle_mode mode)
 {
     if (level == multigrid->get_mg_level_list().size()) {
@@ -501,7 +501,7 @@ void MultigridState::run_mg_cycle(multigrid::cycle cycle, size_type level,
 template <typename VectorType>
 void MultigridState::run_cycle(multigrid::cycle cycle, size_type level,
                                const std::shared_ptr<const LinOp>& matrix,
-                               const MultiVector* b, MultiVector* x,
+                               const IMultiVector* b, IMultiVector* x,
                                cycle_mode mode)
 {
     using value_type = typename VectorType::value_type;
@@ -876,15 +876,15 @@ void Multigrid::generate()
 }
 
 
-void Multigrid::apply_impl(const MultiVector* b, MultiVector* x) const
+void Multigrid::apply_impl(const IMultiVector* b, IMultiVector* x) const
 {
     this->apply_with_initial_guess_impl(b, x,
                                         this->get_default_initial_guess());
 }
 
 
-void Multigrid::apply_with_initial_guess_impl(const MultiVector* b,
-                                              MultiVector* x,
+void Multigrid::apply_with_initial_guess_impl(const IMultiVector* b,
+                                              IMultiVector* x,
                                               initial_guess_mode guess) const
 {
     if (!this->get_system_matrix() || !this->get_system_matrix()->get_size()) {
@@ -914,18 +914,18 @@ void Multigrid::apply_with_initial_guess_impl(const MultiVector* b,
 }
 
 
-void Multigrid::apply_impl(const MultiVector* alpha, const MultiVector* b,
-                           const MultiVector* beta, MultiVector* x) const
+void Multigrid::apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                           const IMultiVector* beta, IMultiVector* x) const
 {
     this->apply_with_initial_guess_impl(alpha, b, beta, x,
                                         this->get_default_initial_guess());
 }
 
 
-void Multigrid::apply_with_initial_guess_impl(const MultiVector* alpha,
-                                              const MultiVector* b,
-                                              const MultiVector* beta,
-                                              MultiVector* x,
+void Multigrid::apply_with_initial_guess_impl(const IMultiVector* alpha,
+                                              const IMultiVector* b,
+                                              const IMultiVector* beta,
+                                              IMultiVector* x,
                                               initial_guess_mode guess) const
 {
     if (!this->get_system_matrix() || !this->get_system_matrix()->get_size()) {
@@ -959,7 +959,7 @@ void Multigrid::apply_with_initial_guess_impl(const MultiVector* alpha,
 }
 
 
-void Multigrid::apply_dense_impl(const MultiVector* b, MultiVector* x,
+void Multigrid::apply_dense_impl(const IMultiVector* b, IMultiVector* x,
                                  initial_guess_mode guess) const
 {
     using ws = workspace_traits<Multigrid>;
@@ -981,8 +981,8 @@ void Multigrid::apply_dense_impl(const MultiVector* b, MultiVector* x,
         exec->run(multigrid::make_initialize(stop_status));
         auto stop_criterion = this->get_stop_criterion_factory()->generate(
             this->get_system_matrix(),
-            std::shared_ptr<const MultiVector>(
-                b_, null_deleter<const MultiVector>{}),
+            std::shared_ptr<const IMultiVector>(
+                b_, null_deleter<const IMultiVector>{}),
             x_, nullptr);
         int iter = -1;
 

@@ -738,10 +738,10 @@ protected:
                     std::shared_ptr<LinOp> diag_linop,
                     std::shared_ptr<LinOp> off_diag_linop);
 
-    void apply_impl(const MultiVector* b, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* b, IMultiVector* x) const override;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                    const MultiVector* beta, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                    const IMultiVector* beta, IMultiVector* x) const override;
 
 private:
     std::shared_ptr<RowGatherer<LocalIndexType>> row_gatherer_;

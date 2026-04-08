@@ -140,10 +140,10 @@ protected:
         std::shared_ptr<const LinOp> basis,
         std::shared_ptr<const LinOp> projector);
 
-    void apply_impl(const MultiVector* b, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* b, IMultiVector* x) const override;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                    const MultiVector* beta, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                    const IMultiVector* beta, IMultiVector* x) const override;
 
     /**
      * Validates the dimensions of the `scalar`, `basis` and `projector`
@@ -169,7 +169,7 @@ private:
         // are 1x1 scalar.
         void allocate(std::shared_ptr<const Executor> exec, dim<2> size);
 
-        std::unique_ptr<MultiVector> intermediate;
+        std::unique_ptr<IMultiVector> intermediate;
         std::unique_ptr<matrix::Dense<ValueType>> one;
         std::unique_ptr<matrix::Dense<ValueType>> alpha_scalar;
     } cache_;

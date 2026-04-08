@@ -719,7 +719,7 @@ void Vector<ValueType>::compute_squared_norm2_impl(
 
 
 template <typename ValueType>
-void Vector<ValueType>::compute_mean(ptr_param<MultiVector> result) const
+void Vector<ValueType>::compute_mean(ptr_param<IMultiVector> result) const
 {
     array<char> tmp{this->get_executor()};
     this->compute_mean(result, tmp);
@@ -727,7 +727,7 @@ void Vector<ValueType>::compute_mean(ptr_param<MultiVector> result) const
 
 
 template <typename ValueType>
-void Vector<ValueType>::compute_mean(ptr_param<MultiVector> result,
+void Vector<ValueType>::compute_mean(ptr_param<IMultiVector> result,
                                      array<char>& tmp) const
 {
     using MeanVector = local_vector_type;

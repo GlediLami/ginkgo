@@ -71,8 +71,8 @@ ScaledReordered<ValueType, IndexType>::ScaledReordered(
 
 
 template <typename ValueType, typename IndexType>
-void ScaledReordered<ValueType, IndexType>::apply_impl(const MultiVector* b,
-                                                       MultiVector* x) const
+void ScaledReordered<ValueType, IndexType>::apply_impl(const IMultiVector* b,
+                                                       IMultiVector* x) const
 {
     auto exec = this->get_executor();
     this->set_cache_to(b, x);
@@ -115,10 +115,9 @@ void ScaledReordered<ValueType, IndexType>::apply_impl(const MultiVector* b,
 
 
 template <typename ValueType, typename IndexType>
-void ScaledReordered<ValueType, IndexType>::apply_impl(const MultiVector* alpha,
-                                                       const MultiVector* b,
-                                                       const MultiVector* beta,
-                                                       MultiVector* x) const
+void ScaledReordered<ValueType, IndexType>::apply_impl(
+    const IMultiVector* alpha, const IMultiVector* b, const IMultiVector* beta,
+    IMultiVector* x) const
 {
     auto x_clone = x->clone();
     this->apply_impl(b, x_clone.get());
@@ -129,7 +128,7 @@ void ScaledReordered<ValueType, IndexType>::apply_impl(const MultiVector* alpha,
 
 template <typename ValueType, typename IndexType>
 void ScaledReordered<ValueType, IndexType>::set_cache_to(
-    const MultiVector* b, const MultiVector* x) const
+    const IMultiVector* b, const IMultiVector* x) const
 
 {
     if (cache_.inner_b == nullptr ||

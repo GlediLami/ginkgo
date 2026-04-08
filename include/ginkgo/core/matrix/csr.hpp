@@ -1340,7 +1340,7 @@ public:
      * @param alpha  The entire matrix is scaled by alpha. alpha has to be a 1x1
      * Dense matrix.
      */
-    void scale(ptr_param<const MultiVector> alpha);
+    void scale(ptr_param<const IMultiVector> alpha);
 
     /**
      * Scales the matrix with the inverse of a scalar.
@@ -1348,7 +1348,7 @@ public:
      * @param alpha  The entire matrix is scaled by 1 / alpha. alpha has to be a
      * 1x1 Dense matrix.
      */
-    void inv_scale(ptr_param<const MultiVector> alpha);
+    void inv_scale(ptr_param<const IMultiVector> alpha);
 
     /**
      * Creates an uninitialized CSR matrix of the specified size.
@@ -1508,10 +1508,10 @@ protected:
         array<index_type> row_ptrs,
         std::shared_ptr<strategy_type> strategy = nullptr);
 
-    void apply_impl(const MultiVector* b, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* b, IMultiVector* x) const override;
 
-    void apply_impl(const MultiVector* alpha, const MultiVector* b,
-                    const MultiVector* beta, MultiVector* x) const override;
+    void apply_impl(const IMultiVector* alpha, const IMultiVector* b,
+                    const IMultiVector* beta, IMultiVector* x) const override;
 
     // TODO: This provides some more sane settings. Please fix this!
     static std::shared_ptr<strategy_type> make_default_strategy(
@@ -1650,7 +1650,7 @@ protected:
      * @note  Other implementations of Csr should override this function
      *        instead of scale(const LinOp *alpha).
      */
-    virtual void scale_impl(const MultiVector* alpha);
+    virtual void scale_impl(const IMultiVector* alpha);
 
     /**
      * @copydoc inv_scale(const LinOp *)
@@ -1658,7 +1658,7 @@ protected:
      * @note  Other implementations of Csr should override this function
      *        instead of inv_scale(const LinOp *alpha).
      */
-    virtual void inv_scale_impl(const MultiVector* alpha);
+    virtual void inv_scale_impl(const IMultiVector* alpha);
 
 private:
     std::shared_ptr<strategy_type> strategy_;
@@ -1667,8 +1667,8 @@ private:
     array<index_type> row_ptrs_;
     array<index_type> srow_;
 
-    void add_scaled_identity_impl(const MultiVector* a,
-                                  const MultiVector* b) override;
+    void add_scaled_identity_impl(const IMultiVector* a,
+                                  const IMultiVector* b) override;
 };
 
 
