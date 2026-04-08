@@ -1244,12 +1244,12 @@ EnableMultiVector<ConcreteType>::as_precision_impl(precision p) const
 template <typename ConcreteType>
 std::variant<
 #if GINKGO_ENABLE_HALF
-    MultiVector::device_view<half>,
-    MultiVector::device_view<std::complex<half>>,
+    IMultiVector::device_view<half>,
+    IMultiVector::device_view<std::complex<half>>,
 #endif
 #if GINKGO_ENABLE_BFLOAT16
-    MultiVector::device_view<bfloat16>,
-    MultiVector::device_view<std::complex<bfloat16>>,
+    IMultiVector::device_view<bfloat16>,
+    IMultiVector::device_view<std::complex<bfloat16>>,
 #endif
 
     IMultiVector::device_view<float>,
@@ -1265,12 +1265,12 @@ EnableMultiVector<ConcreteType>::get_local_device_view_generic_impl()
 template <typename ConcreteType>
 std::variant<
 #if GINKGO_ENABLE_HALF
-    MultiVector::device_view<const half>,
-    MultiVector::device_view<const std::complex<half>>,
+    IMultiVector::device_view<const half>,
+    IMultiVector::device_view<const std::complex<half>>,
 #endif
 #if GINKGO_ENABLE_BFLOAT16
-    MultiVector::device_view<const bfloat16>,
-    MultiVector::device_view<const std::complex<bfloat16>>,
+    IMultiVector::device_view<const bfloat16>,
+    IMultiVector::device_view<const std::complex<bfloat16>>,
 #endif
     IMultiVector::device_view<const float>,
     IMultiVector::device_view<const std::complex<float>>,
