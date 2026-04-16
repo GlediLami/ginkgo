@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -176,11 +176,11 @@ TEST(Record, CatchesOperationCompleted)
 
 TEST(Record, CatchesPolymorphicObjectCreateStarted)
 {
-    using Dense = gko::matrix::Dense<>;
+    using MultiVector = gko::matrix::MultiVector<>;
     auto exec = gko::ReferenceExecutor::create();
     auto logger = gko::log::Record::create(
         gko::log::Logger::polymorphic_object_create_started_mask);
-    auto po = gko::matrix::Dense<>::create(exec);
+    auto po = gko::matrix::MultiVector<>::create(exec);
 
     logger->on<gko::log::Logger::polymorphic_object_create_started>(exec.get(),
                                                                     po.get());
@@ -188,57 +188,57 @@ TEST(Record, CatchesPolymorphicObjectCreateStarted)
 
     auto& data = logger->get().polymorphic_object_create_started.back();
     ASSERT_EQ(data->exec, exec.get());
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->input.get()), po, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->input.get()), po, 0);
     ASSERT_EQ(data->output.get(), nullptr);
 }
 
 
 TEST(Record, CatchesPolymorphicObjectCreateCompleted)
 {
-    using Dense = gko::matrix::Dense<>;
+    using MultiVector = gko::matrix::MultiVector<>;
     auto exec = gko::ReferenceExecutor::create();
     auto logger = gko::log::Record::create(
         gko::log::Logger::polymorphic_object_create_completed_mask);
-    auto po = gko::matrix::Dense<>::create(exec);
-    auto output = gko::matrix::Dense<>::create(exec);
+    auto po = gko::matrix::MultiVector<>::create(exec);
+    auto output = gko::matrix::MultiVector<>::create(exec);
 
     logger->on<gko::log::Logger::polymorphic_object_create_completed>(
         exec.get(), po.get(), output.get());
 
     auto& data = logger->get().polymorphic_object_create_completed.back();
     ASSERT_EQ(data->exec, exec.get());
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->input.get()), po, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->output.get()), output, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->input.get()), po, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->output.get()), output, 0);
 }
 
 
 TEST(Record, CatchesPolymorphicObjectCopyStarted)
 {
-    using Dense = gko::matrix::Dense<>;
+    using MultiVector = gko::matrix::MultiVector<>;
     auto exec = gko::ReferenceExecutor::create();
     auto logger = gko::log::Record::create(
         gko::log::Logger::polymorphic_object_copy_started_mask);
-    auto from = gko::matrix::Dense<>::create(exec);
-    auto to = gko::matrix::Dense<>::create(exec);
+    auto from = gko::matrix::MultiVector<>::create(exec);
+    auto to = gko::matrix::MultiVector<>::create(exec);
 
     logger->on<gko::log::Logger::polymorphic_object_copy_started>(
         exec.get(), from.get(), to.get());
 
     auto& data = logger->get().polymorphic_object_copy_started.back();
     ASSERT_EQ(data->exec, exec.get());
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->input.get()), from, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->output.get()), to, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->input.get()), from, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->output.get()), to, 0);
 }
 
 
 TEST(Record, CatchesPolymorphicObjectCopyCompleted)
 {
-    using Dense = gko::matrix::Dense<>;
+    using MultiVector = gko::matrix::MultiVector<>;
     auto exec = gko::ReferenceExecutor::create();
     auto logger = gko::log::Record::create(
         gko::log::Logger::polymorphic_object_copy_completed_mask);
-    auto from = gko::matrix::Dense<>::create(exec);
-    auto to = gko::matrix::Dense<>::create(exec);
+    auto from = gko::matrix::MultiVector<>::create(exec);
+    auto to = gko::matrix::MultiVector<>::create(exec);
 
     logger->on<gko::log::Logger::polymorphic_object_copy_completed>(
         exec.get(), from.get(), to.get());
@@ -246,38 +246,38 @@ TEST(Record, CatchesPolymorphicObjectCopyCompleted)
 
     auto& data = logger->get().polymorphic_object_copy_completed.back();
     ASSERT_EQ(data->exec, exec.get());
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->input.get()), from, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->output.get()), to, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->input.get()), from, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->output.get()), to, 0);
 }
 
 
 TEST(Record, CatchesPolymorphicObjectMoveStarted)
 {
-    using Dense = gko::matrix::Dense<>;
+    using MultiVector = gko::matrix::MultiVector<>;
     auto exec = gko::ReferenceExecutor::create();
     auto logger = gko::log::Record::create(
         gko::log::Logger::polymorphic_object_move_started_mask);
-    auto from = gko::matrix::Dense<>::create(exec);
-    auto to = gko::matrix::Dense<>::create(exec);
+    auto from = gko::matrix::MultiVector<>::create(exec);
+    auto to = gko::matrix::MultiVector<>::create(exec);
 
     logger->on<gko::log::Logger::polymorphic_object_move_started>(
         exec.get(), from.get(), to.get());
 
     auto& data = logger->get().polymorphic_object_move_started.back();
     ASSERT_EQ(data->exec, exec.get());
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->input.get()), from, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->output.get()), to, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->input.get()), from, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->output.get()), to, 0);
 }
 
 
 TEST(Record, CatchesPolymorphicObjectMoveCompleted)
 {
-    using Dense = gko::matrix::Dense<>;
+    using MultiVector = gko::matrix::MultiVector<>;
     auto exec = gko::ReferenceExecutor::create();
     auto logger = gko::log::Record::create(
         gko::log::Logger::polymorphic_object_move_completed_mask);
-    auto from = gko::matrix::Dense<>::create(exec);
-    auto to = gko::matrix::Dense<>::create(exec);
+    auto from = gko::matrix::MultiVector<>::create(exec);
+    auto to = gko::matrix::MultiVector<>::create(exec);
 
     logger->on<gko::log::Logger::polymorphic_object_move_completed>(
         exec.get(), from.get(), to.get());
@@ -285,18 +285,18 @@ TEST(Record, CatchesPolymorphicObjectMoveCompleted)
 
     auto& data = logger->get().polymorphic_object_move_completed.back();
     ASSERT_EQ(data->exec, exec.get());
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->input.get()), from, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->output.get()), to, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->input.get()), from, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->output.get()), to, 0);
 }
 
 
 TEST(Record, CatchesPolymorphicObjectDeleted)
 {
-    using Dense = gko::matrix::Dense<>;
+    using MultiVector = gko::matrix::MultiVector<>;
     auto exec = gko::ReferenceExecutor::create();
     auto logger = gko::log::Record::create(
         gko::log::Logger::polymorphic_object_deleted_mask);
-    auto po = gko::matrix::Dense<>::create(exec);
+    auto po = gko::matrix::MultiVector<>::create(exec);
 
     logger->on<gko::log::Logger::polymorphic_object_deleted>(exec.get(),
                                                              po.get());
@@ -304,100 +304,100 @@ TEST(Record, CatchesPolymorphicObjectDeleted)
 
     auto& data = logger->get().polymorphic_object_deleted.back();
     ASSERT_EQ(data->exec, exec.get());
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->input.get()), po, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->input.get()), po, 0);
     ASSERT_EQ(data->output, nullptr);
 }
 
 
 TEST(Record, CatchesLinOpApplyStarted)
 {
-    using Dense = gko::matrix::Dense<>;
+    using MultiVector = gko::matrix::MultiVector<>;
     auto exec = gko::ReferenceExecutor::create();
     auto logger =
         gko::log::Record::create(gko::log::Logger::linop_apply_started_mask);
-    auto A = gko::initialize<Dense>({1.1}, exec);
-    auto b = gko::initialize<Dense>({-2.2}, exec);
-    auto x = gko::initialize<Dense>({3.3}, exec);
+    auto A = gko::initialize<MultiVector>({1.1}, exec);
+    auto b = gko::initialize<MultiVector>({-2.2}, exec);
+    auto x = gko::initialize<MultiVector>({3.3}, exec);
 
     logger->on<gko::log::Logger::linop_apply_started>(A.get(), b.get(),
                                                       x.get());
 
     auto& data = logger->get().linop_apply_started.back();
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->A.get()), A, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->A.get()), A, 0);
     ASSERT_EQ(data->alpha, nullptr);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->b.get()), b, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->b.get()), b, 0);
     ASSERT_EQ(data->beta, nullptr);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->x.get()), x, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->x.get()), x, 0);
 }
 
 
 TEST(Record, CatchesLinOpApplyCompleted)
 {
-    using Dense = gko::matrix::Dense<>;
+    using MultiVector = gko::matrix::MultiVector<>;
     auto exec = gko::ReferenceExecutor::create();
     auto logger =
         gko::log::Record::create(gko::log::Logger::linop_apply_completed_mask);
-    auto A = gko::initialize<Dense>({1.1}, exec);
-    auto b = gko::initialize<Dense>({-2.2}, exec);
-    auto x = gko::initialize<Dense>({3.3}, exec);
+    auto A = gko::initialize<MultiVector>({1.1}, exec);
+    auto b = gko::initialize<MultiVector>({-2.2}, exec);
+    auto x = gko::initialize<MultiVector>({3.3}, exec);
 
     logger->on<gko::log::Logger::linop_apply_completed>(A.get(), b.get(),
                                                         x.get());
 
     auto& data = logger->get().linop_apply_completed.back();
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->A.get()), A, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->A.get()), A, 0);
     ASSERT_EQ(data->alpha, nullptr);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->b.get()), b, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->b.get()), b, 0);
     ASSERT_EQ(data->beta, nullptr);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->x.get()), x, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->x.get()), x, 0);
 }
 
 
 TEST(Record, CatchesLinOpAdvancedApplyStarted)
 {
-    using Dense = gko::matrix::Dense<>;
+    using MultiVector = gko::matrix::MultiVector<>;
     auto exec = gko::ReferenceExecutor::create();
     auto logger = gko::log::Record::create(
         gko::log::Logger::linop_advanced_apply_started_mask);
-    auto A = gko::initialize<Dense>({1.1}, exec);
-    auto alpha = gko::initialize<Dense>({-4.4}, exec);
-    auto b = gko::initialize<Dense>({-2.2}, exec);
-    auto beta = gko::initialize<Dense>({-5.5}, exec);
-    auto x = gko::initialize<Dense>({3.3}, exec);
+    auto A = gko::initialize<MultiVector>({1.1}, exec);
+    auto alpha = gko::initialize<MultiVector>({-4.4}, exec);
+    auto b = gko::initialize<MultiVector>({-2.2}, exec);
+    auto beta = gko::initialize<MultiVector>({-5.5}, exec);
+    auto x = gko::initialize<MultiVector>({3.3}, exec);
 
     logger->on<gko::log::Logger::linop_advanced_apply_started>(
         A.get(), alpha.get(), b.get(), beta.get(), x.get());
 
     auto& data = logger->get().linop_advanced_apply_started.back();
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->A.get()), A, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->alpha.get()), alpha, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->b.get()), b, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->beta.get()), beta, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->x.get()), x, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->A.get()), A, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->alpha.get()), alpha, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->b.get()), b, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->beta.get()), beta, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->x.get()), x, 0);
 }
 
 
 TEST(Record, CatchesLinOpAdvancedApplyCompleted)
 {
-    using Dense = gko::matrix::Dense<>;
+    using MultiVector = gko::matrix::MultiVector<>;
     auto exec = gko::ReferenceExecutor::create();
     auto logger = gko::log::Record::create(
         gko::log::Logger::linop_advanced_apply_completed_mask);
-    auto A = gko::initialize<Dense>({1.1}, exec);
-    auto alpha = gko::initialize<Dense>({-4.4}, exec);
-    auto b = gko::initialize<Dense>({-2.2}, exec);
-    auto beta = gko::initialize<Dense>({-5.5}, exec);
-    auto x = gko::initialize<Dense>({3.3}, exec);
+    auto A = gko::initialize<MultiVector>({1.1}, exec);
+    auto alpha = gko::initialize<MultiVector>({-4.4}, exec);
+    auto b = gko::initialize<MultiVector>({-2.2}, exec);
+    auto beta = gko::initialize<MultiVector>({-5.5}, exec);
+    auto x = gko::initialize<MultiVector>({3.3}, exec);
 
     logger->on<gko::log::Logger::linop_advanced_apply_completed>(
         A.get(), alpha.get(), b.get(), beta.get(), x.get());
 
     auto& data = logger->get().linop_advanced_apply_completed.back();
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->A.get()), A, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->alpha.get()), alpha, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->b.get()), b, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->beta.get()), beta, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->x.get()), x, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->A.get()), A, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->alpha.get()), alpha, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->b.get()), b, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->beta.get()), beta, 0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->x.get()), x, 0);
 }
 
 
@@ -410,7 +410,7 @@ TEST(Record, CatchesLinopFactoryGenerateStarted)
         gko::solver::Bicgstab<>::build()
             .with_criteria(gko::stop::Iteration::build().with_max_iters(3u))
             .on(exec);
-    auto input = factory->generate(gko::matrix::Dense<>::create(exec));
+    auto input = factory->generate(gko::matrix::MultiVector<>::create(exec));
 
     logger->on<gko::log::Logger::linop_factory_generate_started>(factory.get(),
                                                                  input.get());
@@ -431,8 +431,8 @@ TEST(Record, CatchesLinopFactoryGenerateCompleted)
         gko::solver::Bicgstab<>::build()
             .with_criteria(gko::stop::Iteration::build().with_max_iters(3u))
             .on(exec);
-    auto input = factory->generate(gko::matrix::Dense<>::create(exec));
-    auto output = factory->generate(gko::matrix::Dense<>::create(exec));
+    auto input = factory->generate(gko::matrix::MultiVector<>::create(exec));
+    auto output = factory->generate(gko::matrix::MultiVector<>::create(exec));
 
     logger->on<gko::log::Logger::linop_factory_generate_completed>(
         factory.get(), input.get(), output.get());
@@ -529,7 +529,7 @@ TEST(Record, CatchesCriterionCheckCompleted)
 
 TEST(Record, CatchesIterations)
 {
-    using Dense = gko::matrix::Dense<>;
+    using MultiVector = gko::matrix::MultiVector<>;
     auto exec = gko::ReferenceExecutor::create();
     auto logger =
         gko::log::Record::create(gko::log::Logger::iteration_complete_mask);
@@ -537,12 +537,12 @@ TEST(Record, CatchesIterations)
         gko::solver::Bicgstab<>::build()
             .with_criteria(gko::stop::Iteration::build().with_max_iters(3u))
             .on(exec);
-    auto solver = factory->generate(gko::initialize<Dense>({1.1}, exec));
-    auto right_hand_side = gko::initialize<Dense>({-5.5}, exec);
-    auto residual = gko::initialize<Dense>({-4.4}, exec);
-    auto solution = gko::initialize<Dense>({-2.2}, exec);
-    auto residual_norm = gko::initialize<Dense>({-3.3}, exec);
-    auto implicit_sq_residual_norm = gko::initialize<Dense>({-3.5}, exec);
+    auto solver = factory->generate(gko::initialize<MultiVector>({1.1}, exec));
+    auto right_hand_side = gko::initialize<MultiVector>({-5.5}, exec);
+    auto residual = gko::initialize<MultiVector>({-4.4}, exec);
+    auto solution = gko::initialize<MultiVector>({-2.2}, exec);
+    auto residual_norm = gko::initialize<MultiVector>({-3.3}, exec);
+    auto implicit_sq_residual_norm = gko::initialize<MultiVector>({-3.5}, exec);
     constexpr gko::uint8 RelativeStoppingId{42};
     gko::array<gko::stopping_status> stop_status(exec, 1);
     stop_status.get_data()->reset();
@@ -558,14 +558,17 @@ TEST(Record, CatchesIterations)
     auto& data = logger->get().iteration_completed.back();
     ASSERT_NE(data->solver.get(), nullptr);
     ASSERT_EQ(data->num_iterations, num_iters);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->residual.get()), residual, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->right_hand_side.get()),
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->residual.get()), residual,
+                        0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->right_hand_side.get()),
                         right_hand_side, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->solution.get()), solution, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->residual_norm.get()),
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->solution.get()), solution,
+                        0);
+    GKO_ASSERT_MTX_NEAR(gko::as<MultiVector>(data->residual_norm.get()),
                         residual_norm, 0);
-    GKO_ASSERT_MTX_NEAR(gko::as<Dense>(data->implicit_sq_residual_norm.get()),
-                        implicit_sq_residual_norm, 0);
+    GKO_ASSERT_MTX_NEAR(
+        gko::as<MultiVector>(data->implicit_sq_residual_norm.get()),
+        implicit_sq_residual_norm, 0);
     ASSERT_EQ(data->status.get_const_data()->has_stopped(), true);
     ASSERT_EQ(data->status.get_const_data()->get_id(),
               stop_status.get_const_data()->get_id());

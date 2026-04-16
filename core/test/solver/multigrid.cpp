@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <ginkgo/core/base/executor.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 #include <ginkgo/core/preconditioner/jacobi.hpp>
 #include <ginkgo/core/solver/direct.hpp>
 #include <ginkgo/core/solver/ir.hpp>
@@ -44,7 +44,7 @@ class DummyLinOpWithFactory
           DummyLinOpWithFactory<ValueType, uses_initial_guess>>,
       public gko::multigrid::EnableMultigridLevel<ValueType> {
 public:
-    using Mtx = gko::matrix::Dense<ValueType>;
+    using Mtx = gko::matrix::MultiVector<ValueType>;
 
     DummyLinOpWithFactory(std::shared_ptr<const gko::Executor> exec)
         : gko::EnableLinOp<DummyLinOpWithFactory>(exec)
@@ -97,7 +97,7 @@ template <typename T>
 class Multigrid : public ::testing::Test {
 protected:
     using value_type = T;
-    using Mtx = gko::matrix::Dense<value_type>;
+    using Mtx = gko::matrix::MultiVector<value_type>;
     using Solver = gko::solver::Multigrid;
     using DummyRPFactory = DummyLinOpWithFactory<value_type>;
     using DummyFactory = DummyLinOpWithFactory<value_type>;

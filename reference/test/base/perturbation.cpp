@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <ginkgo/core/base/perturbation.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/test/utils.hpp"
 
@@ -18,7 +18,7 @@ namespace {
 template <typename T>
 class Perturbation : public ::testing::Test {
 protected:
-    using Mtx = gko::matrix::Dense<T>;
+    using Mtx = gko::matrix::MultiVector<T>;
 
     Perturbation()
         : exec{gko::ReferenceExecutor::create()},
@@ -28,9 +28,9 @@ protected:
     {}
 
     std::shared_ptr<const gko::Executor> exec;
-    std::shared_ptr<gko::LinOp> basis;
-    std::shared_ptr<gko::LinOp> projector;
-    std::shared_ptr<gko::LinOp> scalar;
+    std::shared_ptr<gko::IMultiVector> basis;
+    std::shared_ptr<gko::IMultiVector> projector;
+    std::shared_ptr<gko::IMultiVector> scalar;
 };
 
 TYPED_TEST_SUITE(Perturbation, gko::test::ValueTypes, TypenameNameGenerator);
@@ -101,7 +101,7 @@ TYPED_TEST(Perturbation, AppliesToMixedVector)
         cmp = I + 2 * [ 2 ] * [ 3 2 ]
                       [ 1 ]
     */
-    using Mtx = gko::matrix::Dense<gko::next_precision<TypeParam>>;
+    using Mtx = gko::matrix::MultiVector<gko::next_precision<TypeParam>>;
     using value_type = typename Mtx::value_type;
     auto cmp = gko::Perturbation<TypeParam>::create(this->scalar, this->basis,
                                                     this->projector);
@@ -122,7 +122,7 @@ TYPED_TEST(Perturbation, AppliesToComplexVector)
                       [ 1 ]
     */
     using value_type = gko::to_complex<TypeParam>;
-    using Mtx = gko::matrix::Dense<value_type>;
+    using Mtx = gko::matrix::MultiVector<value_type>;
     auto cmp = gko::Perturbation<TypeParam>::create(this->scalar, this->basis,
                                                     this->projector);
     auto x = gko::initialize<Mtx>(
@@ -144,7 +144,7 @@ TYPED_TEST(Perturbation, AppliesToMixedComplexVector)
                       [ 1 ]
     */
     using value_type = gko::to_complex<gko::next_precision<TypeParam>>;
-    using Mtx = gko::matrix::Dense<value_type>;
+    using Mtx = gko::matrix::MultiVector<value_type>;
     auto cmp = gko::Perturbation<TypeParam>::create(this->scalar, this->basis,
                                                     this->projector);
     auto x = gko::initialize<Mtx>(
@@ -186,7 +186,7 @@ TYPED_TEST(Perturbation, AppliesLinearCombinationToMixedVector)
                       [ 1 ]
     */
     using value_type = gko::next_precision<TypeParam>;
-    using Mtx = gko::matrix::Dense<value_type>;
+    using Mtx = gko::matrix::MultiVector<value_type>;
     auto cmp = gko::Perturbation<TypeParam>::create(this->scalar, this->basis,
                                                     this->projector);
     auto alpha = gko::initialize<Mtx>({3.0}, this->exec);
@@ -207,14 +207,14 @@ TYPED_TEST(Perturbation, AppliesLinearCombinationToComplexVector)
         cmp = I + 2 * [ 2 ] * [ 3 2 ]
                       [ 1 ]
     */
-    using Dense = typename TestFixture::Mtx;
-    using DenseComplex = gko::to_complex<Dense>;
-    using value_type = typename DenseComplex::value_type;
+    using MultiVector = typename TestFixture::Mtx;
+    using MultiVectorComplex = gko::to_complex<MultiVector>;
+    using value_type = typename MultiVectorComplex::value_type;
     auto cmp = gko::Perturbation<TypeParam>::create(this->scalar, this->basis,
                                                     this->projector);
-    auto alpha = gko::initialize<Dense>({3.0}, this->exec);
-    auto beta = gko::initialize<Dense>({-1.0}, this->exec);
-    auto x = gko::initialize<DenseComplex>(
+    auto alpha = gko::initialize<MultiVector>({3.0}, this->exec);
+    auto beta = gko::initialize<MultiVector>({-1.0}, this->exec);
+    auto x = gko::initialize<MultiVectorComplex>(
         {value_type{1.0, -2.0}, value_type{2.0, -4.0}}, this->exec);
     auto res = gko::clone(x);
 
@@ -232,14 +232,15 @@ TYPED_TEST(Perturbation, AppliesLinearCombinationToMixedComplexVector)
         cmp = I + 2 * [ 2 ] * [ 3 2 ]
                       [ 1 ]
     */
-    using MixedDense = gko::matrix::Dense<gko::next_precision<TypeParam>>;
-    using MixedDenseComplex = gko::to_complex<MixedDense>;
-    using value_type = typename MixedDenseComplex::value_type;
+    using MixedMultiVector =
+        gko::matrix::MultiVector<gko::next_precision<TypeParam>>;
+    using MixedMultiVectorComplex = gko::to_complex<MixedMultiVector>;
+    using value_type = typename MixedMultiVectorComplex::value_type;
     auto cmp = gko::Perturbation<TypeParam>::create(this->scalar, this->basis,
                                                     this->projector);
-    auto alpha = gko::initialize<MixedDense>({3.0}, this->exec);
-    auto beta = gko::initialize<MixedDense>({-1.0}, this->exec);
-    auto x = gko::initialize<MixedDenseComplex>(
+    auto alpha = gko::initialize<MixedMultiVector>({3.0}, this->exec);
+    auto beta = gko::initialize<MixedMultiVector>({-1.0}, this->exec);
+    auto x = gko::initialize<MixedMultiVectorComplex>(
         {value_type{1.0, -2.0}, value_type{2.0, -4.0}}, this->exec);
     auto res = gko::clone(x);
 

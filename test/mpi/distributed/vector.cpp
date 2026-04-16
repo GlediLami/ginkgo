@@ -71,7 +71,7 @@ public:
     using md_type = gko::matrix_data<value_type, global_index_type>;
     using d_md_type = gko::device_matrix_data<value_type, global_index_type>;
     using dist_vec_type = gko::experimental::distributed::Vector<value_type>;
-    using dense_type = gko::matrix::Dense<value_type>;
+    using dense_type = gko::matrix::MultiVector<value_type>;
 
     VectorCreation()
         : part(gko::share(part_type::build_from_contiguous(
@@ -426,7 +426,7 @@ public:
         gko::experimental::distributed::Partition<local_index_type,
                                                   global_index_type>;
     using dist_vec_type = gko::experimental::distributed::Vector<value_type>;
-    using dense_type = gko::matrix::Dense<value_type>;
+    using dense_type = gko::matrix::MultiVector<value_type>;
     using real_dense_type = typename dense_type::real_type;
 
     VectorReductions() : size{53, 11}, engine(42)
@@ -515,7 +515,7 @@ TYPED_TEST_SUITE(VectorReductions, gko::test::ValueTypes,
                  TypenameNameGenerator);
 
 
-TYPED_TEST(VectorReductions, ComputeDotProductIsSameAsDense)
+TYPED_TEST(VectorReductions, ComputeDotProductIsSameAsMultiVector)
 {
     using value_type = typename TestFixture::value_type;
     this->init_result();
@@ -527,7 +527,7 @@ TYPED_TEST(VectorReductions, ComputeDotProductIsSameAsDense)
 }
 
 
-TYPED_TEST(VectorReductions, ComputeDotProductWithTmpIsSameAsDense)
+TYPED_TEST(VectorReductions, ComputeDotProductWithTmpIsSameAsMultiVector)
 {
     using value_type = typename TestFixture::value_type;
     this->init_result();
@@ -539,7 +539,7 @@ TYPED_TEST(VectorReductions, ComputeDotProductWithTmpIsSameAsDense)
 }
 
 
-TYPED_TEST(VectorReductions, ComputeConjDotProductIsSameAsDense)
+TYPED_TEST(VectorReductions, ComputeConjDotProductIsSameAsMultiVector)
 {
     using value_type = typename TestFixture::value_type;
     this->init_result();
@@ -551,7 +551,7 @@ TYPED_TEST(VectorReductions, ComputeConjDotProductIsSameAsDense)
 }
 
 
-TYPED_TEST(VectorReductions, ComputeConjDotProductWithTmpIsSameAsDense)
+TYPED_TEST(VectorReductions, ComputeConjDotProductWithTmpIsSameAsMultiVector)
 {
     using value_type = typename TestFixture::value_type;
     this->init_result();
@@ -564,7 +564,7 @@ TYPED_TEST(VectorReductions, ComputeConjDotProductWithTmpIsSameAsDense)
 }
 
 
-TYPED_TEST(VectorReductions, ComputeNorm2IsSameAsDense)
+TYPED_TEST(VectorReductions, ComputeNorm2IsSameAsMultiVector)
 {
     using value_type = typename TestFixture::value_type;
     this->init_result();
@@ -577,7 +577,7 @@ TYPED_TEST(VectorReductions, ComputeNorm2IsSameAsDense)
 }
 
 
-TYPED_TEST(VectorReductions, ComputeNorm2WithTmpIsSameAsDense)
+TYPED_TEST(VectorReductions, ComputeNorm2WithTmpIsSameAsMultiVector)
 {
     using value_type = typename TestFixture::value_type;
     this->init_result();
@@ -590,7 +590,7 @@ TYPED_TEST(VectorReductions, ComputeNorm2WithTmpIsSameAsDense)
 }
 
 
-TYPED_TEST(VectorReductions, ComputeNorm1IsSameAsDense)
+TYPED_TEST(VectorReductions, ComputeNorm1IsSameAsMultiVector)
 {
     using value_type = typename TestFixture::value_type;
     this->init_result();
@@ -603,7 +603,7 @@ TYPED_TEST(VectorReductions, ComputeNorm1IsSameAsDense)
 }
 
 
-TYPED_TEST(VectorReductions, ComputeNorm1WithTmpIsSameAsDense)
+TYPED_TEST(VectorReductions, ComputeNorm1WithTmpIsSameAsMultiVector)
 {
     using value_type = typename TestFixture::value_type;
     this->init_result();
@@ -616,7 +616,7 @@ TYPED_TEST(VectorReductions, ComputeNorm1WithTmpIsSameAsDense)
 }
 
 
-TYPED_TEST(VectorReductions, ComputeSquaredNorm2IsSameAsDense)
+TYPED_TEST(VectorReductions, ComputeSquaredNorm2IsSameAsMultiVector)
 {
     using value_type = typename TestFixture::value_type;
     this->init_result();
@@ -629,7 +629,7 @@ TYPED_TEST(VectorReductions, ComputeSquaredNorm2IsSameAsDense)
 }
 
 
-TYPED_TEST(VectorReductions, ComputeSquaredNorm2WithTmpIsSameAsDense)
+TYPED_TEST(VectorReductions, ComputeSquaredNorm2WithTmpIsSameAsMultiVector)
 {
     using value_type = typename TestFixture::value_type;
     this->init_result();
@@ -642,7 +642,7 @@ TYPED_TEST(VectorReductions, ComputeSquaredNorm2WithTmpIsSameAsDense)
 }
 
 
-TYPED_TEST(VectorReductions, ComputesMeanIsSameAsDense)
+TYPED_TEST(VectorReductions, ComputesMeanIsSameAsMultiVector)
 {
     using value_type = typename TestFixture::value_type;
     this->init_result();
@@ -654,7 +654,7 @@ TYPED_TEST(VectorReductions, ComputesMeanIsSameAsDense)
 }
 
 
-TYPED_TEST(VectorReductions, ComputesMeanWithTmpIsSameAsDense)
+TYPED_TEST(VectorReductions, ComputesMeanWithTmpIsSameAsMultiVector)
 {
     using value_type = typename TestFixture::value_type;
     this->init_result();
@@ -735,7 +735,7 @@ public:
     using dist_vec_type = gko::experimental::distributed::Vector<value_type>;
     using complex_dist_vec_type = typename dist_vec_type::complex_type;
     using real_dist_vec_type = typename dist_vec_type ::real_type;
-    using dense_type = gko::matrix::Dense<value_type>;
+    using dense_type = gko::matrix::MultiVector<value_type>;
     using complex_dense_type = typename dense_type::complex_type;
     using real_dense_type = typename dense_type ::real_type;
 
@@ -798,38 +798,6 @@ public:
 };
 
 TYPED_TEST_SUITE(VectorLocalOps, gko::test::ValueTypes, TypenameNameGenerator);
-
-
-TYPED_TEST(VectorLocalOps, ApplyNotSupported)
-{
-    using dist_vec_type = typename TestFixture::dist_vec_type;
-    auto a = dist_vec_type::create(this->exec, this->comm, gko::dim<2>{2, 2},
-                                   gko::dim<2>{2, 2});
-    auto b = dist_vec_type::create(this->exec, this->comm, gko::dim<2>{2, 2},
-                                   gko::dim<2>{2, 2});
-    auto c = dist_vec_type::create(this->exec, this->comm, gko::dim<2>{2, 2},
-                                   gko::dim<2>{2, 2});
-
-    ASSERT_THROW(a->apply(b, c), gko::NotSupported);
-}
-
-
-TYPED_TEST(VectorLocalOps, AdvancedApplyNotSupported)
-{
-    using dist_vec_type = typename TestFixture::dist_vec_type;
-    auto a = dist_vec_type::create(this->exec, this->comm, gko::dim<2>{2, 2},
-                                   gko::dim<2>{2, 2});
-    auto b = dist_vec_type::create(this->exec, this->comm, gko::dim<2>{1, 1},
-                                   gko::dim<2>{1, 1});
-    auto c = dist_vec_type::create(this->exec, this->comm, gko::dim<2>{2, 2},
-                                   gko::dim<2>{2, 2});
-    auto d = dist_vec_type::create(this->exec, this->comm, gko::dim<2>{1, 1},
-                                   gko::dim<2>{1, 1});
-    auto e = dist_vec_type::create(this->exec, this->comm, gko::dim<2>{2, 2},
-                                   gko::dim<2>{2, 2});
-
-    ASSERT_THROW(a->apply(b, c, d, e), gko::NotSupported);
-}
 
 
 TYPED_TEST(VectorLocalOps, ConvertsToPrecision)

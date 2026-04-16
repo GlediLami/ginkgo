@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 
 #include <ginkgo/core/matrix/csr.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 #include <ginkgo/core/preconditioner/jacobi.hpp>
 
 #include "core/test/utils.hpp"
@@ -20,7 +20,7 @@ class Jacobi : public CommonTestFixture {
 protected:
     using Bj = gko::preconditioner::Jacobi<>;
     using Mtx = gko::matrix::Csr<>;
-    using Vec = gko::matrix::Dense<>;
+    using Vec = gko::matrix::MultiVector<>;
     using mtx_data = gko::matrix_data<>;
     using value_type = typename Mtx::value_type;
     using index_type = typename Mtx::index_type;

@@ -8,7 +8,7 @@
 
 #include <ginkgo/core/base/exception.hpp>
 #include <ginkgo/core/base/executor.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 #include <ginkgo/core/solver/cg.hpp>
 #include <ginkgo/core/stop/combined.hpp>
 #include <ginkgo/core/stop/iteration.hpp>
@@ -25,7 +25,7 @@ template <typename T>
 class Cg : public ::testing::Test {
 protected:
     using value_type = T;
-    using Mtx = gko::matrix::Dense<value_type>;
+    using Mtx = gko::matrix::MultiVector<value_type>;
     using Solver = gko::solver::Cg<value_type>;
     Cg()
         : exec(gko::ReferenceExecutor::create()),
@@ -262,7 +262,7 @@ TYPED_TEST(Cg, ThrowsOnStencilSystemMultiVectorMixed)
 {
     using value_type = typename TestFixture::value_type;
     using snd_value_type = gko::next_precision<value_type>;
-    using Mtx = gko::matrix::Dense<snd_value_type>;
+    using Mtx = gko::matrix::MultiVector<snd_value_type>;
     auto solver =
         gko::solver::Cg<value_type>::build()
             .with_criteria(gko::stop::Iteration::build().with_max_iters(3u))
@@ -280,7 +280,7 @@ TYPED_TEST(Cg, ThrowsOnStencilSystemMultiVectorMixed)
 TYPED_TEST(Cg, SolvesStencilSystemMixed)
 {
     using value_type = gko::next_precision<typename TestFixture::value_type>;
-    using Mtx = gko::matrix::Dense<value_type>;
+    using Mtx = gko::matrix::MultiVector<value_type>;
     auto solver = this->cg_factory->generate(this->mtx);
     auto b = gko::initialize<Mtx>({-1.0, 3.0, 1.0}, this->exec);
     auto x = gko::initialize<Mtx>({0.0, 0.0, 0.0}, this->exec);
@@ -317,7 +317,7 @@ TYPED_TEST(Cg, SolvesStencilSystemMixedComplex)
 {
     using value_type =
         gko::to_complex<gko::next_precision<typename TestFixture::value_type>>;
-    using Mtx = gko::matrix::Dense<value_type>;
+    using Mtx = gko::matrix::MultiVector<value_type>;
     auto solver = this->cg_factory->generate(this->mtx);
     auto b = gko::initialize<Mtx>(
         {value_type{-1.0, 2.0}, value_type{3.0, -6.0}, value_type{1.0, -2.0}},
@@ -372,7 +372,7 @@ TYPED_TEST(Cg, SolvesStencilSystemUsingAdvancedApply)
 TYPED_TEST(Cg, SolvesStencilSystemUsingAdvancedApplyMixed)
 {
     using value_type = gko::next_precision<typename TestFixture::value_type>;
-    using Mtx = gko::matrix::Dense<value_type>;
+    using Mtx = gko::matrix::MultiVector<value_type>;
     auto solver = this->cg_factory->generate(this->mtx);
     auto alpha = gko::initialize<Mtx>({2.0}, this->exec);
     auto beta = gko::initialize<Mtx>({-1.0}, this->exec);
@@ -412,7 +412,7 @@ TYPED_TEST(Cg, SolvesStencilSystemUsingAdvancedApplyComplex)
 
 TYPED_TEST(Cg, SolvesStencilSystemUsingAdvancedApplyMixedComplex)
 {
-    using Scalar = gko::matrix::Dense<
+    using Scalar = gko::matrix::MultiVector<
         gko::next_precision<typename TestFixture::value_type>>;
     using Mtx = gko::to_complex<typename TestFixture::Mtx>;
     using value_type = typename Mtx::value_type;
@@ -455,7 +455,7 @@ TYPED_TEST(Cg, SolvesMultipleStencilSystemsUsingAdvancedApply)
 }
 
 
-TYPED_TEST(Cg, SolvesBigDenseSystem1)
+TYPED_TEST(Cg, SolvesBigMultiVectorSystem1)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -474,7 +474,7 @@ TYPED_TEST(Cg, SolvesBigDenseSystem1)
 }
 
 
-TYPED_TEST(Cg, SolvesBigDenseSystem2)
+TYPED_TEST(Cg, SolvesBigMultiVectorSystem2)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -493,7 +493,7 @@ TYPED_TEST(Cg, SolvesBigDenseSystem2)
 }
 
 
-TYPED_TEST(Cg, SolvesBigDenseSystem3)
+TYPED_TEST(Cg, SolvesBigMultiVectorSystem3)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -512,7 +512,7 @@ TYPED_TEST(Cg, SolvesBigDenseSystem3)
 }
 
 
-TYPED_TEST(Cg, SolvesMultipleDenseSystemForDivergenceCheck)
+TYPED_TEST(Cg, SolvesMultipleMultiVectorSystemForDivergenceCheck)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -582,7 +582,7 @@ TYPED_TEST(Cg, SolvesMultipleDenseSystemForDivergenceCheck)
 }
 
 
-TYPED_TEST(Cg, SolvesTransposedBigDenseSystem)
+TYPED_TEST(Cg, SolvesTransposedBigMultiVectorSystem)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -601,7 +601,7 @@ TYPED_TEST(Cg, SolvesTransposedBigDenseSystem)
 }
 
 
-TYPED_TEST(Cg, SolvesConjTransposedBigDenseSystem)
+TYPED_TEST(Cg, SolvesConjTransposedBigMultiVectorSystem)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;

@@ -2,7 +2,7 @@
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "core/matrix/dense_kernels.hpp"
+#include "core/matrix/multivector_kernels.hpp"
 
 #include <complex>
 #include <memory>
@@ -14,13 +14,12 @@
 #include <ginkgo/core/base/exception.hpp>
 #include <ginkgo/core/base/executor.hpp>
 #include <ginkgo/core/base/math.hpp>
-#include <ginkgo/core/base/precision_dispatch.hpp>
 #include <ginkgo/core/matrix/coo.hpp>
 #include <ginkgo/core/matrix/csr.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
 #include <ginkgo/core/matrix/diagonal.hpp>
 #include <ginkgo/core/matrix/ell.hpp>
 #include <ginkgo/core/matrix/hybrid.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 #include <ginkgo/core/matrix/permutation.hpp>
 #include <ginkgo/core/matrix/scaled_permutation.hpp>
 #include <ginkgo/core/matrix/sellp.hpp>
@@ -33,14 +32,14 @@ namespace {
 
 
 template <typename T>
-class Dense : public ::testing::Test {
+class MultiVector : public ::testing::Test {
 protected:
     using value_type = T;
-    using Mtx = gko::matrix::Dense<value_type>;
-    using MixedMtx = gko::matrix::Dense<gko::next_precision<value_type>>;
+    using Mtx = gko::matrix::MultiVector<value_type>;
+    using MixedMtx = gko::matrix::MultiVector<gko::next_precision<value_type>>;
     using ComplexMtx = gko::to_complex<Mtx>;
     using RealMtx = gko::remove_complex<Mtx>;
-    Dense()
+    MultiVector()
         : exec(gko::ReferenceExecutor::create()),
           mtx1(gko::initialize<Mtx>(4, {{1.0, 2.0, 3.0}, {1.5, 2.5, 3.5}},
                                     exec)),
@@ -80,16 +79,16 @@ protected:
 };
 
 
-TYPED_TEST_SUITE(Dense, gko::test::ValueTypes, TypenameNameGenerator);
+TYPED_TEST_SUITE(MultiVector, gko::test::ValueTypes, TypenameNameGenerator);
 
 
-TYPED_TEST(Dense, CopyRespectsStride)
+TYPED_TEST(MultiVector, CopyRespectsStride)
 {
     using value_type = typename TestFixture::value_type;
-    auto m =
-        gko::initialize<gko::matrix::Dense<TypeParam>>({1.0, 2.0}, this->exec);
-    auto m2 =
-        gko::matrix::Dense<TypeParam>::create(this->exec, gko::dim<2>{2, 1}, 2);
+    auto m = gko::initialize<gko::matrix::MultiVector<TypeParam>>({1.0, 2.0},
+                                                                  this->exec);
+    auto m2 = gko::matrix::MultiVector<TypeParam>::create(this->exec,
+                                                          gko::dim<2>{2, 1}, 2);
     auto original_data = m2->get_values();
     original_data[1] = TypeParam{3.0};
 
@@ -103,11 +102,12 @@ TYPED_TEST(Dense, CopyRespectsStride)
 }
 
 
-TYPED_TEST(Dense, TemporaryOutputCloneWorks)
+TYPED_TEST(MultiVector, TemporaryOutputCloneWorks)
 {
     using value_type = typename TestFixture::value_type;
     auto other = gko::OmpExecutor::create();
-    auto m = gko::initialize<gko::matrix::Dense<TypeParam>>({1.0, 2.0}, other);
+    auto m =
+        gko::initialize<gko::matrix::MultiVector<TypeParam>>({1.0, 2.0}, other);
 
     {
         auto clone = gko::make_temporary_output_clone(this->exec, m);
@@ -124,11 +124,11 @@ TYPED_TEST(Dense, TemporaryOutputCloneWorks)
 }
 
 
-TYPED_TEST(Dense, CanBeFilledWithValue)
+TYPED_TEST(MultiVector, CanBeFilledWithValue)
 {
     using value_type = typename TestFixture::value_type;
-    auto m =
-        gko::initialize<gko::matrix::Dense<TypeParam>>({1.0, 2.0}, this->exec);
+    auto m = gko::initialize<gko::matrix::MultiVector<TypeParam>>({1.0, 2.0},
+                                                                  this->exec);
     EXPECT_EQ(m->at(0), value_type{1});
     EXPECT_EQ(m->at(1), value_type{2});
 
@@ -139,11 +139,11 @@ TYPED_TEST(Dense, CanBeFilledWithValue)
 }
 
 
-TYPED_TEST(Dense, CanBeFilledWithValueForStridedMatrices)
+TYPED_TEST(MultiVector, CanBeFilledWithValueForStridedMatrices)
 {
     using value_type = typename TestFixture::value_type;
     using T = value_type;
-    auto m = gko::initialize<gko::matrix::Dense<TypeParam>>(
+    auto m = gko::initialize<gko::matrix::MultiVector<TypeParam>>(
         4, {I<T>{1.0, 2.0}, I<T>{3.0, 4.0}, I<T>{5.0, 6.0}}, this->exec);
     T in_stride{-1.0};
     m->get_values()[3] = in_stride;
@@ -171,7 +171,7 @@ TYPED_TEST(Dense, CanBeFilledWithValueForStridedMatrices)
 }
 
 
-TYPED_TEST(Dense, AppliesToDense)
+TYPED_TEST(MultiVector, AppliesToMultiVector)
 {
     using T = typename TestFixture::value_type;
     T in_stride{-1};
@@ -189,7 +189,7 @@ TYPED_TEST(Dense, AppliesToDense)
 }
 
 
-TYPED_TEST(Dense, AppliesToMixedDense)
+TYPED_TEST(MultiVector, AppliesToMixedMultiVector)
 {
     using MixedMtx = typename TestFixture::MixedMtx;
     using MixedT = typename MixedMtx::value_type;
@@ -209,7 +209,7 @@ TYPED_TEST(Dense, AppliesToMixedDense)
 }
 
 
-TYPED_TEST(Dense, AppliesLinearCombinationToDense)
+TYPED_TEST(MultiVector, AppliesLinearCombinationToMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -230,7 +230,7 @@ TYPED_TEST(Dense, AppliesLinearCombinationToDense)
 }
 
 
-TYPED_TEST(Dense, AppliesLinearCombinationToDenseWithZeroBetaNan)
+TYPED_TEST(MultiVector, AppliesLinearCombinationToMultiVectorWithZeroBetaNan)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -249,7 +249,7 @@ TYPED_TEST(Dense, AppliesLinearCombinationToDenseWithZeroBetaNan)
 }
 
 
-TYPED_TEST(Dense, AppliesLinearCombinationToMixedDense)
+TYPED_TEST(MultiVector, AppliesLinearCombinationToMixedMultiVector)
 {
     using MixedMtx = typename TestFixture::MixedMtx;
     using MixedT = typename MixedMtx::value_type;
@@ -271,7 +271,7 @@ TYPED_TEST(Dense, AppliesLinearCombinationToMixedDense)
 }
 
 
-TYPED_TEST(Dense, ApplyFailsOnWrongInnerDimension)
+TYPED_TEST(MultiVector, ApplyFailsOnWrongInnerDimension)
 {
     using Mtx = typename TestFixture::Mtx;
     auto res = Mtx::create(this->exec, gko::dim<2>{2});
@@ -280,7 +280,7 @@ TYPED_TEST(Dense, ApplyFailsOnWrongInnerDimension)
 }
 
 
-TYPED_TEST(Dense, ApplyFailsOnWrongNumberOfRows)
+TYPED_TEST(MultiVector, ApplyFailsOnWrongNumberOfRows)
 {
     using Mtx = typename TestFixture::Mtx;
     auto res = Mtx::create(this->exec, gko::dim<2>{3});
@@ -289,7 +289,7 @@ TYPED_TEST(Dense, ApplyFailsOnWrongNumberOfRows)
 }
 
 
-TYPED_TEST(Dense, ApplyFailsOnWrongNumberOfCols)
+TYPED_TEST(MultiVector, ApplyFailsOnWrongNumberOfCols)
 {
     using Mtx = typename TestFixture::Mtx;
     auto res = Mtx::create(this->exec, gko::dim<2>{2}, 3);
@@ -298,7 +298,7 @@ TYPED_TEST(Dense, ApplyFailsOnWrongNumberOfCols)
 }
 
 
-TYPED_TEST(Dense, ScalesData)
+TYPED_TEST(MultiVector, ScalesData)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -313,7 +313,7 @@ TYPED_TEST(Dense, ScalesData)
 }
 
 
-TYPED_TEST(Dense, ScalesDataMixed)
+TYPED_TEST(MultiVector, ScalesDataMixed)
 {
     using MixedMtx = typename TestFixture::MixedMtx;
     using MixedT = typename MixedMtx::value_type;
@@ -329,7 +329,7 @@ TYPED_TEST(Dense, ScalesDataMixed)
 }
 
 
-TYPED_TEST(Dense, InvScalesData)
+TYPED_TEST(MultiVector, InvScalesData)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -344,7 +344,7 @@ TYPED_TEST(Dense, InvScalesData)
 }
 
 
-TYPED_TEST(Dense, ScalesDataWithScalar)
+TYPED_TEST(MultiVector, ScalesDataWithScalar)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -359,7 +359,7 @@ TYPED_TEST(Dense, ScalesDataWithScalar)
 }
 
 
-TYPED_TEST(Dense, ScalesDataWithZeroScalarNaN)
+TYPED_TEST(MultiVector, ScalesDataWithZeroScalarNaN)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -375,7 +375,7 @@ TYPED_TEST(Dense, ScalesDataWithZeroScalarNaN)
 }
 
 
-TYPED_TEST(Dense, InvScalesDataWithScalar)
+TYPED_TEST(MultiVector, InvScalesDataWithScalar)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -390,7 +390,7 @@ TYPED_TEST(Dense, InvScalesDataWithScalar)
 }
 
 
-TYPED_TEST(Dense, ScalesDataWithStride)
+TYPED_TEST(MultiVector, ScalesDataWithStride)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -410,7 +410,7 @@ TYPED_TEST(Dense, ScalesDataWithStride)
 }
 
 
-TYPED_TEST(Dense, AddsScaled)
+TYPED_TEST(MultiVector, AddsScaled)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -430,7 +430,7 @@ TYPED_TEST(Dense, AddsScaled)
 }
 
 
-TYPED_TEST(Dense, AddsScaledMixed)
+TYPED_TEST(MultiVector, AddsScaledMixed)
 {
     using MixedMtx = typename TestFixture::MixedMtx;
     using T = typename TestFixture::value_type;
@@ -452,7 +452,7 @@ TYPED_TEST(Dense, AddsScaledMixed)
 }
 
 
-TYPED_TEST(Dense, SubtractsScaled)
+TYPED_TEST(MultiVector, SubtractsScaled)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -472,7 +472,7 @@ TYPED_TEST(Dense, SubtractsScaled)
 }
 
 
-TYPED_TEST(Dense, AddsScaledWithScalar)
+TYPED_TEST(MultiVector, AddsScaledWithScalar)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -492,7 +492,7 @@ TYPED_TEST(Dense, AddsScaledWithScalar)
 }
 
 
-TYPED_TEST(Dense, AddsScaledWithZeroScalar)
+TYPED_TEST(MultiVector, AddsScaledWithZeroScalar)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -506,7 +506,7 @@ TYPED_TEST(Dense, AddsScaledWithZeroScalar)
 }
 
 
-TYPED_TEST(Dense, SubtractsScaledWithZeroScalar)
+TYPED_TEST(MultiVector, SubtractsScaledWithZeroScalar)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -520,7 +520,7 @@ TYPED_TEST(Dense, SubtractsScaledWithZeroScalar)
 }
 
 
-TYPED_TEST(Dense, AddScaledFailsOnWrongSizes)
+TYPED_TEST(MultiVector, AddScaledFailsOnWrongSizes)
 {
     using Mtx = typename TestFixture::Mtx;
     auto alpha = Mtx::create(this->exec, gko::dim<2>{1, 2});
@@ -530,7 +530,7 @@ TYPED_TEST(Dense, AddScaledFailsOnWrongSizes)
 }
 
 
-TYPED_TEST(Dense, ComputesDot)
+TYPED_TEST(MultiVector, ComputesDot)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -544,7 +544,7 @@ TYPED_TEST(Dense, ComputesDot)
 }
 
 
-TYPED_TEST(Dense, ComputesDotMixed)
+TYPED_TEST(MultiVector, ComputesDotMixed)
 {
     using MixedMtx = typename TestFixture::MixedMtx;
     using MixedT = typename MixedMtx::value_type;
@@ -560,7 +560,7 @@ TYPED_TEST(Dense, ComputesDotMixed)
 }
 
 
-TYPED_TEST(Dense, ComputesConjDot)
+TYPED_TEST(MultiVector, ComputesConjDot)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -574,7 +574,7 @@ TYPED_TEST(Dense, ComputesConjDot)
 }
 
 
-TYPED_TEST(Dense, ComputesConjDotMixed)
+TYPED_TEST(MultiVector, ComputesConjDotMixed)
 {
     using MixedMtx = typename TestFixture::MixedMtx;
     using MixedT = typename MixedMtx::value_type;
@@ -590,12 +590,12 @@ TYPED_TEST(Dense, ComputesConjDotMixed)
 }
 
 
-TYPED_TEST(Dense, ComputesNorm2)
+TYPED_TEST(MultiVector, ComputesNorm2)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
     using T_nc = gko::remove_complex<T>;
-    using NormVector = gko::matrix::Dense<T_nc>;
+    using NormVector = gko::matrix::MultiVector<T_nc>;
     auto mtx(gko::initialize<Mtx>(
         {I<T>{1.0, 0.0}, I<T>{2.0, 3.0}, I<T>{2.0, 4.0}}, this->exec));
     auto result = NormVector::create(this->exec, gko::dim<2>{1, 2});
@@ -607,14 +607,14 @@ TYPED_TEST(Dense, ComputesNorm2)
 }
 
 
-TYPED_TEST(Dense, ComputesNorm2Mixed)
+TYPED_TEST(MultiVector, ComputesNorm2Mixed)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
     using MixedMtx = typename TestFixture::MixedMtx;
     using MixedT = typename MixedMtx::value_type;
     using MixedT_nc = gko::remove_complex<MixedT>;
-    using MixedNormVector = gko::matrix::Dense<MixedT_nc>;
+    using MixedNormVector = gko::matrix::MultiVector<MixedT_nc>;
     auto mtx(gko::initialize<Mtx>(
         {I<T>{1.0, 0.0}, I<T>{2.0, 3.0}, I<T>{2.0, 4.0}}, this->exec));
     auto result = MixedNormVector::create(this->exec, gko::dim<2>{1, 2});
@@ -626,18 +626,18 @@ TYPED_TEST(Dense, ComputesNorm2Mixed)
 }
 
 
-TYPED_TEST(Dense, ComputesNorm2Squared)
+TYPED_TEST(MultiVector, ComputesNorm2Squared)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
     using T_nc = gko::remove_complex<T>;
-    using NormVector = gko::matrix::Dense<T_nc>;
+    using NormVector = gko::matrix::MultiVector<T_nc>;
     gko::array<char> tmp{this->exec};
     auto mtx(gko::initialize<Mtx>(
         {I<T>{1.0, 0.0}, I<T>{2.0, 3.0}, I<T>{2.0, 4.0}}, this->exec));
     auto result = NormVector::create(this->exec, gko::dim<2>{1, 2});
 
-    gko::kernels::reference::dense::compute_squared_norm2(
+    gko::kernels::reference::multivector::compute_squared_norm2(
         gko::as<gko::ReferenceExecutor>(this->exec),
         mtx->get_const_device_view(), result->get_device_view(), tmp);
 
@@ -646,15 +646,15 @@ TYPED_TEST(Dense, ComputesNorm2Squared)
 }
 
 
-TYPED_TEST(Dense, ComputesSqrt)
+TYPED_TEST(MultiVector, ComputesSqrt)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
     using T_nc = gko::remove_complex<T>;
-    using NormVector = gko::matrix::Dense<T_nc>;
+    using NormVector = gko::matrix::MultiVector<T_nc>;
     auto mtx(gko::initialize<NormVector>(I<I<T_nc>>{{9.0, 25.0}}, this->exec));
 
-    gko::kernels::reference::dense::compute_sqrt(
+    gko::kernels::reference::multivector::compute_sqrt(
         gko::as<gko::ReferenceExecutor>(this->exec), mtx->get_device_view());
 
     EXPECT_EQ(mtx->at(0, 0), T_nc{3.0});
@@ -662,12 +662,12 @@ TYPED_TEST(Dense, ComputesSqrt)
 }
 
 
-TYPED_TEST(Dense, ComputesNorm1)
+TYPED_TEST(MultiVector, ComputesNorm1)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
     using T_nc = gko::remove_complex<T>;
-    using NormVector = gko::matrix::Dense<T_nc>;
+    using NormVector = gko::matrix::MultiVector<T_nc>;
     auto mtx(gko::initialize<Mtx>(
         {I<T>{1.0, 0.0}, I<T>{2.0, 3.0}, I<T>{2.0, 4.0}, I<T>{-1.0, -1.0}},
         this->exec));
@@ -680,12 +680,12 @@ TYPED_TEST(Dense, ComputesNorm1)
 }
 
 
-TYPED_TEST(Dense, ComputesNorm1Mixed)
+TYPED_TEST(MultiVector, ComputesNorm1Mixed)
 {
     using MixedMtx = typename TestFixture::MixedMtx;
     using MixedT = typename MixedMtx::value_type;
     using MixedT_nc = gko::remove_complex<MixedT>;
-    using MixedNormVector = gko::matrix::Dense<MixedT_nc>;
+    using MixedNormVector = gko::matrix::MultiVector<MixedT_nc>;
     auto mtx(
         gko::initialize<MixedMtx>({I<MixedT>{1.0, 0.0}, I<MixedT>{2.0, 3.0},
                                    I<MixedT>{2.0, 4.0}, I<MixedT>{-1.0, -1.0}},
@@ -699,7 +699,7 @@ TYPED_TEST(Dense, ComputesNorm1Mixed)
 }
 
 
-TYPED_TEST(Dense, ComputesMean)
+TYPED_TEST(MultiVector, ComputesMean)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -720,7 +720,7 @@ TYPED_TEST(Dense, ComputesMean)
 }
 
 
-TYPED_TEST(Dense, ComputesMeanFailsOnWrongResultSize)
+TYPED_TEST(MultiVector, ComputesMeanFailsOnWrongResultSize)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -730,7 +730,7 @@ TYPED_TEST(Dense, ComputesMeanFailsOnWrongResultSize)
 }
 
 
-TYPED_TEST(Dense, ComputeDotFailsOnWrongInputSize)
+TYPED_TEST(MultiVector, ComputeDotFailsOnWrongInputSize)
 {
     using Mtx = typename TestFixture::Mtx;
     auto result = Mtx::create(this->exec, gko::dim<2>{1, 3});
@@ -740,7 +740,7 @@ TYPED_TEST(Dense, ComputeDotFailsOnWrongInputSize)
 }
 
 
-TYPED_TEST(Dense, ComputeDotFailsOnWrongResultSize)
+TYPED_TEST(MultiVector, ComputeDotFailsOnWrongResultSize)
 {
     using Mtx = typename TestFixture::Mtx;
     auto result = Mtx::create(this->exec, gko::dim<2>{1, 2});
@@ -750,7 +750,7 @@ TYPED_TEST(Dense, ComputeDotFailsOnWrongResultSize)
 }
 
 
-TYPED_TEST(Dense, ComputeConjDotFailsOnWrongInputSize)
+TYPED_TEST(MultiVector, ComputeConjDotFailsOnWrongInputSize)
 {
     using Mtx = typename TestFixture::Mtx;
     auto result = Mtx::create(this->exec, gko::dim<2>{1, 3});
@@ -760,7 +760,7 @@ TYPED_TEST(Dense, ComputeConjDotFailsOnWrongInputSize)
 }
 
 
-TYPED_TEST(Dense, ComputeConjDotFailsOnWrongResultSize)
+TYPED_TEST(MultiVector, ComputeConjDotFailsOnWrongResultSize)
 {
     using Mtx = typename TestFixture::Mtx;
     auto result = Mtx::create(this->exec, gko::dim<2>{1, 2});
@@ -770,14 +770,14 @@ TYPED_TEST(Dense, ComputeConjDotFailsOnWrongResultSize)
 }
 
 
-TYPED_TEST(Dense, ConvertsToPrecision)
+TYPED_TEST(MultiVector, ConvertsToPrecision)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
     using OtherT = typename gko::next_precision<T>;
-    using OtherDense = typename gko::matrix::Dense<OtherT>;
-    auto tmp = OtherDense::create(this->exec);
-    auto res = Dense::create(this->exec);
+    using OtherMultiVector = typename gko::matrix::MultiVector<OtherT>;
+    auto tmp = OtherMultiVector::create(this->exec);
+    auto res = MultiVector::create(this->exec);
     // If OtherT is more precise: 0, otherwise r
     auto residual =
         r<OtherT>::value < r<T>::value
@@ -792,14 +792,14 @@ TYPED_TEST(Dense, ConvertsToPrecision)
 }
 
 
-TYPED_TEST(Dense, MovesToPrecision)
+TYPED_TEST(MultiVector, MovesToPrecision)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
     using OtherT = typename gko::next_precision<T>;
-    using OtherDense = typename gko::matrix::Dense<OtherT>;
-    auto tmp = OtherDense::create(this->exec);
-    auto res = Dense::create(this->exec);
+    using OtherMultiVector = typename gko::matrix::MultiVector<OtherT>;
+    auto tmp = OtherMultiVector::create(this->exec);
+    auto res = MultiVector::create(this->exec);
     // If OtherT is more precise: 0, otherwise r
     auto residual =
         r<OtherT>::value < r<T>::value
@@ -814,7 +814,7 @@ TYPED_TEST(Dense, MovesToPrecision)
 }
 
 
-TYPED_TEST(Dense, SquareMatrixIsTransposable)
+TYPED_TEST(MultiVector, SquareMatrixIsTransposable)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -826,7 +826,7 @@ TYPED_TEST(Dense, SquareMatrixIsTransposable)
 }
 
 
-TYPED_TEST(Dense, SquareMatrixIsTransposableIntoDense)
+TYPED_TEST(MultiVector, SquareMatrixIsTransposableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -840,7 +840,7 @@ TYPED_TEST(Dense, SquareMatrixIsTransposableIntoDense)
 }
 
 
-TYPED_TEST(Dense, SquareSubmatrixIsTransposableIntoDense)
+TYPED_TEST(MultiVector, SquareSubmatrixIsTransposableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -853,7 +853,8 @@ TYPED_TEST(Dense, SquareSubmatrixIsTransposableIntoDense)
 }
 
 
-TYPED_TEST(Dense, SquareMatrixIsTransposableIntoDenseFailsForWrongDimensions)
+TYPED_TEST(MultiVector,
+           SquareMatrixIsTransposableIntoMultiVectorFailsForWrongDimensions)
 {
     using Mtx = typename TestFixture::Mtx;
 
@@ -862,7 +863,7 @@ TYPED_TEST(Dense, SquareMatrixIsTransposableIntoDenseFailsForWrongDimensions)
 }
 
 
-TYPED_TEST(Dense, NonSquareMatrixIsTransposable)
+TYPED_TEST(MultiVector, NonSquareMatrixIsTransposable)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -872,7 +873,7 @@ TYPED_TEST(Dense, NonSquareMatrixIsTransposable)
 }
 
 
-TYPED_TEST(Dense, NonSquareMatrixIsTransposableIntoDense)
+TYPED_TEST(MultiVector, NonSquareMatrixIsTransposableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -885,7 +886,7 @@ TYPED_TEST(Dense, NonSquareMatrixIsTransposableIntoDense)
 }
 
 
-TYPED_TEST(Dense, NonSquareSubmatrixIsTransposableIntoDense)
+TYPED_TEST(MultiVector, NonSquareSubmatrixIsTransposableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -898,7 +899,8 @@ TYPED_TEST(Dense, NonSquareSubmatrixIsTransposableIntoDense)
 }
 
 
-TYPED_TEST(Dense, NonSquareMatrixIsTransposableIntoDenseFailsForWrongDimensions)
+TYPED_TEST(MultiVector,
+           NonSquareMatrixIsTransposableIntoMultiVectorFailsForWrongDimensions)
 {
     using Mtx = typename TestFixture::Mtx;
 
@@ -907,7 +909,7 @@ TYPED_TEST(Dense, NonSquareMatrixIsTransposableIntoDenseFailsForWrongDimensions)
 }
 
 
-TYPED_TEST(Dense, ExtractsDiagonalFromSquareMatrix)
+TYPED_TEST(MultiVector, ExtractsDiagonalFromSquareMatrix)
 {
     using T = typename TestFixture::value_type;
 
@@ -921,7 +923,7 @@ TYPED_TEST(Dense, ExtractsDiagonalFromSquareMatrix)
 }
 
 
-TYPED_TEST(Dense, ExtractsDiagonalFromTallSkinnyMatrix)
+TYPED_TEST(MultiVector, ExtractsDiagonalFromTallSkinnyMatrix)
 {
     using T = typename TestFixture::value_type;
 
@@ -934,7 +936,7 @@ TYPED_TEST(Dense, ExtractsDiagonalFromTallSkinnyMatrix)
 }
 
 
-TYPED_TEST(Dense, ExtractsDiagonalFromShortFatMatrix)
+TYPED_TEST(MultiVector, ExtractsDiagonalFromShortFatMatrix)
 {
     using T = typename TestFixture::value_type;
 
@@ -947,7 +949,7 @@ TYPED_TEST(Dense, ExtractsDiagonalFromShortFatMatrix)
 }
 
 
-TYPED_TEST(Dense, ExtractsDiagonalFromSquareMatrixIntoDiagonal)
+TYPED_TEST(MultiVector, ExtractsDiagonalFromSquareMatrixIntoDiagonal)
 {
     using T = typename TestFixture::value_type;
     auto diag = gko::matrix::Diagonal<T>::create(this->exec, 3);
@@ -962,7 +964,7 @@ TYPED_TEST(Dense, ExtractsDiagonalFromSquareMatrixIntoDiagonal)
 }
 
 
-TYPED_TEST(Dense, ExtractsDiagonalFromTallSkinnyMatrixIntoDiagonal)
+TYPED_TEST(MultiVector, ExtractsDiagonalFromTallSkinnyMatrixIntoDiagonal)
 {
     using T = typename TestFixture::value_type;
     auto diag = gko::matrix::Diagonal<T>::create(this->exec, 2);
@@ -976,7 +978,7 @@ TYPED_TEST(Dense, ExtractsDiagonalFromTallSkinnyMatrixIntoDiagonal)
 }
 
 
-TYPED_TEST(Dense, ExtractsDiagonalFromShortFatMatrixIntoDiagonal)
+TYPED_TEST(MultiVector, ExtractsDiagonalFromShortFatMatrixIntoDiagonal)
 {
     using T = typename TestFixture::value_type;
     auto diag = gko::matrix::Diagonal<T>::create(this->exec, 2);
@@ -990,7 +992,7 @@ TYPED_TEST(Dense, ExtractsDiagonalFromShortFatMatrixIntoDiagonal)
 }
 
 
-TYPED_TEST(Dense, InplaceAbsolute)
+TYPED_TEST(MultiVector, InplaceAbsolute)
 {
     using T = typename TestFixture::value_type;
 
@@ -1002,7 +1004,7 @@ TYPED_TEST(Dense, InplaceAbsolute)
 }
 
 
-TYPED_TEST(Dense, InplaceAbsoluteSubMatrix)
+TYPED_TEST(MultiVector, InplaceAbsoluteSubMatrix)
 {
     using T = typename TestFixture::value_type;
     auto mtx = this->mtx5->create_subview(gko::span{0, 2}, gko::span{0, 2});
@@ -1015,7 +1017,7 @@ TYPED_TEST(Dense, InplaceAbsoluteSubMatrix)
 }
 
 
-TYPED_TEST(Dense, OutplaceAbsolute)
+TYPED_TEST(MultiVector, OutplaceAbsolute)
 {
     using T = typename TestFixture::value_type;
 
@@ -1027,7 +1029,7 @@ TYPED_TEST(Dense, OutplaceAbsolute)
 }
 
 
-TYPED_TEST(Dense, OutplaceAbsoluteIntoDense)
+TYPED_TEST(MultiVector, OutplaceAbsoluteIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -1042,7 +1044,7 @@ TYPED_TEST(Dense, OutplaceAbsoluteIntoDense)
 }
 
 
-TYPED_TEST(Dense, OutplaceAbsoluteSubMatrix)
+TYPED_TEST(MultiVector, OutplaceAbsoluteSubMatrix)
 {
     using T = typename TestFixture::value_type;
     auto mtx = this->mtx5->create_subview(gko::span{0, 2}, gko::span{0, 2});
@@ -1054,7 +1056,7 @@ TYPED_TEST(Dense, OutplaceAbsoluteSubMatrix)
 }
 
 
-TYPED_TEST(Dense, OutplaceSubmatrixAbsoluteIntoDense)
+TYPED_TEST(MultiVector, OutplaceSubmatrixAbsoluteIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -1069,11 +1071,11 @@ TYPED_TEST(Dense, OutplaceSubmatrixAbsoluteIntoDense)
 }
 
 
-TYPED_TEST(Dense, AppliesToComplex)
+TYPED_TEST(MultiVector, AppliesToComplex)
 {
     using value_type = typename TestFixture::value_type;
     using complex_type = gko::to_complex<value_type>;
-    using Vec = gko::matrix::Dense<complex_type>;
+    using Vec = gko::matrix::MultiVector<complex_type>;
     auto exec = gko::ReferenceExecutor::create();
     auto b =
         gko::initialize<Vec>({{complex_type{1.0, 0.0}, complex_type{2.0, 1.0}},
@@ -1092,12 +1094,12 @@ TYPED_TEST(Dense, AppliesToComplex)
 }
 
 
-TYPED_TEST(Dense, AppliesToMixedComplex)
+TYPED_TEST(MultiVector, AppliesToMixedComplex)
 {
     using mixed_value_type =
         gko::next_precision<typename TestFixture::value_type>;
     using mixed_complex_type = gko::to_complex<mixed_value_type>;
-    using Vec = gko::matrix::Dense<mixed_complex_type>;
+    using Vec = gko::matrix::MultiVector<mixed_complex_type>;
     auto exec = gko::ReferenceExecutor::create();
     auto b = gko::initialize<Vec>(
         {{mixed_complex_type{1.0, 0.0}, mixed_complex_type{2.0, 1.0}},
@@ -1116,25 +1118,25 @@ TYPED_TEST(Dense, AppliesToMixedComplex)
 }
 
 
-TYPED_TEST(Dense, AdvancedAppliesToComplex)
+TYPED_TEST(MultiVector, AdvancedAppliesToComplex)
 {
     using value_type = typename TestFixture::value_type;
     using complex_type = gko::to_complex<value_type>;
-    using Dense = gko::matrix::Dense<value_type>;
-    using DenseComplex = gko::matrix::Dense<complex_type>;
+    using MultiVector = gko::matrix::MultiVector<value_type>;
+    using MultiVectorComplex = gko::matrix::MultiVector<complex_type>;
     auto exec = gko::ReferenceExecutor::create();
 
-    auto b = gko::initialize<DenseComplex>(
+    auto b = gko::initialize<MultiVectorComplex>(
         {{complex_type{1.0, 0.0}, complex_type{2.0, 1.0}},
          {complex_type{2.0, 2.0}, complex_type{3.0, 3.0}},
          {complex_type{3.0, 4.0}, complex_type{4.0, 5.0}}},
         exec);
-    auto x = gko::initialize<DenseComplex>(
+    auto x = gko::initialize<MultiVectorComplex>(
         {{complex_type{1.0, 0.0}, complex_type{2.0, 1.0}},
          {complex_type{2.0, 2.0}, complex_type{3.0, 3.0}}},
         exec);
-    auto alpha = gko::initialize<Dense>({-1.0}, this->exec);
-    auto beta = gko::initialize<Dense>({2.0}, this->exec);
+    auto alpha = gko::initialize<MultiVector>({-1.0}, this->exec);
+    auto beta = gko::initialize<MultiVector>({2.0}, this->exec);
 
     this->mtx1->apply(alpha, b, beta, x);
 
@@ -1146,26 +1148,27 @@ TYPED_TEST(Dense, AdvancedAppliesToComplex)
 }
 
 
-TYPED_TEST(Dense, AdvancedAppliesToMixedComplex)
+TYPED_TEST(MultiVector, AdvancedAppliesToMixedComplex)
 {
     using mixed_value_type =
         gko::next_precision<typename TestFixture::value_type>;
     using mixed_complex_type = gko::to_complex<mixed_value_type>;
-    using MixedDense = gko::matrix::Dense<mixed_value_type>;
-    using MixedDenseComplex = gko::matrix::Dense<mixed_complex_type>;
+    using MixedMultiVector = gko::matrix::MultiVector<mixed_value_type>;
+    using MixedMultiVectorComplex =
+        gko::matrix::MultiVector<mixed_complex_type>;
     auto exec = gko::ReferenceExecutor::create();
 
-    auto b = gko::initialize<MixedDenseComplex>(
+    auto b = gko::initialize<MixedMultiVectorComplex>(
         {{mixed_complex_type{1.0, 0.0}, mixed_complex_type{2.0, 1.0}},
          {mixed_complex_type{2.0, 2.0}, mixed_complex_type{3.0, 3.0}},
          {mixed_complex_type{3.0, 4.0}, mixed_complex_type{4.0, 5.0}}},
         exec);
-    auto x = gko::initialize<MixedDenseComplex>(
+    auto x = gko::initialize<MixedMultiVectorComplex>(
         {{mixed_complex_type{1.0, 0.0}, mixed_complex_type{2.0, 1.0}},
          {mixed_complex_type{2.0, 2.0}, mixed_complex_type{3.0, 3.0}}},
         exec);
-    auto alpha = gko::initialize<MixedDense>({-1.0}, this->exec);
-    auto beta = gko::initialize<MixedDense>({2.0}, this->exec);
+    auto alpha = gko::initialize<MixedMultiVector>({-1.0}, this->exec);
+    auto beta = gko::initialize<MixedMultiVector>({2.0}, this->exec);
 
     this->mtx1->apply(alpha, b, beta, x);
 
@@ -1178,7 +1181,7 @@ TYPED_TEST(Dense, AdvancedAppliesToMixedComplex)
 }
 
 
-TYPED_TEST(Dense, MakeComplex)
+TYPED_TEST(MultiVector, MakeComplex)
 {
     using T = typename TestFixture::value_type;
 
@@ -1188,7 +1191,7 @@ TYPED_TEST(Dense, MakeComplex)
 }
 
 
-TYPED_TEST(Dense, MakeComplexIntoDense)
+TYPED_TEST(MultiVector, MakeComplexIntoMultiVector)
 {
     using T = typename TestFixture::value_type;
     using ComplexMtx = typename TestFixture::ComplexMtx;
@@ -1201,7 +1204,7 @@ TYPED_TEST(Dense, MakeComplexIntoDense)
 }
 
 
-TYPED_TEST(Dense, MakeComplexIntoDenseFailsForWrongDimensions)
+TYPED_TEST(MultiVector, MakeComplexIntoMultiVectorFailsForWrongDimensions)
 {
     using T = typename TestFixture::value_type;
     using ComplexMtx = typename TestFixture::ComplexMtx;
@@ -1213,7 +1216,7 @@ TYPED_TEST(Dense, MakeComplexIntoDenseFailsForWrongDimensions)
 }
 
 
-TYPED_TEST(Dense, GetReal)
+TYPED_TEST(MultiVector, GetReal)
 {
     using T = typename TestFixture::value_type;
 
@@ -1223,7 +1226,7 @@ TYPED_TEST(Dense, GetReal)
 }
 
 
-TYPED_TEST(Dense, GetRealIntoDense)
+TYPED_TEST(MultiVector, GetRealIntoMultiVector)
 {
     using T = typename TestFixture::value_type;
     using RealMtx = typename TestFixture::RealMtx;
@@ -1236,7 +1239,7 @@ TYPED_TEST(Dense, GetRealIntoDense)
 }
 
 
-TYPED_TEST(Dense, GetRealIntoDenseFailsForWrongDimensions)
+TYPED_TEST(MultiVector, GetRealIntoMultiVectorFailsForWrongDimensions)
 {
     using T = typename TestFixture::value_type;
     using RealMtx = typename TestFixture::RealMtx;
@@ -1247,7 +1250,7 @@ TYPED_TEST(Dense, GetRealIntoDenseFailsForWrongDimensions)
 }
 
 
-TYPED_TEST(Dense, GetImag)
+TYPED_TEST(MultiVector, GetImag)
 {
     using T = typename TestFixture::value_type;
 
@@ -1259,7 +1262,7 @@ TYPED_TEST(Dense, GetImag)
 }
 
 
-TYPED_TEST(Dense, GetImagIntoDense)
+TYPED_TEST(MultiVector, GetImagIntoMultiVector)
 {
     using T = typename TestFixture::value_type;
     using RealMtx = typename TestFixture::RealMtx;
@@ -1274,7 +1277,7 @@ TYPED_TEST(Dense, GetImagIntoDense)
 }
 
 
-TYPED_TEST(Dense, GetImagIntoDenseFailsForWrongDimensions)
+TYPED_TEST(MultiVector, GetImagIntoMultiVectorFailsForWrongDimensions)
 {
     using T = typename TestFixture::value_type;
     using RealMtx = typename TestFixture::RealMtx;
@@ -1285,7 +1288,7 @@ TYPED_TEST(Dense, GetImagIntoDenseFailsForWrongDimensions)
 }
 
 
-TYPED_TEST(Dense, MakeTemporaryConversionDoesntConvertOnMatch)
+TYPED_TEST(MultiVector, MakeTemporaryConversionDoesntConvertOnMatch)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -1295,7 +1298,7 @@ TYPED_TEST(Dense, MakeTemporaryConversionDoesntConvertOnMatch)
 }
 
 
-TYPED_TEST(Dense, MakeTemporaryConversionConvertsBack)
+TYPED_TEST(MultiVector, MakeTemporaryConversionConvertsBack)
 {
     using MixedMtx = typename TestFixture::MixedMtx;
     using T = typename TestFixture::value_type;
@@ -1311,7 +1314,7 @@ TYPED_TEST(Dense, MakeTemporaryConversionConvertsBack)
 }
 
 
-TYPED_TEST(Dense, MakeTemporaryConversionConstDoesntConvertBack)
+TYPED_TEST(MultiVector, MakeTemporaryConversionConstDoesntConvertBack)
 {
     using MixedMtx = typename TestFixture::MixedMtx;
     using T = typename TestFixture::value_type;
@@ -1328,7 +1331,7 @@ TYPED_TEST(Dense, MakeTemporaryConversionConstDoesntConvertBack)
 }
 
 
-TYPED_TEST(Dense, ScaleAddIdentityRectangular)
+TYPED_TEST(MultiVector, ScaleAddIdentityRectangular)
 {
     using T = typename TestFixture::value_type;
     using Vec = typename TestFixture::Mtx;
@@ -1344,8 +1347,8 @@ TYPED_TEST(Dense, ScaleAddIdentityRectangular)
 
 
 template <typename ValueIndexType>
-class DenseWithIndexType
-    : public Dense<
+class MultiVectorWithIndexType
+    : public MultiVector<
           typename std::tuple_element<0, decltype(ValueIndexType())>::type> {
 public:
     using value_type =
@@ -1357,7 +1360,7 @@ public:
         gko::matrix::ScaledPermutation<value_type, index_type>;
 
 
-    DenseWithIndexType()
+    MultiVectorWithIndexType()
     {
         perm2 = Permutation::create(this->exec,
                                     gko::array<index_type>{this->exec, {1, 0}});
@@ -1388,7 +1391,7 @@ public:
     std::unique_ptr<ScaledPermutation> scale_perm0;
 };
 
-TYPED_TEST_SUITE(DenseWithIndexType, gko::test::ValueIndexTypes,
+TYPED_TEST_SUITE(MultiVectorWithIndexType, gko::test::ValueIndexTypes,
                  PairTypenameNameGenerator);
 
 
@@ -1416,7 +1419,7 @@ void assert_coo_eq_mtx4(const gko::matrix::Coo<ValueType, IndexType>* coo_mtx)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsToCoo)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsToCoo)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1429,7 +1432,7 @@ TYPED_TEST(DenseWithIndexType, ConvertsToCoo)
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesToCoo)
+TYPED_TEST(MultiVectorWithIndexType, MovesToCoo)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1464,7 +1467,7 @@ void assert_csr_eq_mtx4(const gko::matrix::Csr<ValueType, IndexType>* csr_mtx)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsToCsr)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsToCsr)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1484,7 +1487,7 @@ TYPED_TEST(DenseWithIndexType, ConvertsToCsr)
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesToCsr)
+TYPED_TEST(MultiVectorWithIndexType, MovesToCsr)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1526,7 +1529,7 @@ void assert_sparsity_csr_eq_mtx4(
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsToSparsityCsr)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsToSparsityCsr)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1540,7 +1543,7 @@ TYPED_TEST(DenseWithIndexType, ConvertsToSparsityCsr)
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesToSparsityCsr)
+TYPED_TEST(MultiVectorWithIndexType, MovesToSparsityCsr)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1575,7 +1578,7 @@ void assert_ell_eq_mtx6(const gko::matrix::Ell<ValueType, IndexType>* ell_mtx)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsToEll)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsToEll)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1588,7 +1591,7 @@ TYPED_TEST(DenseWithIndexType, ConvertsToEll)
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesToEll)
+TYPED_TEST(MultiVectorWithIndexType, MovesToEll)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1625,7 +1628,7 @@ void assert_strided_ell_eq_mtx6(
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsToEllWithStride)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsToEllWithStride)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1639,7 +1642,7 @@ TYPED_TEST(DenseWithIndexType, ConvertsToEllWithStride)
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesToEllWithStride)
+TYPED_TEST(MultiVectorWithIndexType, MovesToEllWithStride)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1683,7 +1686,7 @@ void assert_hybrid_auto_eq_mtx4(
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesToHybridAutomatically)
+TYPED_TEST(MultiVectorWithIndexType, MovesToHybridAutomatically)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1696,7 +1699,7 @@ TYPED_TEST(DenseWithIndexType, MovesToHybridAutomatically)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsToHybridAutomatically)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsToHybridAutomatically)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1739,7 +1742,7 @@ void assert_hybrid_strided_eq_mtx4(
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesToHybridWithStrideAutomatically)
+TYPED_TEST(MultiVectorWithIndexType, MovesToHybridWithStrideAutomatically)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1753,7 +1756,7 @@ TYPED_TEST(DenseWithIndexType, MovesToHybridWithStrideAutomatically)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsToHybridWithStrideAutomatically)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsToHybridWithStrideAutomatically)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1800,7 +1803,8 @@ void assert_hybrid_limited_eq_mtx4(
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesToHybridWithStrideAndCooLengthByColumns2)
+TYPED_TEST(MultiVectorWithIndexType,
+           MovesToHybridWithStrideAndCooLengthByColumns2)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1815,7 +1819,8 @@ TYPED_TEST(DenseWithIndexType, MovesToHybridWithStrideAndCooLengthByColumns2)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsToHybridWithStrideAndCooLengthByColumns2)
+TYPED_TEST(MultiVectorWithIndexType,
+           ConvertsToHybridWithStrideAndCooLengthByColumns2)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1862,7 +1867,7 @@ void assert_hybrid_percent_eq_mtx4(
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesToHybridWithStrideByPercent40)
+TYPED_TEST(MultiVectorWithIndexType, MovesToHybridWithStrideByPercent40)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1877,7 +1882,7 @@ TYPED_TEST(DenseWithIndexType, MovesToHybridWithStrideByPercent40)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsToHybridWithStrideByPercent40)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsToHybridWithStrideByPercent40)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1927,7 +1932,7 @@ void assert_sellp_eq_mtx7(
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsToSellp)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsToSellp)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1940,7 +1945,7 @@ TYPED_TEST(DenseWithIndexType, ConvertsToSellp)
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesToSellp)
+TYPED_TEST(MultiVectorWithIndexType, MovesToSellp)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -1990,7 +1995,8 @@ void assert_sellp_strided_eq_mtx7(
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsToSellpWithSliceSizeAndStrideFactor)
+TYPED_TEST(MultiVectorWithIndexType,
+           ConvertsToSellpWithSliceSizeAndStrideFactor)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -2004,7 +2010,7 @@ TYPED_TEST(DenseWithIndexType, ConvertsToSellpWithSliceSizeAndStrideFactor)
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesToSellpWithSliceSizeAndStrideFactor)
+TYPED_TEST(MultiVectorWithIndexType, MovesToSellpWithSliceSizeAndStrideFactor)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -2018,7 +2024,7 @@ TYPED_TEST(DenseWithIndexType, MovesToSellpWithSliceSizeAndStrideFactor)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsToAndFromSellpWithMoreThanOneSlice)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsToAndFromSellpWithMoreThanOneSlice)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
@@ -2035,14 +2041,14 @@ TYPED_TEST(DenseWithIndexType, ConvertsToAndFromSellpWithMoreThanOneSlice)
 }
 
 
-TYPED_TEST(Dense, ConvertsEmptyToPrecision)
+TYPED_TEST(MultiVector, ConvertsEmptyToPrecision)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
     using OtherT = typename gko::next_precision<T>;
-    using OtherDense = typename gko::matrix::Dense<OtherT>;
-    auto empty = OtherDense::create(this->exec);
-    auto res = Dense::create(this->exec);
+    using OtherMultiVector = typename gko::matrix::MultiVector<OtherT>;
+    auto empty = OtherMultiVector::create(this->exec);
+    auto res = MultiVector::create(this->exec);
 
     empty->convert_to(res);
 
@@ -2050,14 +2056,14 @@ TYPED_TEST(Dense, ConvertsEmptyToPrecision)
 }
 
 
-TYPED_TEST(Dense, MovesEmptyToPrecision)
+TYPED_TEST(MultiVector, MovesEmptyToPrecision)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
     using OtherT = typename gko::next_precision<T>;
-    using OtherDense = typename gko::matrix::Dense<OtherT>;
-    auto empty = OtherDense::create(this->exec);
-    auto res = Dense::create(this->exec);
+    using OtherMultiVector = typename gko::matrix::MultiVector<OtherT>;
+    auto empty = OtherMultiVector::create(this->exec);
+    auto res = MultiVector::create(this->exec);
 
     empty->move_to(res);
 
@@ -2065,13 +2071,13 @@ TYPED_TEST(Dense, MovesEmptyToPrecision)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsEmptyToCoo)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsEmptyToCoo)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
     using Coo = typename gko::matrix::Coo<value_type, index_type>;
-    auto empty = Dense::create(this->exec);
+    auto empty = MultiVector::create(this->exec);
     auto res = Coo::create(this->exec);
 
     empty->convert_to(res);
@@ -2081,13 +2087,13 @@ TYPED_TEST(DenseWithIndexType, ConvertsEmptyToCoo)
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesEmptyToCoo)
+TYPED_TEST(MultiVectorWithIndexType, MovesEmptyToCoo)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
     using Coo = typename gko::matrix::Coo<value_type, index_type>;
-    auto empty = Dense::create(this->exec);
+    auto empty = MultiVector::create(this->exec);
     auto res = Coo::create(this->exec);
 
     empty->move_to(res);
@@ -2097,13 +2103,13 @@ TYPED_TEST(DenseWithIndexType, MovesEmptyToCoo)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsEmptyMatrixToCsr)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsEmptyMatrixToCsr)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
     using Csr = typename gko::matrix::Csr<value_type, index_type>;
-    auto empty = Dense::create(this->exec);
+    auto empty = MultiVector::create(this->exec);
     auto res = Csr::create(this->exec);
 
     empty->convert_to(res);
@@ -2114,13 +2120,13 @@ TYPED_TEST(DenseWithIndexType, ConvertsEmptyMatrixToCsr)
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesEmptyMatrixToCsr)
+TYPED_TEST(MultiVectorWithIndexType, MovesEmptyMatrixToCsr)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
     using Csr = typename gko::matrix::Csr<value_type, index_type>;
-    auto empty = Dense::create(this->exec);
+    auto empty = MultiVector::create(this->exec);
     auto res = Csr::create(this->exec);
 
     empty->move_to(res);
@@ -2131,14 +2137,14 @@ TYPED_TEST(DenseWithIndexType, MovesEmptyMatrixToCsr)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsEmptyToSparsityCsr)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsEmptyToSparsityCsr)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
     using SparsityCsr =
         typename gko::matrix::SparsityCsr<value_type, index_type>;
-    auto empty = Dense::create(this->exec);
+    auto empty = MultiVector::create(this->exec);
     auto res = SparsityCsr::create(this->exec);
 
     empty->convert_to(res);
@@ -2149,14 +2155,14 @@ TYPED_TEST(DenseWithIndexType, ConvertsEmptyToSparsityCsr)
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesEmptyToSparsityCsr)
+TYPED_TEST(MultiVectorWithIndexType, MovesEmptyToSparsityCsr)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
     using SparsityCsr =
         typename gko::matrix::SparsityCsr<value_type, index_type>;
-    auto empty = Dense::create(this->exec);
+    auto empty = MultiVector::create(this->exec);
     auto res = SparsityCsr::create(this->exec);
 
     empty->move_to(res);
@@ -2167,13 +2173,13 @@ TYPED_TEST(DenseWithIndexType, MovesEmptyToSparsityCsr)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsEmptyToEll)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsEmptyToEll)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
     using Ell = typename gko::matrix::Ell<value_type, index_type>;
-    auto empty = Dense::create(this->exec);
+    auto empty = MultiVector::create(this->exec);
     auto res = Ell::create(this->exec);
 
     empty->convert_to(res);
@@ -2183,13 +2189,13 @@ TYPED_TEST(DenseWithIndexType, ConvertsEmptyToEll)
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesEmptyToEll)
+TYPED_TEST(MultiVectorWithIndexType, MovesEmptyToEll)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
     using Ell = typename gko::matrix::Ell<value_type, index_type>;
-    auto empty = Dense::create(this->exec);
+    auto empty = MultiVector::create(this->exec);
     auto res = Ell::create(this->exec);
 
     empty->move_to(res);
@@ -2199,13 +2205,13 @@ TYPED_TEST(DenseWithIndexType, MovesEmptyToEll)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsEmptyToHybrid)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsEmptyToHybrid)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
     using Hybrid = typename gko::matrix::Hybrid<value_type, index_type>;
-    auto empty = Dense::create(this->exec);
+    auto empty = MultiVector::create(this->exec);
     auto res = Hybrid::create(this->exec);
 
     empty->convert_to(res);
@@ -2215,13 +2221,13 @@ TYPED_TEST(DenseWithIndexType, ConvertsEmptyToHybrid)
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesEmptyToHybrid)
+TYPED_TEST(MultiVectorWithIndexType, MovesEmptyToHybrid)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
     using Hybrid = typename gko::matrix::Hybrid<value_type, index_type>;
-    auto empty = Dense::create(this->exec);
+    auto empty = MultiVector::create(this->exec);
     auto res = Hybrid::create(this->exec);
 
     empty->move_to(res);
@@ -2231,13 +2237,13 @@ TYPED_TEST(DenseWithIndexType, MovesEmptyToHybrid)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ConvertsEmptyToSellp)
+TYPED_TEST(MultiVectorWithIndexType, ConvertsEmptyToSellp)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
     using Sellp = typename gko::matrix::Sellp<value_type, index_type>;
-    auto empty = Dense::create(this->exec);
+    auto empty = MultiVector::create(this->exec);
     auto res = Sellp::create(this->exec);
 
     empty->convert_to(res);
@@ -2248,13 +2254,13 @@ TYPED_TEST(DenseWithIndexType, ConvertsEmptyToSellp)
 }
 
 
-TYPED_TEST(DenseWithIndexType, MovesEmptyToSellp)
+TYPED_TEST(MultiVectorWithIndexType, MovesEmptyToSellp)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
     using Sellp = typename gko::matrix::Sellp<value_type, index_type>;
-    auto empty = Dense::create(this->exec);
+    auto empty = MultiVector::create(this->exec);
     auto res = Sellp::create(this->exec);
 
     empty->move_to(res);
@@ -2266,15 +2272,15 @@ TYPED_TEST(DenseWithIndexType, MovesEmptyToSellp)
 
 
 template <typename ValueType, typename IndexType>
-std::unique_ptr<gko::matrix::Dense<ValueType>> ref_permute(
-    gko::matrix::Dense<ValueType>* input,
+std::unique_ptr<gko::matrix::MultiVector<ValueType>> ref_permute(
+    gko::matrix::MultiVector<ValueType>* input,
     gko::matrix::Permutation<IndexType>* permutation,
     gko::matrix::permute_mode mode)
 {
     using gko::matrix::permute_mode;
     auto result = input->clone();
     auto permutation_dense =
-        gko::matrix::Dense<double>::create(input->get_executor());
+        gko::matrix::MultiVector<double>::create(input->get_executor());
     gko::matrix_data<double, IndexType> permutation_data;
     if ((mode & permute_mode::inverse) == permute_mode::inverse) {
         permutation->compute_inverse()->write(permutation_data);
@@ -2289,7 +2295,7 @@ std::unique_ptr<gko::matrix::Dense<ValueType>> ref_permute(
     if ((mode & permute_mode::columns) == permute_mode::columns) {
         // compute A * P^T = (P * A^T)^T
         auto tmp = result->transpose();
-        auto tmp2 = gko::as<gko::matrix::Dense<ValueType>>(tmp->clone());
+        auto tmp2 = gko::as<gko::matrix::MultiVector<ValueType>>(tmp->clone());
         permutation_dense->apply(tmp, tmp2);
         tmp2->transpose(result);
     }
@@ -2298,17 +2304,17 @@ std::unique_ptr<gko::matrix::Dense<ValueType>> ref_permute(
 
 
 template <typename ValueType, typename IndexType>
-std::unique_ptr<gko::matrix::Dense<ValueType>> ref_permute(
-    gko::matrix::Dense<ValueType>* input,
+std::unique_ptr<gko::matrix::MultiVector<ValueType>> ref_permute(
+    gko::matrix::MultiVector<ValueType>* input,
     gko::matrix::Permutation<IndexType>* row_permutation,
     gko::matrix::Permutation<IndexType>* col_permutation, bool invert)
 {
     using gko::matrix::permute_mode;
     auto result = input->clone();
     auto row_permutation_dense =
-        gko::matrix::Dense<double>::create(input->get_executor());
+        gko::matrix::MultiVector<double>::create(input->get_executor());
     auto col_permutation_dense =
-        gko::matrix::Dense<double>::create(input->get_executor());
+        gko::matrix::MultiVector<double>::create(input->get_executor());
     gko::matrix_data<double, IndexType> row_permutation_data;
     gko::matrix_data<double, IndexType> col_permutation_data;
     if (invert) {
@@ -2322,14 +2328,14 @@ std::unique_ptr<gko::matrix::Dense<ValueType>> ref_permute(
     col_permutation_dense->read(col_permutation_data);
     row_permutation_dense->apply(input, result);
     auto tmp = result->transpose();
-    auto tmp2 = gko::as<gko::matrix::Dense<ValueType>>(tmp->clone());
+    auto tmp2 = gko::as<gko::matrix::MultiVector<ValueType>>(tmp->clone());
     col_permutation_dense->apply(tmp, tmp2);
     tmp2->transpose(result);
     return result;
 }
 
 
-TYPED_TEST(DenseWithIndexType, Permute)
+TYPED_TEST(MultiVectorWithIndexType, Permute)
 {
     using gko::matrix::permute_mode;
 
@@ -2348,7 +2354,7 @@ TYPED_TEST(DenseWithIndexType, Permute)
 }
 
 
-TYPED_TEST(DenseWithIndexType, PermuteRoundtrip)
+TYPED_TEST(MultiVectorWithIndexType, PermuteRoundtrip)
 {
     using gko::matrix::permute_mode;
 
@@ -2365,7 +2371,7 @@ TYPED_TEST(DenseWithIndexType, PermuteRoundtrip)
 }
 
 
-TYPED_TEST(DenseWithIndexType, PermuteStridedIntoDense)
+TYPED_TEST(MultiVectorWithIndexType, PermuteStridedIntoMultiVector)
 {
     using gko::matrix::permute_mode;
     using Mtx = typename TestFixture::Mtx;
@@ -2391,7 +2397,7 @@ TYPED_TEST(DenseWithIndexType, PermuteStridedIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, PermuteRectangular)
+TYPED_TEST(MultiVectorWithIndexType, PermuteRectangular)
 {
     using gko::matrix::permute_mode;
 
@@ -2417,7 +2423,7 @@ TYPED_TEST(DenseWithIndexType, PermuteRectangular)
 }
 
 
-TYPED_TEST(DenseWithIndexType, PermuteFailsWithIncorrectPermutationSize)
+TYPED_TEST(MultiVectorWithIndexType, PermuteFailsWithIncorrectPermutationSize)
 {
     using gko::matrix::permute_mode;
 
@@ -2433,7 +2439,7 @@ TYPED_TEST(DenseWithIndexType, PermuteFailsWithIncorrectPermutationSize)
 }
 
 
-TYPED_TEST(DenseWithIndexType, PermuteFailsWithIncorrectOutputSize)
+TYPED_TEST(MultiVectorWithIndexType, PermuteFailsWithIncorrectOutputSize)
 {
     using gko::matrix::permute_mode;
     using Mtx = typename TestFixture::Mtx;
@@ -2451,7 +2457,7 @@ TYPED_TEST(DenseWithIndexType, PermuteFailsWithIncorrectOutputSize)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmPermute)
+TYPED_TEST(MultiVectorWithIndexType, NonsymmPermute)
 {
     auto permuted = this->mtx5->permute(this->perm3, this->perm3_rev);
     auto ref_permuted = ref_permute(this->mtx5.get(), this->perm3.get(),
@@ -2461,7 +2467,7 @@ TYPED_TEST(DenseWithIndexType, NonsymmPermute)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmPermuteInverse)
+TYPED_TEST(MultiVectorWithIndexType, NonsymmPermuteInverse)
 {
     auto permuted = this->mtx5->permute(this->perm3, this->perm3_rev, true);
     auto ref_permuted = ref_permute(this->mtx5.get(), this->perm3.get(),
@@ -2471,7 +2477,7 @@ TYPED_TEST(DenseWithIndexType, NonsymmPermuteInverse)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmPermuteRectangular)
+TYPED_TEST(MultiVectorWithIndexType, NonsymmPermuteRectangular)
 {
     auto permuted = this->mtx1->permute(this->perm2, this->perm3);
     auto ref_permuted = ref_permute(this->mtx1.get(), this->perm2.get(),
@@ -2481,7 +2487,7 @@ TYPED_TEST(DenseWithIndexType, NonsymmPermuteRectangular)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmPermuteInverseRectangular)
+TYPED_TEST(MultiVectorWithIndexType, NonsymmPermuteInverseRectangular)
 {
     auto permuted = this->mtx1->permute(this->perm2, this->perm3, true);
     auto ref_permuted = ref_permute(this->mtx1.get(), this->perm2.get(),
@@ -2491,7 +2497,7 @@ TYPED_TEST(DenseWithIndexType, NonsymmPermuteInverseRectangular)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmPermuteRoundtrip)
+TYPED_TEST(MultiVectorWithIndexType, NonsymmPermuteRoundtrip)
 {
     auto permuted = this->mtx5->permute(this->perm3, this->perm3_rev)
                         ->permute(this->perm3, this->perm3_rev, true);
@@ -2500,7 +2506,7 @@ TYPED_TEST(DenseWithIndexType, NonsymmPermuteRoundtrip)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmPermuteInverseInverted)
+TYPED_TEST(MultiVectorWithIndexType, NonsymmPermuteInverseInverted)
 {
     auto inv_permuted = this->mtx5->permute(this->perm3, this->perm3_rev, true);
     auto preinv_permuted = this->mtx5->permute(this->perm3_rev, this->perm3);
@@ -2509,7 +2515,7 @@ TYPED_TEST(DenseWithIndexType, NonsymmPermuteInverseInverted)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmPermuteStridedIntoDense)
+TYPED_TEST(MultiVectorWithIndexType, NonsymmPermuteStridedIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     auto mtx = Mtx::create(this->exec, this->mtx5->get_size(),
@@ -2526,7 +2532,8 @@ TYPED_TEST(DenseWithIndexType, NonsymmPermuteStridedIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmPermuteInverseStridedIntoDense)
+TYPED_TEST(MultiVectorWithIndexType,
+           NonsymmPermuteInverseStridedIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     auto mtx = Mtx::create(this->exec, this->mtx5->get_size(),
@@ -2543,7 +2550,8 @@ TYPED_TEST(DenseWithIndexType, NonsymmPermuteInverseStridedIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmPermuteFailsWithIncorrectPermutationSize)
+TYPED_TEST(MultiVectorWithIndexType,
+           NonsymmPermuteFailsWithIncorrectPermutationSize)
 {
     ASSERT_THROW(this->mtx5->permute(this->perm0, this->perm3_rev),
                  gko::DimensionMismatch);
@@ -2554,7 +2562,7 @@ TYPED_TEST(DenseWithIndexType, NonsymmPermuteFailsWithIncorrectPermutationSize)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareMatrixCanGatherRows)
+TYPED_TEST(MultiVectorWithIndexType, SquareMatrixCanGatherRows)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -2570,7 +2578,7 @@ TYPED_TEST(DenseWithIndexType, SquareMatrixCanGatherRows)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareMatrixCanGatherRowsIntoDense)
+TYPED_TEST(MultiVectorWithIndexType, SquareMatrixCanGatherRowsIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -2587,7 +2595,8 @@ TYPED_TEST(DenseWithIndexType, SquareMatrixCanGatherRowsIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareSubmatrixCanGatherRowsIntoDense)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareSubmatrixCanGatherRowsIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -2605,7 +2614,8 @@ TYPED_TEST(DenseWithIndexType, SquareSubmatrixCanGatherRowsIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonSquareSubmatrixCanGatherRowsIntoMixedDense)
+TYPED_TEST(MultiVectorWithIndexType,
+           NonSquareSubmatrixCanGatherRowsIntoMixedMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using MixedMtx = typename TestFixture::MixedMtx;
@@ -2625,8 +2635,8 @@ TYPED_TEST(DenseWithIndexType, NonSquareSubmatrixCanGatherRowsIntoMixedDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType,
-           NonSquareSubmatrixCanAdvancedGatherRowsIntoMixedDense)
+TYPED_TEST(MultiVectorWithIndexType,
+           NonSquareSubmatrixCanAdvancedGatherRowsIntoMixedMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using MixedMtx = typename TestFixture::MixedMtx;
@@ -2649,8 +2659,8 @@ TYPED_TEST(DenseWithIndexType,
 }
 
 
-TYPED_TEST(DenseWithIndexType,
-           SquareMatrixGatherRowsIntoDenseFailsForWrongDimensions)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareMatrixGatherRowsIntoMultiVectorFailsForWrongDimensions)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -2663,7 +2673,7 @@ TYPED_TEST(DenseWithIndexType,
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareMatrixIsPermutable)
+TYPED_TEST(MultiVectorWithIndexType, SquareMatrixIsPermutable)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -2679,7 +2689,7 @@ TYPED_TEST(DenseWithIndexType, SquareMatrixIsPermutable)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareMatrixIsPermutableIntoDense)
+TYPED_TEST(MultiVectorWithIndexType, SquareMatrixIsPermutableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -2696,7 +2706,7 @@ TYPED_TEST(DenseWithIndexType, SquareMatrixIsPermutableIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareSubmatrixIsPermutableIntoDense)
+TYPED_TEST(MultiVectorWithIndexType, SquareSubmatrixIsPermutableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -2715,7 +2725,7 @@ TYPED_TEST(DenseWithIndexType, SquareSubmatrixIsPermutableIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonSquareMatrixPermuteIntoDenseFails)
+TYPED_TEST(MultiVectorWithIndexType, NonSquareMatrixPermuteIntoMultiVectorFails)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -2727,8 +2737,8 @@ TYPED_TEST(DenseWithIndexType, NonSquareMatrixPermuteIntoDenseFails)
 }
 
 
-TYPED_TEST(DenseWithIndexType,
-           SquareMatrixPermuteIntoDenseFailsForWrongPermutationSize)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareMatrixPermuteIntoMultiVectorFailsForWrongPermutationSize)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -2740,8 +2750,8 @@ TYPED_TEST(DenseWithIndexType,
 }
 
 
-TYPED_TEST(DenseWithIndexType,
-           SquareMatrixPermuteIntoDenseFailsForWrongDimensions)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareMatrixPermuteIntoMultiVectorFailsForWrongDimensions)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -2753,7 +2763,7 @@ TYPED_TEST(DenseWithIndexType,
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareMatrixIsInversePermutable)
+TYPED_TEST(MultiVectorWithIndexType, SquareMatrixIsInversePermutable)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -2769,7 +2779,8 @@ TYPED_TEST(DenseWithIndexType, SquareMatrixIsInversePermutable)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareMatrixIsInversePermutableIntoDense)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareMatrixIsInversePermutableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -2786,7 +2797,8 @@ TYPED_TEST(DenseWithIndexType, SquareMatrixIsInversePermutableIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareSubmatrixIsInversePermutableIntoDense)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareSubmatrixIsInversePermutableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -2805,7 +2817,8 @@ TYPED_TEST(DenseWithIndexType, SquareSubmatrixIsInversePermutableIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonSquareMatrixInversePermuteIntoDenseFails)
+TYPED_TEST(MultiVectorWithIndexType,
+           NonSquareMatrixInversePermuteIntoMultiVectorFails)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -2818,8 +2831,9 @@ TYPED_TEST(DenseWithIndexType, NonSquareMatrixInversePermuteIntoDenseFails)
 }
 
 
-TYPED_TEST(DenseWithIndexType,
-           SquareMatrixInversePermuteIntoDenseFailsForWrongPermutationSize)
+TYPED_TEST(
+    MultiVectorWithIndexType,
+    SquareMatrixInversePermuteIntoMultiVectorFailsForWrongPermutationSize)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -2832,8 +2846,8 @@ TYPED_TEST(DenseWithIndexType,
 }
 
 
-TYPED_TEST(DenseWithIndexType,
-           SquareMatrixInversePermuteIntoDenseFailsForWrongDimensions)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareMatrixInversePermuteIntoMultiVectorFailsForWrongDimensions)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -2845,7 +2859,7 @@ TYPED_TEST(DenseWithIndexType,
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareMatrixIsRowPermutable)
+TYPED_TEST(MultiVectorWithIndexType, SquareMatrixIsRowPermutable)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -2862,7 +2876,7 @@ TYPED_TEST(DenseWithIndexType, SquareMatrixIsRowPermutable)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonSquareMatrixIsRowPermutable)
+TYPED_TEST(MultiVectorWithIndexType, NonSquareMatrixIsRowPermutable)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -2877,7 +2891,7 @@ TYPED_TEST(DenseWithIndexType, NonSquareMatrixIsRowPermutable)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareMatrixIsRowPermutableIntoDense)
+TYPED_TEST(MultiVectorWithIndexType, SquareMatrixIsRowPermutableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -2895,7 +2909,8 @@ TYPED_TEST(DenseWithIndexType, SquareMatrixIsRowPermutableIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareSubmatrixIsRowPermutableIntoDense)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareSubmatrixIsRowPermutableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -2913,8 +2928,8 @@ TYPED_TEST(DenseWithIndexType, SquareSubmatrixIsRowPermutableIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType,
-           SquareMatrixRowPermuteIntoDenseFailsForWrongPermutationSize)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareMatrixRowPermuteIntoMultiVectorFailsForWrongPermutationSize)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -2927,8 +2942,8 @@ TYPED_TEST(DenseWithIndexType,
 }
 
 
-TYPED_TEST(DenseWithIndexType,
-           SquareMatrixRowPermuteIntoDenseFailsForWrongDimensions)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareMatrixRowPermuteIntoMultiVectorFailsForWrongDimensions)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -2940,7 +2955,7 @@ TYPED_TEST(DenseWithIndexType,
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareMatrixIsColPermutable)
+TYPED_TEST(MultiVectorWithIndexType, SquareMatrixIsColPermutable)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -2957,7 +2972,7 @@ TYPED_TEST(DenseWithIndexType, SquareMatrixIsColPermutable)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonSquareMatrixIsColPermutable)
+TYPED_TEST(MultiVectorWithIndexType, NonSquareMatrixIsColPermutable)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -2972,7 +2987,7 @@ TYPED_TEST(DenseWithIndexType, NonSquareMatrixIsColPermutable)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareMatrixIsColPermutableIntoDense)
+TYPED_TEST(MultiVectorWithIndexType, SquareMatrixIsColPermutableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -2990,7 +3005,8 @@ TYPED_TEST(DenseWithIndexType, SquareMatrixIsColPermutableIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareSubmatrixIsColPermutableIntoDense)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareSubmatrixIsColPermutableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -3008,8 +3024,8 @@ TYPED_TEST(DenseWithIndexType, SquareSubmatrixIsColPermutableIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType,
-           SquareMatrixColPermuteIntoDenseFailsForWrongPermutationSize)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareMatrixColPermuteIntoMultiVectorFailsForWrongPermutationSize)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -3022,8 +3038,8 @@ TYPED_TEST(DenseWithIndexType,
 }
 
 
-TYPED_TEST(DenseWithIndexType,
-           SquareMatrixColPermuteIntoDenseFailsForWrongDimensions)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareMatrixColPermuteIntoMultiVectorFailsForWrongDimensions)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -3035,7 +3051,7 @@ TYPED_TEST(DenseWithIndexType,
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareMatrixIsInverseRowPermutable)
+TYPED_TEST(MultiVectorWithIndexType, SquareMatrixIsInverseRowPermutable)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -3053,7 +3069,7 @@ TYPED_TEST(DenseWithIndexType, SquareMatrixIsInverseRowPermutable)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonSquareMatrixIsInverseRowPermutable)
+TYPED_TEST(MultiVectorWithIndexType, NonSquareMatrixIsInverseRowPermutable)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -3069,7 +3085,8 @@ TYPED_TEST(DenseWithIndexType, NonSquareMatrixIsInverseRowPermutable)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareMatrixIsInverseRowPermutableIntoDense)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareMatrixIsInverseRowPermutableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -3087,7 +3104,8 @@ TYPED_TEST(DenseWithIndexType, SquareMatrixIsInverseRowPermutableIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareSubmatrixIsInverseRowPermutableIntoDense)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareSubmatrixIsInverseRowPermutableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -3105,8 +3123,9 @@ TYPED_TEST(DenseWithIndexType, SquareSubmatrixIsInverseRowPermutableIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType,
-           SquareMatrixInverseRowPermuteIntoDenseFailsForWrongPermutationSize)
+TYPED_TEST(
+    MultiVectorWithIndexType,
+    SquareMatrixInverseRowPermuteIntoMultiVectorFailsForWrongPermutationSize)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -3119,8 +3138,8 @@ TYPED_TEST(DenseWithIndexType,
 }
 
 
-TYPED_TEST(DenseWithIndexType,
-           SquareMatrixInverseRowPermuteIntoDenseFailsForWrongDimensions)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareMatrixInverseRowPermuteIntoMultiVectorFailsForWrongDimensions)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -3133,7 +3152,7 @@ TYPED_TEST(DenseWithIndexType,
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareMatrixIsInverseColPermutable)
+TYPED_TEST(MultiVectorWithIndexType, SquareMatrixIsInverseColPermutable)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -3151,7 +3170,7 @@ TYPED_TEST(DenseWithIndexType, SquareMatrixIsInverseColPermutable)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonSquareMatrixIsInverseColPermutable)
+TYPED_TEST(MultiVectorWithIndexType, NonSquareMatrixIsInverseColPermutable)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -3167,7 +3186,8 @@ TYPED_TEST(DenseWithIndexType, NonSquareMatrixIsInverseColPermutable)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareMatrixIsInverseColPermutableIntoDense)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareMatrixIsInverseColPermutableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -3185,7 +3205,8 @@ TYPED_TEST(DenseWithIndexType, SquareMatrixIsInverseColPermutableIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, SquareSubmatrixIsInverseColPermutableIntoDense)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareSubmatrixIsInverseColPermutableIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -3203,8 +3224,9 @@ TYPED_TEST(DenseWithIndexType, SquareSubmatrixIsInverseColPermutableIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType,
-           SquareMatrixInverseColPermuteIntoDenseFailsForWrongPermutationSize)
+TYPED_TEST(
+    MultiVectorWithIndexType,
+    SquareMatrixInverseColPermuteIntoMultiVectorFailsForWrongPermutationSize)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -3217,8 +3239,8 @@ TYPED_TEST(DenseWithIndexType,
 }
 
 
-TYPED_TEST(DenseWithIndexType,
-           SquareMatrixInverseColPermuteIntoDenseFailsForWrongDimensions)
+TYPED_TEST(MultiVectorWithIndexType,
+           SquareMatrixInverseColPermuteIntoMultiVectorFailsForWrongDimensions)
 {
     using Mtx = typename TestFixture::Mtx;
     using index_type = typename TestFixture::index_type;
@@ -3232,15 +3254,15 @@ TYPED_TEST(DenseWithIndexType,
 
 
 template <typename ValueType, typename IndexType>
-std::unique_ptr<gko::matrix::Dense<ValueType>> ref_scaled_permute(
-    gko::matrix::Dense<ValueType>* input,
+std::unique_ptr<gko::matrix::MultiVector<ValueType>> ref_scaled_permute(
+    gko::matrix::MultiVector<ValueType>* input,
     gko::matrix::ScaledPermutation<ValueType, IndexType>* permutation,
     gko::matrix::permute_mode mode)
 {
     using gko::matrix::permute_mode;
     auto result = input->clone();
     auto permutation_dense =
-        gko::matrix::Dense<ValueType>::create(input->get_executor());
+        gko::matrix::MultiVector<ValueType>::create(input->get_executor());
     gko::matrix_data<ValueType, IndexType> permutation_data;
     if ((mode & permute_mode::inverse) == permute_mode::inverse) {
         permutation->compute_inverse()->write(permutation_data);
@@ -3255,7 +3277,7 @@ std::unique_ptr<gko::matrix::Dense<ValueType>> ref_scaled_permute(
     if ((mode & permute_mode::columns) == permute_mode::columns) {
         // compute A * P^T = (P * A^T)^T
         auto tmp = result->transpose();
-        auto tmp2 = gko::as<gko::matrix::Dense<ValueType>>(tmp->clone());
+        auto tmp2 = gko::as<gko::matrix::MultiVector<ValueType>>(tmp->clone());
         permutation_dense->apply(tmp, tmp2);
         tmp2->transpose(result);
     }
@@ -3264,8 +3286,8 @@ std::unique_ptr<gko::matrix::Dense<ValueType>> ref_scaled_permute(
 
 
 template <typename ValueType, typename IndexType>
-std::unique_ptr<gko::matrix::Dense<ValueType>> ref_scaled_permute(
-    gko::matrix::Dense<ValueType>* input,
+std::unique_ptr<gko::matrix::MultiVector<ValueType>> ref_scaled_permute(
+    gko::matrix::MultiVector<ValueType>* input,
     gko::matrix::ScaledPermutation<ValueType, IndexType>* row_permutation,
     gko::matrix::ScaledPermutation<ValueType, IndexType>* col_permutation,
     bool invert)
@@ -3273,9 +3295,9 @@ std::unique_ptr<gko::matrix::Dense<ValueType>> ref_scaled_permute(
     using gko::matrix::permute_mode;
     auto result = input->clone();
     auto row_permutation_dense =
-        gko::matrix::Dense<ValueType>::create(input->get_executor());
+        gko::matrix::MultiVector<ValueType>::create(input->get_executor());
     auto col_permutation_dense =
-        gko::matrix::Dense<ValueType>::create(input->get_executor());
+        gko::matrix::MultiVector<ValueType>::create(input->get_executor());
     gko::matrix_data<ValueType, IndexType> row_permutation_data;
     gko::matrix_data<ValueType, IndexType> col_permutation_data;
     if (invert) {
@@ -3289,14 +3311,14 @@ std::unique_ptr<gko::matrix::Dense<ValueType>> ref_scaled_permute(
     col_permutation_dense->read(col_permutation_data);
     row_permutation_dense->apply(input, result);
     auto tmp = result->transpose();
-    auto tmp2 = gko::as<gko::matrix::Dense<ValueType>>(tmp->clone());
+    auto tmp2 = gko::as<gko::matrix::MultiVector<ValueType>>(tmp->clone());
     col_permutation_dense->apply(tmp, tmp2);
     tmp2->transpose(result);
     return result;
 }
 
 
-TYPED_TEST(DenseWithIndexType, ScaledPermute)
+TYPED_TEST(MultiVectorWithIndexType, ScaledPermute)
 {
     using gko::matrix::permute_mode;
     using value_type = typename TestFixture::value_type;
@@ -3316,7 +3338,7 @@ TYPED_TEST(DenseWithIndexType, ScaledPermute)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ScaledPermuteRoundtrip)
+TYPED_TEST(MultiVectorWithIndexType, ScaledPermuteRoundtrip)
 {
     using gko::matrix::permute_mode;
     using value_type = typename TestFixture::value_type;
@@ -3334,7 +3356,7 @@ TYPED_TEST(DenseWithIndexType, ScaledPermuteRoundtrip)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ScaledPermuteStridedIntoDense)
+TYPED_TEST(MultiVectorWithIndexType, ScaledPermuteStridedIntoMultiVector)
 {
     using gko::matrix::permute_mode;
     using value_type = typename TestFixture::value_type;
@@ -3361,7 +3383,7 @@ TYPED_TEST(DenseWithIndexType, ScaledPermuteStridedIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ScaledPermuteRectangular)
+TYPED_TEST(MultiVectorWithIndexType, ScaledPermuteRectangular)
 {
     using gko::matrix::permute_mode;
     using value_type = typename TestFixture::value_type;
@@ -3391,7 +3413,8 @@ TYPED_TEST(DenseWithIndexType, ScaledPermuteRectangular)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ScaledPermuteFailsWithIncorrectPermutationSize)
+TYPED_TEST(MultiVectorWithIndexType,
+           ScaledPermuteFailsWithIncorrectPermutationSize)
 {
     using gko::matrix::permute_mode;
 
@@ -3407,7 +3430,7 @@ TYPED_TEST(DenseWithIndexType, ScaledPermuteFailsWithIncorrectPermutationSize)
 }
 
 
-TYPED_TEST(DenseWithIndexType, ScaledPermuteFailsWithIncorrectOutputSize)
+TYPED_TEST(MultiVectorWithIndexType, ScaledPermuteFailsWithIncorrectOutputSize)
 {
     using gko::matrix::permute_mode;
     using Mtx = typename TestFixture::Mtx;
@@ -3425,7 +3448,7 @@ TYPED_TEST(DenseWithIndexType, ScaledPermuteFailsWithIncorrectOutputSize)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmScaledPermute)
+TYPED_TEST(MultiVectorWithIndexType, NonsymmScaledPermute)
 {
     using value_type = typename TestFixture::value_type;
 
@@ -3439,7 +3462,7 @@ TYPED_TEST(DenseWithIndexType, NonsymmScaledPermute)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteInverse)
+TYPED_TEST(MultiVectorWithIndexType, NonsymmScaledPermuteInverse)
 {
     using value_type = typename TestFixture::value_type;
 
@@ -3453,7 +3476,7 @@ TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteInverse)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteRectangular)
+TYPED_TEST(MultiVectorWithIndexType, NonsymmScaledPermuteRectangular)
 {
     using value_type = typename TestFixture::value_type;
 
@@ -3467,7 +3490,7 @@ TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteRectangular)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteInverseRectangular)
+TYPED_TEST(MultiVectorWithIndexType, NonsymmScaledPermuteInverseRectangular)
 {
     using value_type = typename TestFixture::value_type;
 
@@ -3481,7 +3504,7 @@ TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteInverseRectangular)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteRoundtrip)
+TYPED_TEST(MultiVectorWithIndexType, NonsymmScaledPermuteRoundtrip)
 {
     using value_type = typename TestFixture::value_type;
 
@@ -3493,7 +3516,7 @@ TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteRoundtrip)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteInverseInverted)
+TYPED_TEST(MultiVectorWithIndexType, NonsymmScaledPermuteInverseInverted)
 {
     using value_type = typename TestFixture::value_type;
 
@@ -3506,7 +3529,7 @@ TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteInverseInverted)
     GKO_ASSERT_MTX_NEAR(inv_permuted, preinv_permuted, r<value_type>::value);
 }
 
-TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteStridedIntoDense)
+TYPED_TEST(MultiVectorWithIndexType, NonsymmScaledPermuteStridedIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -3525,7 +3548,8 @@ TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteStridedIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteInverseStridedIntoDense)
+TYPED_TEST(MultiVectorWithIndexType,
+           NonsymmScaledPermuteInverseStridedIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using value_type = typename TestFixture::value_type;
@@ -3545,7 +3569,8 @@ TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteInverseStridedIntoDense)
 }
 
 
-TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteFailsWithIncorrectOutputSize)
+TYPED_TEST(MultiVectorWithIndexType,
+           NonsymmScaledPermuteFailsWithIncorrectOutputSize)
 {
     ASSERT_THROW(
         this->mtx5->scale_permute(this->scale_perm3, this->scale_perm3,
@@ -3554,7 +3579,7 @@ TYPED_TEST(DenseWithIndexType, NonsymmScaledPermuteFailsWithIncorrectOutputSize)
 }
 
 
-TYPED_TEST(DenseWithIndexType,
+TYPED_TEST(MultiVectorWithIndexType,
            NonsymmScaledPermuteFailsWithIncorrectPermutationSize)
 {
     ASSERT_THROW(
@@ -3570,30 +3595,30 @@ TYPED_TEST(DenseWithIndexType,
 
 
 template <typename T>
-class DenseComplex : public ::testing::Test {
+class MultiVectorComplex : public ::testing::Test {
 protected:
     using value_type = T;
-    using Mtx = gko::matrix::Dense<value_type>;
-    using RealMtx = gko::matrix::Dense<gko::remove_complex<value_type>>;
+    using Mtx = gko::matrix::MultiVector<value_type>;
+    using RealMtx = gko::matrix::MultiVector<gko::remove_complex<value_type>>;
 };
 
 
-TYPED_TEST_SUITE(DenseComplex, gko::test::ComplexValueTypes,
+TYPED_TEST_SUITE(MultiVectorComplex, gko::test::ComplexValueTypes,
                  TypenameNameGenerator);
 
 
-TYPED_TEST(DenseComplex, ScalesWithRealScalar)
+TYPED_TEST(MultiVectorComplex, ScalesWithRealScalar)
 {
-    using Dense = typename TestFixture::Mtx;
-    using RealDense = gko::remove_complex<Dense>;
+    using MultiVector = typename TestFixture::Mtx;
+    using RealMultiVector = gko::remove_complex<MultiVector>;
     using T = typename TestFixture::value_type;
     auto exec = gko::ReferenceExecutor::create();
-    auto mtx = gko::initialize<Dense>({{T{1.0, 2.0}, T{-1.0, 2.25}},
-                                       {T{-2.0, 1.5}, T{4.5, 0.0}},
-                                       {T{1.0, 0.0}, T{0.0, 1.0}}},
-                                      exec);
+    auto mtx = gko::initialize<MultiVector>({{T{1.0, 2.0}, T{-1.0, 2.25}},
+                                             {T{-2.0, 1.5}, T{4.5, 0.0}},
+                                             {T{1.0, 0.0}, T{0.0, 1.0}}},
+                                            exec);
     auto alpha =
-        gko::initialize<RealDense>({gko::remove_complex<T>{-2.0}}, exec);
+        gko::initialize<RealMultiVector>({gko::remove_complex<T>{-2.0}}, exec);
 
     mtx->scale(alpha);
 
@@ -3605,18 +3630,19 @@ TYPED_TEST(DenseComplex, ScalesWithRealScalar)
 }
 
 
-TYPED_TEST(DenseComplex, ScalesWithRealVector)
+TYPED_TEST(MultiVectorComplex, ScalesWithRealVector)
 {
-    using Dense = typename TestFixture::Mtx;
-    using RealDense = gko::remove_complex<Dense>;
+    using MultiVector = typename TestFixture::Mtx;
+    using RealMultiVector = gko::remove_complex<MultiVector>;
     using T = typename TestFixture::value_type;
     using RealT = gko::remove_complex<T>;
     auto exec = gko::ReferenceExecutor::create();
-    auto mtx = gko::initialize<Dense>({{T{1.0, 2.0}, T{-1.0, 2.25}},
-                                       {T{-2.0, 1.5}, T{4.5, 0.0}},
-                                       {T{1.0, 0.0}, T{0.0, 1.0}}},
-                                      exec);
-    auto alpha = gko::initialize<RealDense>({{RealT{-2.0}, RealT{4.0}}}, exec);
+    auto mtx = gko::initialize<MultiVector>({{T{1.0, 2.0}, T{-1.0, 2.25}},
+                                             {T{-2.0, 1.5}, T{4.5, 0.0}},
+                                             {T{1.0, 0.0}, T{0.0, 1.0}}},
+                                            exec);
+    auto alpha =
+        gko::initialize<RealMultiVector>({{RealT{-2.0}, RealT{4.0}}}, exec);
 
     mtx->scale(alpha);
 
@@ -3628,18 +3654,18 @@ TYPED_TEST(DenseComplex, ScalesWithRealVector)
 }
 
 
-TYPED_TEST(DenseComplex, InvScalesWithRealScalar)
+TYPED_TEST(MultiVectorComplex, InvScalesWithRealScalar)
 {
-    using Dense = typename TestFixture::Mtx;
-    using RealDense = gko::remove_complex<Dense>;
+    using MultiVector = typename TestFixture::Mtx;
+    using RealMultiVector = gko::remove_complex<MultiVector>;
     using T = typename TestFixture::value_type;
     auto exec = gko::ReferenceExecutor::create();
-    auto mtx = gko::initialize<Dense>({{T{1.0, 2.0}, T{-1.0, 2.25}},
-                                       {T{-2.0, 1.5}, T{4.5, 0.0}},
-                                       {T{1.0, 0.0}, T{0.0, 1.0}}},
-                                      exec);
+    auto mtx = gko::initialize<MultiVector>({{T{1.0, 2.0}, T{-1.0, 2.25}},
+                                             {T{-2.0, 1.5}, T{4.5, 0.0}},
+                                             {T{1.0, 0.0}, T{0.0, 1.0}}},
+                                            exec);
     auto alpha =
-        gko::initialize<RealDense>({gko::remove_complex<T>{-0.5}}, exec);
+        gko::initialize<RealMultiVector>({gko::remove_complex<T>{-0.5}}, exec);
 
     mtx->inv_scale(alpha);
 
@@ -3651,18 +3677,19 @@ TYPED_TEST(DenseComplex, InvScalesWithRealScalar)
 }
 
 
-TYPED_TEST(DenseComplex, InvScalesWithRealVector)
+TYPED_TEST(MultiVectorComplex, InvScalesWithRealVector)
 {
-    using Dense = typename TestFixture::Mtx;
-    using RealDense = gko::remove_complex<Dense>;
+    using MultiVector = typename TestFixture::Mtx;
+    using RealMultiVector = gko::remove_complex<MultiVector>;
     using T = typename TestFixture::value_type;
     using RealT = gko::remove_complex<T>;
     auto exec = gko::ReferenceExecutor::create();
-    auto mtx = gko::initialize<Dense>({{T{1.0, 2.0}, T{-1.0, 2.25}},
-                                       {T{-2.0, 1.5}, T{4.5, 0.0}},
-                                       {T{1.0, 0.0}, T{0.0, 1.0}}},
-                                      exec);
-    auto alpha = gko::initialize<RealDense>({{RealT{-0.5}, RealT{0.25}}}, exec);
+    auto mtx = gko::initialize<MultiVector>({{T{1.0, 2.0}, T{-1.0, 2.25}},
+                                             {T{-2.0, 1.5}, T{4.5, 0.0}},
+                                             {T{1.0, 0.0}, T{0.0, 1.0}}},
+                                            exec);
+    auto alpha =
+        gko::initialize<RealMultiVector>({{RealT{-0.5}, RealT{0.25}}}, exec);
 
     mtx->inv_scale(alpha);
 
@@ -3674,22 +3701,22 @@ TYPED_TEST(DenseComplex, InvScalesWithRealVector)
 }
 
 
-TYPED_TEST(DenseComplex, AddsScaledWithRealScalar)
+TYPED_TEST(MultiVectorComplex, AddsScaledWithRealScalar)
 {
-    using Dense = typename TestFixture::Mtx;
-    using RealDense = gko::remove_complex<Dense>;
+    using MultiVector = typename TestFixture::Mtx;
+    using RealMultiVector = gko::remove_complex<MultiVector>;
     using T = typename TestFixture::value_type;
     auto exec = gko::ReferenceExecutor::create();
-    auto mtx = gko::initialize<Dense>({{T{1.0, 2.0}, T{-1.0, 2.25}},
-                                       {T{-2.0, 1.5}, T{4.5, 0.0}},
-                                       {T{1.0, 0.0}, T{0.0, 1.0}}},
-                                      exec);
-    auto mtx2 = gko::initialize<Dense>({{T{4.0, -1.0}, T{5.0, 1.5}},
-                                        {T{3.0, 1.0}, T{0.0, 2.0}},
-                                        {T{-1.0, 1.0}, T{0.5, -2.0}}},
-                                       exec);
+    auto mtx = gko::initialize<MultiVector>({{T{1.0, 2.0}, T{-1.0, 2.25}},
+                                             {T{-2.0, 1.5}, T{4.5, 0.0}},
+                                             {T{1.0, 0.0}, T{0.0, 1.0}}},
+                                            exec);
+    auto mtx2 = gko::initialize<MultiVector>({{T{4.0, -1.0}, T{5.0, 1.5}},
+                                              {T{3.0, 1.0}, T{0.0, 2.0}},
+                                              {T{-1.0, 1.0}, T{0.5, -2.0}}},
+                                             exec);
     auto alpha =
-        gko::initialize<RealDense>({gko::remove_complex<T>{-2.0}}, exec);
+        gko::initialize<RealMultiVector>({gko::remove_complex<T>{-2.0}}, exec);
 
     mtx->add_scaled(alpha, mtx2);
 
@@ -3701,22 +3728,23 @@ TYPED_TEST(DenseComplex, AddsScaledWithRealScalar)
 }
 
 
-TYPED_TEST(DenseComplex, AddsScaledWithRealVector)
+TYPED_TEST(MultiVectorComplex, AddsScaledWithRealVector)
 {
-    using Dense = typename TestFixture::Mtx;
-    using RealDense = gko::remove_complex<Dense>;
+    using MultiVector = typename TestFixture::Mtx;
+    using RealMultiVector = gko::remove_complex<MultiVector>;
     using T = typename TestFixture::value_type;
     using RealT = gko::remove_complex<T>;
     auto exec = gko::ReferenceExecutor::create();
-    auto mtx = gko::initialize<Dense>({{T{1.0, 2.0}, T{-1.0, 2.25}},
-                                       {T{-2.0, 1.5}, T{4.5, 0.0}},
-                                       {T{1.0, 0.0}, T{0.0, 1.0}}},
-                                      exec);
-    auto mtx2 = gko::initialize<Dense>({{T{4.0, -1.0}, T{5.0, 1.5}},
-                                        {T{3.0, 1.0}, T{0.0, 2.0}},
-                                        {T{-1.0, 1.0}, T{0.5, -2.0}}},
-                                       exec);
-    auto alpha = gko::initialize<RealDense>({{RealT{-2.0}, RealT{4.0}}}, exec);
+    auto mtx = gko::initialize<MultiVector>({{T{1.0, 2.0}, T{-1.0, 2.25}},
+                                             {T{-2.0, 1.5}, T{4.5, 0.0}},
+                                             {T{1.0, 0.0}, T{0.0, 1.0}}},
+                                            exec);
+    auto mtx2 = gko::initialize<MultiVector>({{T{4.0, -1.0}, T{5.0, 1.5}},
+                                              {T{3.0, 1.0}, T{0.0, 2.0}},
+                                              {T{-1.0, 1.0}, T{0.5, -2.0}}},
+                                             exec);
+    auto alpha =
+        gko::initialize<RealMultiVector>({{RealT{-2.0}, RealT{4.0}}}, exec);
 
     mtx->add_scaled(alpha, mtx2);
 
@@ -3728,22 +3756,22 @@ TYPED_TEST(DenseComplex, AddsScaledWithRealVector)
 }
 
 
-TYPED_TEST(DenseComplex, SubtractsScaledWithRealScalar)
+TYPED_TEST(MultiVectorComplex, SubtractsScaledWithRealScalar)
 {
-    using Dense = typename TestFixture::Mtx;
-    using RealDense = gko::remove_complex<Dense>;
+    using MultiVector = typename TestFixture::Mtx;
+    using RealMultiVector = gko::remove_complex<MultiVector>;
     using T = typename TestFixture::value_type;
     auto exec = gko::ReferenceExecutor::create();
-    auto mtx = gko::initialize<Dense>({{T{1.0, 2.0}, T{-1.0, 2.25}},
-                                       {T{-2.0, 1.5}, T{4.5, 0.0}},
-                                       {T{1.0, 0.0}, T{0.0, 1.0}}},
-                                      exec);
-    auto mtx2 = gko::initialize<Dense>({{T{4.0, -1.0}, T{5.0, 1.5}},
-                                        {T{3.0, 1.0}, T{0.0, 2.0}},
-                                        {T{-1.0, 1.0}, T{0.5, -2.0}}},
-                                       exec);
+    auto mtx = gko::initialize<MultiVector>({{T{1.0, 2.0}, T{-1.0, 2.25}},
+                                             {T{-2.0, 1.5}, T{4.5, 0.0}},
+                                             {T{1.0, 0.0}, T{0.0, 1.0}}},
+                                            exec);
+    auto mtx2 = gko::initialize<MultiVector>({{T{4.0, -1.0}, T{5.0, 1.5}},
+                                              {T{3.0, 1.0}, T{0.0, 2.0}},
+                                              {T{-1.0, 1.0}, T{0.5, -2.0}}},
+                                             exec);
     auto alpha =
-        gko::initialize<RealDense>({gko::remove_complex<T>{2.0}}, exec);
+        gko::initialize<RealMultiVector>({gko::remove_complex<T>{2.0}}, exec);
 
     mtx->sub_scaled(alpha, mtx2);
 
@@ -3755,22 +3783,23 @@ TYPED_TEST(DenseComplex, SubtractsScaledWithRealScalar)
 }
 
 
-TYPED_TEST(DenseComplex, SubtractsScaledWithRealVector)
+TYPED_TEST(MultiVectorComplex, SubtractsScaledWithRealVector)
 {
-    using Dense = typename TestFixture::Mtx;
-    using RealDense = gko::remove_complex<Dense>;
+    using MultiVector = typename TestFixture::Mtx;
+    using RealMultiVector = gko::remove_complex<MultiVector>;
     using T = typename TestFixture::value_type;
     using RealT = gko::remove_complex<T>;
     auto exec = gko::ReferenceExecutor::create();
-    auto mtx = gko::initialize<Dense>({{T{1.0, 2.0}, T{-1.0, 2.25}},
-                                       {T{-2.0, 1.5}, T{4.5, 0.0}},
-                                       {T{1.0, 0.0}, T{0.0, 1.0}}},
-                                      exec);
-    auto mtx2 = gko::initialize<Dense>({{T{4.0, -1.0}, T{5.0, 1.5}},
-                                        {T{3.0, 1.0}, T{0.0, 2.0}},
-                                        {T{-1.0, 1.0}, T{0.5, -2.0}}},
-                                       exec);
-    auto alpha = gko::initialize<RealDense>({{RealT{2.0}, RealT{-4.0}}}, exec);
+    auto mtx = gko::initialize<MultiVector>({{T{1.0, 2.0}, T{-1.0, 2.25}},
+                                             {T{-2.0, 1.5}, T{4.5, 0.0}},
+                                             {T{1.0, 0.0}, T{0.0, 1.0}}},
+                                            exec);
+    auto mtx2 = gko::initialize<MultiVector>({{T{4.0, -1.0}, T{5.0, 1.5}},
+                                              {T{3.0, 1.0}, T{0.0, 2.0}},
+                                              {T{-1.0, 1.0}, T{0.5, -2.0}}},
+                                             exec);
+    auto alpha =
+        gko::initialize<RealMultiVector>({{RealT{2.0}, RealT{-4.0}}}, exec);
 
     mtx->sub_scaled(alpha, mtx2);
 
@@ -3782,17 +3811,17 @@ TYPED_TEST(DenseComplex, SubtractsScaledWithRealVector)
 }
 
 
-TYPED_TEST(DenseComplex, NonSquareMatrixIsConjugateTransposable)
+TYPED_TEST(MultiVectorComplex, NonSquareMatrixIsConjugateTransposable)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
     auto exec = gko::ReferenceExecutor::create();
-    auto mtx = gko::initialize<Dense>({{T{1.0, 2.0}, T{-1.0, 2.1}},
-                                       {T{-2.0, 1.5}, T{4.5, 0.0}},
-                                       {T{1.0, 0.0}, T{0.0, 1.0}}},
-                                      exec);
+    auto mtx = gko::initialize<MultiVector>({{T{1.0, 2.0}, T{-1.0, 2.1}},
+                                             {T{-2.0, 1.5}, T{4.5, 0.0}},
+                                             {T{1.0, 0.0}, T{0.0, 1.0}}},
+                                            exec);
 
-    auto trans = gko::as<Dense>(mtx->conj_transpose());
+    auto trans = gko::as<MultiVector>(mtx->conj_transpose());
 
     GKO_ASSERT_MTX_NEAR(trans,
                         l<T>({{T{1.0, -2.0}, T{-2.0, -1.5}, T{1.0, 0.0}},
@@ -3801,16 +3830,17 @@ TYPED_TEST(DenseComplex, NonSquareMatrixIsConjugateTransposable)
 }
 
 
-TYPED_TEST(DenseComplex, NonSquareMatrixIsConjugateTransposableIntoDense)
+TYPED_TEST(MultiVectorComplex,
+           NonSquareMatrixIsConjugateTransposableIntoMultiVector)
 {
-    using Dense = typename TestFixture::Mtx;
+    using MultiVector = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
     auto exec = gko::ReferenceExecutor::create();
-    auto mtx = gko::initialize<Dense>({{T{1.0, 2.0}, T{-1.0, 2.1}},
-                                       {T{-2.0, 1.5}, T{4.5, 0.0}},
-                                       {T{1.0, 0.0}, T{0.0, 1.0}}},
-                                      exec);
-    auto trans = Dense::create(exec, gko::transpose(mtx->get_size()));
+    auto mtx = gko::initialize<MultiVector>({{T{1.0, 2.0}, T{-1.0, 2.1}},
+                                             {T{-2.0, 1.5}, T{4.5, 0.0}},
+                                             {T{1.0, 0.0}, T{0.0, 1.0}}},
+                                            exec);
+    auto trans = MultiVector::create(exec, gko::transpose(mtx->get_size()));
 
     mtx->conj_transpose(trans);
 
@@ -3821,7 +3851,7 @@ TYPED_TEST(DenseComplex, NonSquareMatrixIsConjugateTransposableIntoDense)
 }
 
 
-TYPED_TEST(DenseComplex, InplaceAbsolute)
+TYPED_TEST(MultiVectorComplex, InplaceAbsolute)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -3838,7 +3868,7 @@ TYPED_TEST(DenseComplex, InplaceAbsolute)
 }
 
 
-TYPED_TEST(DenseComplex, OutplaceAbsolute)
+TYPED_TEST(MultiVectorComplex, OutplaceAbsolute)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -3856,7 +3886,7 @@ TYPED_TEST(DenseComplex, OutplaceAbsolute)
 }
 
 
-TYPED_TEST(DenseComplex, OutplaceAbsoluteIntoDense)
+TYPED_TEST(MultiVectorComplex, OutplaceAbsoluteIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -3875,7 +3905,7 @@ TYPED_TEST(DenseComplex, OutplaceAbsoluteIntoDense)
 }
 
 
-TYPED_TEST(DenseComplex, MakeComplex)
+TYPED_TEST(MultiVectorComplex, MakeComplex)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -3891,7 +3921,7 @@ TYPED_TEST(DenseComplex, MakeComplex)
 }
 
 
-TYPED_TEST(DenseComplex, MakeComplexIntoDense)
+TYPED_TEST(MultiVectorComplex, MakeComplexIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -3908,7 +3938,7 @@ TYPED_TEST(DenseComplex, MakeComplexIntoDense)
 }
 
 
-TYPED_TEST(DenseComplex, GetReal)
+TYPED_TEST(MultiVectorComplex, GetReal)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -3926,7 +3956,7 @@ TYPED_TEST(DenseComplex, GetReal)
 }
 
 
-TYPED_TEST(DenseComplex, GetRealIntoDense)
+TYPED_TEST(MultiVectorComplex, GetRealIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using RealMtx = typename TestFixture::RealMtx;
@@ -3946,7 +3976,7 @@ TYPED_TEST(DenseComplex, GetRealIntoDense)
 }
 
 
-TYPED_TEST(DenseComplex, GetImag)
+TYPED_TEST(MultiVectorComplex, GetImag)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -3964,7 +3994,7 @@ TYPED_TEST(DenseComplex, GetImag)
 }
 
 
-TYPED_TEST(DenseComplex, GetImagIntoDense)
+TYPED_TEST(MultiVectorComplex, GetImagIntoMultiVector)
 {
     using Mtx = typename TestFixture::Mtx;
     using RealMtx = typename TestFixture::RealMtx;
@@ -3984,7 +4014,7 @@ TYPED_TEST(DenseComplex, GetImagIntoDense)
 }
 
 
-TYPED_TEST(DenseComplex, Dot)
+TYPED_TEST(MultiVectorComplex, Dot)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;
@@ -4001,7 +4031,7 @@ TYPED_TEST(DenseComplex, Dot)
 }
 
 
-TYPED_TEST(DenseComplex, ConjDot)
+TYPED_TEST(MultiVectorComplex, ConjDot)
 {
     using Mtx = typename TestFixture::Mtx;
     using T = typename TestFixture::value_type;

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -13,8 +13,8 @@
 #include <ginkgo/core/base/executor.hpp>
 #include <ginkgo/core/matrix/coo.hpp>
 #include <ginkgo/core/matrix/csr.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
 #include <ginkgo/core/matrix/diagonal.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/test/utils.hpp"
 
@@ -31,8 +31,8 @@ protected:
         typename std::tuple_element<1, decltype(ValueIndexType())>::type;
     using Csr = gko::matrix::Csr<value_type, index_type>;
     using Mtx = gko::matrix::Coo<value_type, index_type>;
-    using Vec = gko::matrix::Dense<value_type>;
-    using MixedVec = gko::matrix::Dense<gko::next_precision<value_type>>;
+    using Vec = gko::matrix::MultiVector<value_type>;
+    using MixedVec = gko::matrix::MultiVector<gko::next_precision<value_type>>;
 
     Coo() : exec(gko::ReferenceExecutor::create()), mtx(Mtx::create(exec))
     {
@@ -160,12 +160,12 @@ TYPED_TEST(Coo, MovesToCsr)
 }
 
 
-TYPED_TEST(Coo, ConvertsToDense)
+TYPED_TEST(Coo, ConvertsToMultiVector)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
-    using Dense = typename TestFixture::Vec;
-    auto dense_mtx = Dense::create(this->mtx->get_executor());
+    using MultiVector = typename TestFixture::Vec;
+    auto dense_mtx = MultiVector::create(this->mtx->get_executor());
 
     this->mtx->convert_to(dense_mtx);
 
@@ -177,12 +177,12 @@ TYPED_TEST(Coo, ConvertsToDense)
 }
 
 
-TYPED_TEST(Coo, ConvertsToDenseUnsorted)
+TYPED_TEST(Coo, ConvertsToMultiVectorUnsorted)
 {
     using value_type = typename TestFixture::value_type;
     using index_type = typename TestFixture::index_type;
-    using Dense = typename TestFixture::Vec;
-    auto dense_mtx = Dense::create(this->mtx->get_executor());
+    using MultiVector = typename TestFixture::Vec;
+    auto dense_mtx = MultiVector::create(this->mtx->get_executor());
 
     this->uns_mtx->convert_to(dense_mtx);
 
@@ -194,11 +194,11 @@ TYPED_TEST(Coo, ConvertsToDenseUnsorted)
 }
 
 
-TYPED_TEST(Coo, MovesToDense)
+TYPED_TEST(Coo, MovesToMultiVector)
 {
     using value_type = typename TestFixture::value_type;
-    using Dense = typename TestFixture::Vec;
-    auto dense_mtx = Dense::create(this->mtx->get_executor());
+    using MultiVector = typename TestFixture::Vec;
+    auto dense_mtx = MultiVector::create(this->mtx->get_executor());
 
     this->mtx->move_to(dense_mtx);
 
@@ -278,14 +278,14 @@ TYPED_TEST(Coo, MovesEmptyToCsr)
 }
 
 
-TYPED_TEST(Coo, ConvertsEmptyToDense)
+TYPED_TEST(Coo, ConvertsEmptyToMultiVector)
 {
     using ValueType = typename TestFixture::value_type;
     using IndexType = typename TestFixture::index_type;
     using Coo = typename TestFixture::Mtx;
-    using Dense = gko::matrix::Dense<ValueType>;
+    using MultiVector = gko::matrix::MultiVector<ValueType>;
     auto empty = Coo::create(this->exec);
-    auto res = Dense::create(this->exec);
+    auto res = MultiVector::create(this->exec);
 
     empty->convert_to(res);
 
@@ -293,14 +293,14 @@ TYPED_TEST(Coo, ConvertsEmptyToDense)
 }
 
 
-TYPED_TEST(Coo, MovesEmptyToDense)
+TYPED_TEST(Coo, MovesEmptyToMultiVector)
 {
     using ValueType = typename TestFixture::value_type;
     using IndexType = typename TestFixture::index_type;
     using Coo = typename TestFixture::Mtx;
-    using Dense = gko::matrix::Dense<ValueType>;
+    using MultiVector = gko::matrix::MultiVector<ValueType>;
     auto empty = Coo::create(this->exec);
-    auto res = Dense::create(this->exec);
+    auto res = MultiVector::create(this->exec);
 
     empty->move_to(res);
 
@@ -308,7 +308,7 @@ TYPED_TEST(Coo, MovesEmptyToDense)
 }
 
 
-TYPED_TEST(Coo, AppliesToDenseVector)
+TYPED_TEST(Coo, AppliesToMultiVectorVector)
 {
     using Vec = typename TestFixture::Vec;
     auto x = gko::initialize<Vec>({2.0, 1.0, 4.0}, this->exec);
@@ -335,7 +335,7 @@ TYPED_TEST(Coo, ApplyToStridedVectorKeepsPadding)
 }
 
 
-TYPED_TEST(Coo, AppliesToMixedDenseVector)
+TYPED_TEST(Coo, AppliesToMixedMultiVectorVector)
 {
     using MixedVec = typename TestFixture::MixedVec;
     auto x = gko::initialize<MixedVec>({2.0, 1.0, 4.0}, this->exec);
@@ -347,7 +347,7 @@ TYPED_TEST(Coo, AppliesToMixedDenseVector)
 }
 
 
-TYPED_TEST(Coo, AppliesToDenseVectorUnsorted)
+TYPED_TEST(Coo, AppliesToMultiVectorVectorUnsorted)
 {
     using Vec = typename TestFixture::Vec;
     auto x = gko::initialize<Vec>({2.0, 1.0, 4.0}, this->exec);
@@ -359,7 +359,7 @@ TYPED_TEST(Coo, AppliesToDenseVectorUnsorted)
 }
 
 
-TYPED_TEST(Coo, AppliesToDenseMatrix)
+TYPED_TEST(Coo, AppliesToMultiVectorMatrix)
 {
     using Vec = typename TestFixture::Vec;
     using T = typename TestFixture::value_type;
@@ -381,7 +381,7 @@ TYPED_TEST(Coo, AppliesToDenseMatrix)
 }
 
 
-TYPED_TEST(Coo, AppliesToDenseMatrixUnsorted)
+TYPED_TEST(Coo, AppliesToMultiVectorMatrixUnsorted)
 {
     using Vec = typename TestFixture::Vec;
     using T = typename TestFixture::value_type;
@@ -403,7 +403,7 @@ TYPED_TEST(Coo, AppliesToDenseMatrixUnsorted)
 }
 
 
-TYPED_TEST(Coo, AppliesLinearCombinationToDenseVector)
+TYPED_TEST(Coo, AppliesLinearCombinationToMultiVectorVector)
 {
     using Vec = typename TestFixture::Vec;
     auto alpha = gko::initialize<Vec>({-1.0}, this->exec);
@@ -436,7 +436,7 @@ TYPED_TEST(Coo, ApplyLinearCombinationToStridedVectorKeepsPadding)
 }
 
 
-TYPED_TEST(Coo, AppliesLinearCombinationToMixedDenseVector)
+TYPED_TEST(Coo, AppliesLinearCombinationToMixedMultiVectorVector)
 {
     using MixedVec = typename TestFixture::MixedVec;
     auto alpha = gko::initialize<MixedVec>({-1.0}, this->exec);
@@ -450,7 +450,7 @@ TYPED_TEST(Coo, AppliesLinearCombinationToMixedDenseVector)
 }
 
 
-TYPED_TEST(Coo, AppliesLinearCombinationToDenseMatrix)
+TYPED_TEST(Coo, AppliesLinearCombinationToMultiVectorMatrix)
 {
     using Vec = typename TestFixture::Vec;
     using T = typename TestFixture::value_type;
@@ -506,7 +506,7 @@ TYPED_TEST(Coo, ApplyFailsOnWrongNumberOfCols)
 }
 
 
-TYPED_TEST(Coo, AppliesAddToDenseVector)
+TYPED_TEST(Coo, AppliesAddToMultiVectorVector)
 {
     using Vec = typename TestFixture::Vec;
     auto x = gko::initialize<Vec>({2.0, 1.0, 4.0}, this->exec);
@@ -518,7 +518,7 @@ TYPED_TEST(Coo, AppliesAddToDenseVector)
 }
 
 
-TYPED_TEST(Coo, AppliesAddToMixedDenseVector)
+TYPED_TEST(Coo, AppliesAddToMixedMultiVectorVector)
 {
     using MixedVec = typename TestFixture::MixedVec;
     auto x = gko::initialize<MixedVec>({2.0, 1.0, 4.0}, this->exec);
@@ -530,7 +530,7 @@ TYPED_TEST(Coo, AppliesAddToMixedDenseVector)
 }
 
 
-TYPED_TEST(Coo, AppliesAddToDenseMatrix)
+TYPED_TEST(Coo, AppliesAddToMultiVectorMatrix)
 {
     using Vec = typename TestFixture::Vec;
     using T = typename TestFixture::value_type;
@@ -554,7 +554,7 @@ TYPED_TEST(Coo, AppliesAddToDenseMatrix)
 }
 
 
-TYPED_TEST(Coo, AppliesLinearCombinationAddToDenseVector)
+TYPED_TEST(Coo, AppliesLinearCombinationAddToMultiVectorVector)
 {
     using Vec = typename TestFixture::Vec;
     auto alpha = gko::initialize<Vec>({-1.0}, this->exec);
@@ -567,7 +567,7 @@ TYPED_TEST(Coo, AppliesLinearCombinationAddToDenseVector)
 }
 
 
-TYPED_TEST(Coo, AppliesLinearCombinationAddToMixedDenseVector)
+TYPED_TEST(Coo, AppliesLinearCombinationAddToMixedMultiVectorVector)
 {
     using MixedVec = typename TestFixture::MixedVec;
     auto alpha = gko::initialize<MixedVec>({-1.0}, this->exec);
@@ -580,7 +580,7 @@ TYPED_TEST(Coo, AppliesLinearCombinationAddToMixedDenseVector)
 }
 
 
-TYPED_TEST(Coo, AppliesLinearCombinationAddToDenseMatrix)
+TYPED_TEST(Coo, AppliesLinearCombinationAddToMultiVectorMatrix)
 {
     using Vec = typename TestFixture::Vec;
     using T = typename TestFixture::value_type;
@@ -678,7 +678,7 @@ TYPED_TEST(Coo, AppliesToComplex)
 {
     using value_type = typename TestFixture::value_type;
     using complex_type = gko::to_complex<value_type>;
-    using Vec = gko::matrix::Dense<complex_type>;
+    using Vec = gko::matrix::MultiVector<complex_type>;
     auto exec = gko::ReferenceExecutor::create();
 
     // clang-format off
@@ -704,7 +704,7 @@ TYPED_TEST(Coo, AppliesToMixedComplex)
     using mixed_value_type =
         gko::next_precision<typename TestFixture::value_type>;
     using mixed_complex_type = gko::to_complex<mixed_value_type>;
-    using Vec = gko::matrix::Dense<mixed_complex_type>;
+    using Vec = gko::matrix::MultiVector<mixed_complex_type>;
     auto exec = gko::ReferenceExecutor::create();
 
     // clang-format off
@@ -729,20 +729,20 @@ TYPED_TEST(Coo, AdvancedAppliesToComplex)
 {
     using value_type = typename TestFixture::value_type;
     using complex_type = gko::to_complex<value_type>;
-    using Dense = gko::matrix::Dense<value_type>;
-    using DenseComplex = gko::matrix::Dense<complex_type>;
+    using MultiVector = gko::matrix::MultiVector<value_type>;
+    using MultiVectorComplex = gko::matrix::MultiVector<complex_type>;
     auto exec = gko::ReferenceExecutor::create();
 
     // clang-format off
-    auto b = gko::initialize<DenseComplex>(
+    auto b = gko::initialize<MultiVectorComplex>(
         {{complex_type{1.0, 0.0}, complex_type{2.0, 1.0}},
          {complex_type{2.0, 2.0}, complex_type{3.0, 3.0}},
          {complex_type{3.0, 4.0}, complex_type{4.0, 5.0}}}, exec);
-    auto x = gko::initialize<DenseComplex>(
+    auto x = gko::initialize<MultiVectorComplex>(
         {{complex_type{1.0, 0.0}, complex_type{2.0, 1.0}},
          {complex_type{2.0, 2.0}, complex_type{3.0, 3.0}}}, exec);
-    auto alpha = gko::initialize<Dense>({-1.0}, this->exec);
-    auto beta = gko::initialize<Dense>({2.0}, this->exec);
+    auto alpha = gko::initialize<MultiVector>({-1.0}, this->exec);
+    auto beta = gko::initialize<MultiVector>({2.0}, this->exec);
     // clang-format on
 
     this->mtx->apply(alpha, b, beta, x);
@@ -760,20 +760,21 @@ TYPED_TEST(Coo, AdvancedAppliesToMixedComplex)
     using mixed_value_type =
         gko::next_precision<typename TestFixture::value_type>;
     using mixed_complex_type = gko::to_complex<mixed_value_type>;
-    using MixedDense = gko::matrix::Dense<mixed_value_type>;
-    using MixedDenseComplex = gko::matrix::Dense<mixed_complex_type>;
+    using MixedMultiVector = gko::matrix::MultiVector<mixed_value_type>;
+    using MixedMultiVectorComplex =
+        gko::matrix::MultiVector<mixed_complex_type>;
     auto exec = gko::ReferenceExecutor::create();
 
     // clang-format off
-    auto b = gko::initialize<MixedDenseComplex>(
+    auto b = gko::initialize<MixedMultiVectorComplex>(
         {{mixed_complex_type{1.0, 0.0}, mixed_complex_type{2.0, 1.0}},
          {mixed_complex_type{2.0, 2.0}, mixed_complex_type{3.0, 3.0}},
          {mixed_complex_type{3.0, 4.0}, mixed_complex_type{4.0, 5.0}}}, exec);
-    auto x = gko::initialize<MixedDenseComplex>(
+    auto x = gko::initialize<MixedMultiVectorComplex>(
         {{mixed_complex_type{1.0, 0.0}, mixed_complex_type{2.0, 1.0}},
          {mixed_complex_type{2.0, 2.0}, mixed_complex_type{3.0, 3.0}}}, exec);
-    auto alpha = gko::initialize<MixedDense>({-1.0}, this->exec);
-    auto beta = gko::initialize<MixedDense>({2.0}, this->exec);
+    auto alpha = gko::initialize<MixedMultiVector>({-1.0}, this->exec);
+    auto beta = gko::initialize<MixedMultiVector>({2.0}, this->exec);
     // clang-format on
 
     this->mtx->apply(alpha, b, beta, x);
@@ -790,7 +791,7 @@ TYPED_TEST(Coo, ApplyAddsToComplex)
 {
     using value_type = typename TestFixture::value_type;
     using complex_type = gko::to_complex<value_type>;
-    using Vec = gko::matrix::Dense<complex_type>;
+    using Vec = gko::matrix::MultiVector<complex_type>;
     auto exec = gko::ReferenceExecutor::create();
 
     // clang-format off
@@ -818,7 +819,7 @@ TYPED_TEST(Coo, ApplyAddsToMixedComplex)
     using mixed_value_type =
         gko::next_precision<typename TestFixture::value_type>;
     using mixed_complex_type = gko::to_complex<mixed_value_type>;
-    using MixedVec = gko::matrix::Dense<mixed_complex_type>;
+    using MixedVec = gko::matrix::MultiVector<mixed_complex_type>;
     auto exec = gko::ReferenceExecutor::create();
 
     // clang-format off
@@ -845,19 +846,19 @@ TYPED_TEST(Coo, ApplyAddsScaledToComplex)
 {
     using value_type = typename TestFixture::value_type;
     using complex_type = gko::to_complex<value_type>;
-    using Dense = gko::matrix::Dense<value_type>;
-    using DenseComplex = gko::matrix::Dense<complex_type>;
+    using MultiVector = gko::matrix::MultiVector<value_type>;
+    using MultiVectorComplex = gko::matrix::MultiVector<complex_type>;
     auto exec = gko::ReferenceExecutor::create();
 
     // clang-format off
-    auto b = gko::initialize<DenseComplex>(
+    auto b = gko::initialize<MultiVectorComplex>(
         {{complex_type{1.0, 0.0}, complex_type{2.0, 1.0}},
          {complex_type{2.0, 2.0}, complex_type{3.0, 3.0}},
          {complex_type{3.0, 4.0}, complex_type{4.0, 5.0}}}, exec);
-    auto x = gko::initialize<DenseComplex>(
+    auto x = gko::initialize<MultiVectorComplex>(
         {{complex_type{1.0, 0.0}, complex_type{2.0, 1.0}},
          {complex_type{2.0, 2.0}, complex_type{3.0, 3.0}}}, exec);
-    auto alpha = gko::initialize<Dense>({-1.0}, this->exec);
+    auto alpha = gko::initialize<MultiVector>({-1.0}, this->exec);
     // clang-format on
 
     this->mtx->apply2(alpha, b, x);
@@ -875,19 +876,20 @@ TYPED_TEST(Coo, ApplyAddsScaledToMixedComplex)
     using mixed_value_type =
         gko::next_precision<typename TestFixture::value_type>;
     using mixed_complex_type = gko::to_complex<mixed_value_type>;
-    using MixedDense = gko::matrix::Dense<mixed_value_type>;
-    using MixedDenseComplex = gko::matrix::Dense<mixed_complex_type>;
+    using MixedMultiVector = gko::matrix::MultiVector<mixed_value_type>;
+    using MixedMultiVectorComplex =
+        gko::matrix::MultiVector<mixed_complex_type>;
     auto exec = gko::ReferenceExecutor::create();
 
     // clang-format off
-    auto b = gko::initialize<MixedDenseComplex>(
+    auto b = gko::initialize<MixedMultiVectorComplex>(
         {{mixed_complex_type{1.0, 0.0}, mixed_complex_type{2.0, 1.0}},
          {mixed_complex_type{2.0, 2.0}, mixed_complex_type{3.0, 3.0}},
          {mixed_complex_type{3.0, 4.0}, mixed_complex_type{4.0, 5.0}}}, exec);
-    auto x = gko::initialize<MixedDenseComplex>(
+    auto x = gko::initialize<MixedMultiVectorComplex>(
         {{mixed_complex_type{1.0, 0.0}, mixed_complex_type{2.0, 1.0}},
          {mixed_complex_type{2.0, 2.0}, mixed_complex_type{3.0, 3.0}}}, exec);
-    auto alpha = gko::initialize<MixedDense>({-1.0}, this->exec);
+    auto alpha = gko::initialize<MixedMultiVector>({-1.0}, this->exec);
     // clang-format on
 
     this->mtx->apply2(alpha, b, x);

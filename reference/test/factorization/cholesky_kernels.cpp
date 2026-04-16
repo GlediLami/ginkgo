@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -49,7 +49,7 @@ protected:
     std::unique_ptr<matrix_type> combined_factor(
         gko::ptr_param<const matrix_type> l_factor)
     {
-        auto one = gko::initialize<gko::matrix::Dense<value_type>>(
+        auto one = gko::initialize<gko::matrix::MultiVector<value_type>>(
             {gko::one<value_type>()}, ref);
         auto id = gko::matrix::Identity<value_type>::create(
             ref, l_factor->get_size()[0]);

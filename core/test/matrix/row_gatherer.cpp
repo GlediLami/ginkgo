@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -7,7 +7,7 @@
 #include <ginkgo/core/base/executor.hpp>
 #include <ginkgo/core/base/range.hpp>
 #include <ginkgo/core/matrix/csr.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 #include <ginkgo/core/matrix/row_gatherer.hpp>
 
 #include "core/test/utils.hpp"
@@ -26,8 +26,8 @@ protected:
         typename std::tuple_element<1, decltype(ValueIndexType())>::type;
     using i_type =
         typename std::tuple_element<2, decltype(ValueIndexType())>::type;
-    using Vec = gko::matrix::Dense<v_type>;
-    using OutVec = gko::matrix::Dense<o_type>;
+    using Vec = gko::matrix::MultiVector<v_type>;
+    using OutVec = gko::matrix::MultiVector<o_type>;
     RowGatherer()
         : exec(gko::ReferenceExecutor::create()),
           mtx(gko::matrix::RowGatherer<i_type>::create(

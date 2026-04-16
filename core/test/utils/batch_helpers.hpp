@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -14,7 +14,7 @@
 #include <ginkgo/core/base/matrix_data.hpp>
 #include <ginkgo/core/log/batch_logger.hpp>
 #include <ginkgo/core/matrix/batch_identity.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 
 #include "core/test/utils/assertions.hpp"
 #include "core/test/utils/matrix_generator.hpp"

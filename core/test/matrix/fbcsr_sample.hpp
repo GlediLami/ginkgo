@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -8,9 +8,9 @@
 
 #include <ginkgo/core/base/matrix_data.hpp>
 #include <ginkgo/core/matrix/csr.hpp>
-#include <ginkgo/core/matrix/dense.hpp>
 #include <ginkgo/core/matrix/diagonal.hpp>
 #include <ginkgo/core/matrix/fbcsr.hpp>
+#include <ginkgo/core/matrix/multivector.hpp>
 #include <ginkgo/core/matrix/sparsity_csr.hpp>
 
 #include "accessor/block_col_major.hpp"
