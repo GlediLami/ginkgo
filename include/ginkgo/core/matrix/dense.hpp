@@ -1680,9 +1680,11 @@ std::unique_ptr<Matrix> initialize(
     for (const auto& row : vals) {
         size_type cidx = 0;
         for (const auto& elem : row) {
+            std::cout << elem << " ";
             tmp->at(ridx, cidx) = elem;
             ++cidx;
         }
+        std::cout << std::endl;
         ++ridx;
     }
     auto mtx = Matrix::create(exec, std::forward<TArgs>(create_args)...);
