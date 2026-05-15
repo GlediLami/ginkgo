@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -37,20 +37,24 @@ class Criterion : public EnableAbstractPolymorphicObject<Criterion> {
 public:
     /**
      * The Updater class serves for convenient argument passing to the
-     * Criterion's check function. The pattern used is a Builder, except Updater
-     * builds a function's arguments before calling the function itself, and
-     * does not build an object. This allows calling a Criterion's check in the
-     * form of: stop_criterion->update()
-     *   .num_iterations(num_iterations)
-     *   .ignore_residual_check(ignore_residual_check)
-     *   .residual_norm(residual_norm)
-     *   .implicit_sq_residual_norm(implicit_sq_residual_norm)
-     *   .residual(residual)
-     *   .solution(solution)
-     *   .check(converged);
+     * Criterion's check function. The pattern used is a Builder, except
+     * Updater builds a function's arguments before calling the function
+     * itself, and does not build an object. This allows calling a
+     * Criterion's check in the form
      *
-     * If there is a need for a new form of data to pass to the Criterion, it
-     * should be added here.
+     * ```cpp
+     * stop_criterion->update()
+     *     .num_iterations(num_iterations)
+     *     .ignore_residual_check(ignore_residual_check)
+     *     .residual_norm(residual_norm)
+     *     .implicit_sq_residual_norm(implicit_sq_residual_norm)
+     *     .residual(residual)
+     *     .solution(solution)
+     *     .check(converged);
+     * ```
+     *
+     * If there is a need for a new form of data to pass to the Criterion,
+     * it should be added here.
      */
     class Updater {
         friend class Criterion;
