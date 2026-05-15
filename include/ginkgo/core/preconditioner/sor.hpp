@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -23,8 +23,8 @@ namespace preconditioner {
  * This class generates the (S)SOR preconditioner.
  *
  * The SOR preconditioner starts from a splitting of the the matrix \f$A\f$ into
- * \f$A = D + L + U\f$, where \f$L\f$ contains all entries below the diagonal, and \f$U\f$
- * contains all entries above the diagonal. The application of the
+ * \f$A = D + L + U\f$, where \f$L\f$ contains all entries below the diagonal,
+ * and \f$U\f$ contains all entries above the diagonal. The application of the
  * preconditioner is then defined as solving \f$M x = y\f$ with
  * \f[
  * M = \frac{1}{\omega} (D + \omega L), \quad 0 < \omega < 2.

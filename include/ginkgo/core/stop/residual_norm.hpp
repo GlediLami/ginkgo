@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -242,8 +242,8 @@ protected:
  * ```
  *
  * @param tolerance  the value the residual norm needs to be below.
- *     With residual \f$r\f$, initial guess \f$x_0\f$, right-hand side \f$b\f$, matrix \f$A\f$,
- *     `absolute` means the exact value of the norm $||r||$,
+ *     With residual \f$r\f$, initial guess \f$x_0\f$, right-hand side \f$b\f$,
+ * matrix \f$A\f$, `absolute` means the exact value of the norm $||r||$,
  *     `relative` means the norm relative to the right-hand side $||r||/||b||$,
  *     `initial` means the norm relative to the initial residual
  *     $||r||/||b - A x_0||$.

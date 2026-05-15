@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -22,8 +22,8 @@ namespace preconditioner {
 /**
  * This class generates the Gauss-Seidel preconditioner.
  *
- * This is the special case of the relaxation factor \f$\omega = 1\f$ of the (S)SOR
- * preconditioner.
+ * This is the special case of the relaxation factor \f$\omega = 1\f$ of the
+ * (S)SOR preconditioner.
  *
  * @see Sor
  *

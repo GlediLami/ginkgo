@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -30,9 +30,10 @@ namespace factorization {
  * computed in parallel.
  *
  * \f$L\f$ is a lower triangular matrix which approximates a given symmetric
- * positive definite matrix \f$A\f$ with \f$A \approx LL^T\f$. Here, \f$L\f$ has a sparsity
- * pattern that is improved iteratively based on its element-wise magnitude.
- * The initial sparsity pattern is chosen based on the lower triangle of \f$A\f$.
+ * positive definite matrix \f$A\f$ with \f$A \approx LL^T\f$. Here, \f$L\f$ has
+ * a sparsity pattern that is improved iteratively based on its element-wise
+ * magnitude. The initial sparsity pattern is chosen based on the lower triangle
+ * of \f$A\f$.
  *
  * One iteration of the ParICT algorithm consists of the following steps:
  *
