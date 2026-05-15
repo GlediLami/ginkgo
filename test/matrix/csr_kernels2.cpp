@@ -1655,9 +1655,10 @@ TEST_F(Csr, CalculateNnzPerRowInSpanIsEquivalentToRef)
     auto drow_nnz = gko::array<int>(this->exec, row_nnz);
 
     gko::kernels::reference::csr::calculate_nonzeros_per_row_in_span(
-        this->ref, this->mtx2.get(), rspan, cspan, row_nnz);
+        this->ref, this->mtx2->get_const_device_view(), rspan, cspan, row_nnz);
     gko::kernels::GKO_DEVICE_NAMESPACE::csr::calculate_nonzeros_per_row_in_span(
-        this->exec, this->dmtx2.get(), rspan, cspan, drow_nnz);
+        this->exec, this->dmtx2->get_const_device_view(), rspan, cspan,
+        drow_nnz);
 
     GKO_ASSERT_ARRAY_EQ(row_nnz, drow_nnz);
 }
@@ -1673,7 +1674,7 @@ TEST_F(Csr, ComputeSubmatrixIsEquivalentToRef)
     auto row_nnz = gko::array<int>(this->ref, rspan.length() + 1);
     row_nnz.fill(gko::zero<int>());
     gko::kernels::reference::csr::calculate_nonzeros_per_row_in_span(
-        this->ref, this->mtx2.get(), rspan, cspan, row_nnz);
+        this->ref, this->mtx2->get_const_device_view(), rspan, cspan, row_nnz);
     gko::kernels::reference::components::prefix_sum_nonnegative(
         this->ref, row_nnz.get_data(), row_nnz.get_size());
     auto num_nnz = row_nnz.get_data()[rspan.length()];
@@ -1690,10 +1691,12 @@ TEST_F(Csr, ComputeSubmatrixIsEquivalentToRef)
                     std::move(drow_nnz));
 
 
-    gko::kernels::reference::csr::compute_submatrix(this->ref, this->mtx2.get(),
-                                                    rspan, cspan, smat1.get());
+    gko::kernels::reference::csr::compute_submatrix(
+        this->ref, this->mtx2->get_const_device_view(), rspan, cspan,
+        smat1->get_device_view());
     gko::kernels::GKO_DEVICE_NAMESPACE::csr::compute_submatrix(
-        this->exec, this->dmtx2.get(), rspan, cspan, sdmat1.get());
+        this->exec, this->dmtx2->get_const_device_view(), rspan, cspan,
+        sdmat1->get_device_view());
 
     GKO_ASSERT_MTX_NEAR(sdmat1, smat1, 0.0);
 }
@@ -1717,10 +1720,12 @@ TEST_F(Csr, CalculateNnzPerRowInIndexSetIsEquivalentToRef)
     auto drow_nnz = gko::array<int>(this->exec, row_nnz);
 
     gko::kernels::reference::csr::calculate_nonzeros_per_row_in_index_set(
-        this->ref, this->mtx2.get(), rset, cset, row_nnz.get_data());
+        this->ref, this->mtx2->get_const_device_view(), rset, cset,
+        row_nnz.get_data());
     gko::kernels::GKO_DEVICE_NAMESPACE::csr::
         calculate_nonzeros_per_row_in_index_set(
-            this->exec, this->dmtx2.get(), drset, dcset, drow_nnz.get_data());
+            this->exec, this->dmtx2->get_const_device_view(), drset, dcset,
+            drow_nnz.get_data());
 
     GKO_ASSERT_ARRAY_EQ(row_nnz, drow_nnz);
 }
@@ -1739,7 +1744,8 @@ TEST_F(Csr, ComputeSubmatrixFromIndexSetIsEquivalentToRef)
     auto row_nnz = gko::array<int>(this->ref, rset.get_size() + 1);
     row_nnz.fill(gko::zero<int>());
     gko::kernels::reference::csr::calculate_nonzeros_per_row_in_index_set(
-        this->ref, this->mtx2.get(), rset, cset, row_nnz.get_data());
+        this->ref, this->mtx2->get_const_device_view(), rset, cset,
+        row_nnz.get_data());
     gko::kernels::reference::components::prefix_sum_nonnegative(
         this->ref, row_nnz.get_data(), row_nnz.get_size());
     auto num_nnz = row_nnz.get_data()[rset.get_size()];
@@ -1756,9 +1762,11 @@ TEST_F(Csr, ComputeSubmatrixFromIndexSetIsEquivalentToRef)
                     std::move(drow_nnz));
 
     gko::kernels::reference::csr::compute_submatrix_from_index_set(
-        this->ref, this->mtx2.get(), rset, cset, smat1.get());
+        this->ref, this->mtx2->get_const_device_view(), rset, cset,
+        smat1->get_device_view());
     gko::kernels::GKO_DEVICE_NAMESPACE::csr::compute_submatrix_from_index_set(
-        this->exec, this->dmtx2.get(), drset, dcset, sdmat1.get());
+        this->exec, this->dmtx2->get_const_device_view(), drset, dcset,
+        sdmat1->get_device_view());
 
     GKO_ASSERT_MTX_NEAR(sdmat1, smat1, 0.0);
 }
@@ -1813,7 +1821,7 @@ TEST_F(Csr, CanDetectMissingDiagonalEntry)
     bool has_diags = true;
 
     gko::kernels::GKO_DEVICE_NAMESPACE::csr::check_diagonal_entries_exist(
-        exec, mtx.get(), has_diags);
+        exec, mtx->get_const_device_view(), has_diags);
 
     ASSERT_FALSE(has_diags);
 }
@@ -1828,7 +1836,7 @@ TEST_F(Csr, CanDetectWhenAllDiagonalEntriesArePresent)
     bool has_diags = true;
 
     gko::kernels::GKO_DEVICE_NAMESPACE::csr::check_diagonal_entries_exist(
-        exec, mtx.get(), has_diags);
+        exec, mtx->get_const_device_view(), has_diags);
 
     ASSERT_TRUE(has_diags);
 }

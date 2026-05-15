@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -37,7 +37,7 @@ namespace kernels {
                         const matrix::Hybrid<ValueType, IndexType>* source, \
                         const IndexType* ell_row_ptrs,                      \
                         const IndexType* coo_row_ptrs,                      \
-                        matrix::Csr<ValueType, IndexType>* result)
+                        matrix::view::csr<ValueType, IndexType> result)
 
 
 #define GKO_DECLARE_ALL_AS_TEMPLATES                                     \

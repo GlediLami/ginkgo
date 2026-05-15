@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -458,8 +458,8 @@ TYPED_TEST(Pgm, FindStrongestNeighbor)
     }
 
     gko::kernels::reference::pgm::find_strongest_neighbor(
-        this->exec, this->weight.get(), this->mtx_diag.get(), agg,
-        strongest_neighbor);
+        this->exec, this->weight->get_const_device_view(), this->mtx_diag.get(),
+        agg, strongest_neighbor);
 
     ASSERT_EQ(snb_vals[0], 2);
     ASSERT_EQ(snb_vals[1], 0);
@@ -483,8 +483,8 @@ TYPED_TEST(Pgm, AssignToExistAgg)
     agg_vals[4] = -1;
 
     gko::kernels::reference::pgm::assign_to_exist_agg(
-        this->exec, this->weight.get(), this->mtx_diag.get(), agg,
-        intermediate_agg);
+        this->exec, this->weight->get_const_device_view(), this->mtx_diag.get(),
+        agg, intermediate_agg);
 
     ASSERT_EQ(agg_vals[0], 0);
     ASSERT_EQ(agg_vals[1], 1);

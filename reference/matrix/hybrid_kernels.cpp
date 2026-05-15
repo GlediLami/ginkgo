@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -94,11 +94,11 @@ template <typename ValueType, typename IndexType>
 void convert_to_csr(std::shared_ptr<const ReferenceExecutor> exec,
                     const matrix::Hybrid<ValueType, IndexType>* source,
                     const IndexType*, const IndexType*,
-                    matrix::Csr<ValueType, IndexType>* result)
+                    matrix::view::csr<ValueType, IndexType> result)
 {
-    auto csr_val = result->get_values();
-    auto csr_col_idxs = result->get_col_idxs();
-    auto csr_row_ptrs = result->get_row_ptrs();
+    auto csr_val = result.values;
+    auto csr_col_idxs = result.col_idxs;
+    auto csr_row_ptrs = result.row_ptrs;
     const auto ell = source->get_ell();
     const auto max_nnz_per_row = ell->get_num_stored_elements_per_row();
     const auto coo_val = source->get_const_coo_values();

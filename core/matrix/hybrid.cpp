@@ -317,7 +317,7 @@ void Hybrid<ValueType, IndexType>::convert_to(
         tmp->set_size(this->get_size());
         exec->run(hybrid::make_convert_to_csr(
             this, ell_row_ptrs.get_const_data(), coo_row_ptrs.get_const_data(),
-            tmp.get()));
+            tmp->get_device_view()));
     }
     result->make_srow();
 }

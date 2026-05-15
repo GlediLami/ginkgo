@@ -127,7 +127,8 @@ struct ParIctState {
         llh = CsrMatrix::create(exec, mtx_size);
         l_new = CsrMatrix::create(exec, mtx_size);
         l_coo = CooMatrix::create(exec, mtx_size);
-        exec->run(make_csr_conj_transpose(l.get(), lh.get()));
+        exec->run(make_csr_conj_transpose(l->get_const_device_view(),
+                                          lh->get_device_view()));
     }
 
     std::unique_ptr<Composition<ValueType>> to_factors() &&
@@ -198,7 +199,8 @@ ParIct<ValueType, IndexType>::generate_l_lt(
     const auto num_rows = csr_system_matrix->get_size()[0];
     array<IndexType> l_row_ptrs_array{exec, num_rows + 1};
     auto l_row_ptrs = l_row_ptrs_array.get_data();
-    exec->run(make_initialize_row_ptrs_l(csr_system_matrix.get(), l_row_ptrs));
+    exec->run(make_initialize_row_ptrs_l(
+        csr_system_matrix->get_const_device_view(), l_row_ptrs));
 
     auto l_nnz =
         static_cast<size_type>(get_element(l_row_ptrs_array, num_rows));
@@ -209,7 +211,8 @@ ParIct<ValueType, IndexType>::generate_l_lt(
                                std::move(l_row_ptrs_array));
 
     // initialize L
-    exec->run(make_initialize_l(csr_system_matrix.get(), l.get(), true));
+    exec->run(make_initialize_l(csr_system_matrix->get_const_device_view(),
+                                l->get_device_view(), true));
 
     // compute limit #nnz for L
     auto l_nnz_limit =
@@ -238,8 +241,9 @@ void ParIctState<ValueType, IndexType>::iterate()
     exec->run(make_spgemm(l.get(), lh.get(), llh.get()));
 
     // add new candidates to L' factor
-    exec->run(
-        make_add_candidates(llh.get(), system_matrix, l.get(), l_new.get()));
+    exec->run(make_add_candidates(llh->get_const_device_view(),
+                                  system_matrix->get_const_device_view(),
+                                  l->get_const_device_view(), l_new.get()));
 
     // update L(COO), L'^H sizes and pointers
     {
@@ -260,7 +264,8 @@ void ParIctState<ValueType, IndexType>::iterate()
                                         l_coo->get_row_idxs()));
 
     // execute asynchronous iteration
-    exec->run(make_compute_factor(system_matrix, l_new.get(),
+    exec->run(make_compute_factor(system_matrix->get_const_device_view(),
+                                  l_new->get_device_view(),
                                   l_coo->get_const_device_view()));
 
     // determine ranks for selection/filtering
@@ -270,23 +275,25 @@ void ParIctState<ValueType, IndexType>::iterate()
     if (use_approx_select) {
         remove_complex<ValueType> tmp{};
         // remove approximately smallest candidates
-        exec->run(make_threshold_filter_approx(l_new.get(), l_filter_rank,
-                                               selection_tmp, tmp, l.get(),
-                                               l_coo.get()));
+        exec->run(make_threshold_filter_approx(l_new->get_const_device_view(),
+                                               l_filter_rank, selection_tmp,
+                                               tmp, l.get(), l_coo.get()));
     } else {
         // select threshold to remove smallest candidates
         remove_complex<ValueType> l_threshold{};
-        exec->run(make_threshold_select(l_new.get(), l_filter_rank,
-                                        selection_tmp, selection_tmp2,
-                                        l_threshold));
+        exec->run(make_threshold_select(l_new->get_const_device_view(),
+                                        l_filter_rank, selection_tmp,
+                                        selection_tmp2, l_threshold));
 
         // remove smallest candidates
-        exec->run(make_threshold_filter(l_new.get(), l_threshold, l.get(),
-                                        l_coo.get(), true));
+        exec->run(make_threshold_filter(l_new->get_const_device_view(),
+                                        l_threshold, l.get(), l_coo.get(),
+                                        true));
     }
 
     // execute asynchronous iteration
-    exec->run(make_compute_factor(system_matrix, l.get(),
+    exec->run(make_compute_factor(system_matrix->get_const_device_view(),
+                                  l->get_device_view(),
                                   l_coo->get_const_device_view()));
 
     // convert L to L^H
@@ -296,7 +303,8 @@ void ParIctState<ValueType, IndexType>::iterate()
         lt_builder.get_col_idx_array().resize_and_reset(l_nnz);
         lt_builder.get_value_array().resize_and_reset(l_nnz);
     }
-    exec->run(make_csr_conj_transpose(l.get(), lh.get()));
+    exec->run(make_csr_conj_transpose(l->get_const_device_view(),
+                                      lh->get_device_view()));
 }
 
 

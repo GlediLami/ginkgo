@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -46,7 +46,8 @@ Factorization<ValueType, IndexType>::unpack() const
         array<index_type> l_row_ptrs{exec, size[0] + 1};
         array<index_type> u_row_ptrs{exec, size[0] + 1};
         const auto mtx = this->get_combined();
-        exec->run(make_initialize_row_ptrs_l_u(mtx.get(), l_row_ptrs.get_data(),
+        exec->run(make_initialize_row_ptrs_l_u(mtx->get_const_device_view(),
+                                               l_row_ptrs.get_data(),
                                                u_row_ptrs.get_data()));
         const auto l_nnz =
             static_cast<size_type>(get_element(l_row_ptrs, size[0]));
@@ -60,7 +61,9 @@ Factorization<ValueType, IndexType>::unpack() const
             exec, size, array<value_type>{exec, u_nnz},
             array<index_type>{exec, u_nnz}, std::move(u_row_ptrs));
         // fill matrices
-        exec->run(make_initialize_l_u(mtx.get(), l_mtx.get(), u_mtx.get()));
+        exec->run(make_initialize_l_u(mtx->get_const_device_view(),
+                                      l_mtx->get_device_view(),
+                                      u_mtx->get_device_view()));
         return create_from_composition(
             composition_type::create(std::move(l_mtx), std::move(u_mtx)));
     }
@@ -68,7 +71,8 @@ Factorization<ValueType, IndexType>::unpack() const
         // count nonzeros
         array<index_type> l_row_ptrs{exec, size[0] + 1};
         const auto mtx = this->get_combined();
-        exec->run(make_initialize_row_ptrs_l(mtx.get(), l_row_ptrs.get_data()));
+        exec->run(make_initialize_row_ptrs_l(mtx->get_const_device_view(),
+                                             l_row_ptrs.get_data()));
         const auto l_nnz =
             static_cast<size_type>(get_element(l_row_ptrs, size[0]));
         // create matrices
@@ -76,7 +80,8 @@ Factorization<ValueType, IndexType>::unpack() const
             exec, size, array<value_type>{exec, l_nnz},
             array<index_type>{exec, l_nnz}, std::move(l_row_ptrs));
         // fill matrices
-        exec->run(make_initialize_l(mtx.get(), l_mtx.get(), false));
+        exec->run(make_initialize_l(mtx->get_const_device_view(),
+                                    l_mtx->get_device_view(), false));
         auto u_mtx = l_mtx->conj_transpose();
         return create_from_symm_composition(
             composition_type::create(std::move(l_mtx), std::move(u_mtx)));

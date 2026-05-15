@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -98,7 +98,7 @@ void convert_to_csr(std::shared_ptr<const DefaultExecutor> exec,
                     const matrix::Hybrid<ValueType, IndexType>* source,
                     const IndexType* ell_row_ptrs,
                     const IndexType* coo_row_ptrs,
-                    matrix::Csr<ValueType, IndexType>* result)
+                    matrix::view::csr<ValueType, IndexType> result)
 {
     const auto ell = source->get_ell();
     const auto coo = source->get_coo();
@@ -119,16 +119,15 @@ void convert_to_csr(std::shared_ptr<const DefaultExecutor> exec,
         },
         dim<2>{ell->get_num_stored_elements_per_row(), ell->get_size()[0]},
         static_cast<int64>(ell->get_stride()), ell->get_const_col_idxs(),
-        ell->get_const_values(), ell_row_ptrs, coo_row_ptrs,
-        result->get_col_idxs(), result->get_values());
+        ell->get_const_values(), ell_row_ptrs, coo_row_ptrs, result.col_idxs,
+        result.values);
     run_kernel(
         exec,
         [] GKO_KERNEL(auto idx, auto ell_row_ptrs, auto coo_row_ptrs,
                       auto out_row_ptrs) {
             out_row_ptrs[idx] = ell_row_ptrs[idx] + coo_row_ptrs[idx];
         },
-        source->get_size()[0] + 1, ell_row_ptrs, coo_row_ptrs,
-        result->get_row_ptrs());
+        source->get_size()[0] + 1, ell_row_ptrs, coo_row_ptrs, result.row_ptrs);
     run_kernel(
         exec,
         [] GKO_KERNEL(auto idx, auto in_rows, auto in_cols, auto in_vals,
@@ -147,7 +146,7 @@ void convert_to_csr(std::shared_ptr<const DefaultExecutor> exec,
         },
         coo->get_num_stored_elements(), coo->get_const_row_idxs(),
         coo->get_const_col_idxs(), coo->get_const_values(), ell_row_ptrs,
-        coo_row_ptrs, result->get_col_idxs(), result->get_values());
+        coo_row_ptrs, result.col_idxs, result.values);
 }
 
 GKO_INSTANTIATE_FOR_EACH_VALUE_AND_INDEX_TYPE(

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -2545,7 +2545,7 @@ TYPED_TEST(Csr, CanDetectMissingDiagonalEntry)
     bool has_diags{};
 
     gko::kernels::reference::csr::check_diagonal_entries_exist(
-        this->exec, b.get(), has_diags);
+        this->exec, b->get_const_device_view(), has_diags);
 
     ASSERT_FALSE(has_diags);
 }
@@ -2562,7 +2562,7 @@ TYPED_TEST(Csr, CanDetectWhenAllDiagonalEntriesArePresent)
     bool has_diags{};
 
     gko::kernels::reference::csr::check_diagonal_entries_exist(
-        this->exec, b.get(), has_diags);
+        this->exec, b->get_const_device_view(), has_diags);
 
     ASSERT_TRUE(has_diags);
 }
@@ -2915,7 +2915,7 @@ TYPED_TEST(Csr, CanComputeRowWiseAbsoluteSum)
         {-gko::one<value_type>()}, this->exec));
 
     gko::kernels::reference::csr::row_wise_absolute_sum(
-        this->exec, this->mtx3_sorted.get(), sum);
+        this->exec, this->mtx3_sorted->get_const_device_view(), sum);
 
     gko::array<value_type> sum_result(this->exec, {3, 12, 5});
     GKO_ASSERT_ARRAY_EQ(sum, sum_result);
