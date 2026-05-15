@@ -93,11 +93,11 @@ private:
  * The ResidualNorm class is a stopping criterion which
  * stops the iteration process when the actual residual norm is below a
  * certain threshold relative to
- * 1. the norm of the right-hand side, norm(residual) $\leq$ < threshold *
+ * 1. the norm of the right-hand side, norm(residual) \f$\leq\f$ < threshold *
  *    norm(right_hand_side).
- * 2. the initial residual, norm(residual) $\leq$ threshold *
+ * 2. the initial residual, norm(residual) \f$\leq\f$ threshold *
  *    norm(initial_residual).
- * 3. one,  norm(residual) $\leq$ threshold.
+ * 3. one,  norm(residual) \f$\leq\f$ threshold.
  *
  * For better performance, the checks are run on the executor
  * where the algorithm is executed.
@@ -158,11 +158,11 @@ protected:
  * The ImplicitResidualNorm class is a stopping criterion which
  * stops the iteration process when the implicit residual norm is below a
  * certain threshold relative to
- * 1. the norm of the right-hand side, implicit_resnorm $\leq$ < threshold *
+ * 1. the norm of the right-hand side, implicit_resnorm \f$\leq\f$ < threshold *
  * norm(right_hand_side)
- * 2. the initial residual, implicit_resnorm $\leq$ threshold *
+ * 2. the initial residual, implicit_resnorm \f$\leq\f$ threshold *
  * norm(initial_residual) .
- * 3. one,  implicit_resnorm $\leq$ threshold.
+ * 3. one,  implicit_resnorm \f$\leq\f$ threshold.
  *
  * @note To use this stopping criterion there are some dependencies. The
  * constructor depends on either `b` or the `initial_residual` in order to
@@ -242,7 +242,7 @@ protected:
  * ```
  *
  * @param tolerance  the value the residual norm needs to be below.
- *     With residual $r$, initial guess $x_0$, right-hand side $b$, matrix $A$,
+ *     With residual \f$r\f$, initial guess \f$x_0\f$, right-hand side \f$b\f$, matrix \f$A\f$,
  *     `absolute` means the exact value of the norm $||r||$,
  *     `relative` means the norm relative to the right-hand side $||r||/||b||$,
  *     `initial` means the norm relative to the initial residual
