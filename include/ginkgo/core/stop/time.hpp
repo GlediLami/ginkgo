@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -75,7 +75,7 @@ private:
  * specified amount of time since the start of the solver run has elapsed.
  *
  * Full usage example: Stop after 1 second or when the relative residual norm is
- * below $10^{-10}$, whichever happens first.
+ * below \f$10^{-10}\f$, whichever happens first.
  * ```cpp
  * auto factory = gko::solver::Cg<double>::build()
  *                    .with_criteria(
