@@ -84,12 +84,12 @@ namespace kernels {
                 const matrix::Csr<ValueType, IndexType>* b,  \
                 matrix::Csr<ValueType, IndexType>* c)
 
-#define GKO_DECLARE_CSR_SPGEAM_NUMERIC_KERNEL(ValueType, IndexType)            \
-    void spgeam_numeric(std::shared_ptr<const DefaultExecutor> exec,           \
-                        matrix::view::dense<const ValueType> alpha,            \
-                        matrix::view::csr<const ValueType, const IndexType> a, \
-                        matrix::view::dense<const ValueType> beta,             \
-                        matrix::view::csr<const ValueType, const IndexType> b, \
+#define GKO_DECLARE_CSR_SPGEAM_NUMERIC_KERNEL(ValueType, IndexType)  \
+    void spgeam_numeric(std::shared_ptr<const DefaultExecutor> exec, \
+                        matrix::view::dense<const ValueType> alpha,  \
+                        const matrix::Csr<ValueType, IndexType>* a,  \
+                        matrix::view::dense<const ValueType> beta,   \
+                        const matrix::Csr<ValueType, IndexType>* b,  \
                         matrix::view::csr<ValueType, IndexType> c)
 
 #define GKO_DECLARE_CSR_FILL_IN_DENSE_KERNEL(ValueType, IndexType)  \

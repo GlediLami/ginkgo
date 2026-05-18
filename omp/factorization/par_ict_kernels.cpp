@@ -99,12 +99,12 @@ GKO_INSTANTIATE_FOR_EACH_VALUE_AND_INDEX_TYPE(
 
 template <typename ValueType, typename IndexType>
 void add_candidates(std::shared_ptr<const DefaultExecutor> exec,
-                    matrix::view::csr<const ValueType, const IndexType> llh,
-                    matrix::view::csr<const ValueType, const IndexType> a,
+                    const matrix::Csr<ValueType, IndexType>* llh,
+                    const matrix::Csr<ValueType, IndexType>* a,
                     matrix::view::csr<const ValueType, const IndexType> l,
                     matrix::Csr<ValueType, IndexType>* l_new)
 {
-    auto num_rows = a.size[0];
+    auto num_rows = a->get_size()[0];
     auto l_row_ptrs = l.row_ptrs;
     auto l_col_idxs = l.col_idxs;
     auto l_vals = l.values;

@@ -978,11 +978,10 @@ void Csr<ValueType, IndexType>::scale_add_reuse_info::update_values(
     auto local_mtx1 = make_temporary_clone(exec, mtx1);
     auto local_mtx2 = make_temporary_clone(exec, mtx2);
     auto local_mtx_out = make_temporary_clone(exec, out);
-    exec->run(csr::make_spgeam_numeric(local_scale1->get_const_device_view(),
-                                       local_mtx1->get_const_device_view(),
-                                       local_scale2->get_const_device_view(),
-                                       local_mtx2->get_const_device_view(),
-                                       local_mtx_out->get_device_view()));
+    exec->run(csr::make_spgeam_numeric(
+        local_scale1->get_const_device_view(), local_mtx1.get(),
+        local_scale2->get_const_device_view(), local_mtx2.get(),
+        local_mtx_out->get_device_view()));
 }
 
 

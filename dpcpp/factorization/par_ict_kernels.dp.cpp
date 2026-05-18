@@ -394,21 +394,21 @@ namespace {
 template <int subgroup_size, typename ValueType, typename IndexType>
 void add_candidates(syn::value_list<int, subgroup_size>,
                     std::shared_ptr<const DefaultExecutor> exec,
-                    matrix::view::csr<const ValueType, const IndexType> llh,
-                    matrix::view::csr<const ValueType, const IndexType> a,
+                    const matrix::Csr<ValueType, IndexType>* llh,
+                    const matrix::Csr<ValueType, IndexType>* a,
                     matrix::view::csr<const ValueType, const IndexType> l,
                     matrix::Csr<ValueType, IndexType>* l_new)
 {
-    auto num_rows = static_cast<IndexType>(llh.size[0]);
+    auto num_rows = static_cast<IndexType>(llh->get_size()[0]);
     auto subwarps_per_block = default_block_size / subgroup_size;
     auto num_blocks = ceildiv(num_rows, subwarps_per_block);
     matrix::CsrBuilder<ValueType, IndexType> l_new_builder(l_new);
-    auto llh_row_ptrs = llh.row_ptrs;
-    auto llh_col_idxs = llh.col_idxs;
-    auto llh_vals = as_device_type(llh.values);
-    auto a_row_ptrs = a.row_ptrs;
-    auto a_col_idxs = a.col_idxs;
-    auto a_vals = as_device_type(a.values);
+    auto llh_row_ptrs = llh->get_const_row_ptrs();
+    auto llh_col_idxs = llh->get_const_col_idxs();
+    auto llh_vals = as_device_type(llh->get_const_values());
+    auto a_row_ptrs = a->get_const_row_ptrs();
+    auto a_col_idxs = a->get_const_col_idxs();
+    auto a_vals = as_device_type(a->get_const_values());
     auto l_row_ptrs = l.row_ptrs;
     auto l_col_idxs = l.col_idxs;
     auto l_vals = as_device_type(l.values);
@@ -467,13 +467,14 @@ GKO_ENABLE_IMPLEMENTATION_SELECTION(select_compute_factor, compute_factor);
 
 template <typename ValueType, typename IndexType>
 void add_candidates(std::shared_ptr<const DefaultExecutor> exec,
-                    matrix::view::csr<const ValueType, const IndexType> llh,
-                    matrix::view::csr<const ValueType, const IndexType> a,
+                    const matrix::Csr<ValueType, IndexType>* llh,
+                    const matrix::Csr<ValueType, IndexType>* a,
                     matrix::view::csr<const ValueType, const IndexType> l,
                     matrix::Csr<ValueType, IndexType>* l_new)
 {
-    auto num_rows = a.size[0];
-    auto total_nnz = llh.num_stored_elements + a.num_stored_elements;
+    auto num_rows = a->get_size()[0];
+    auto total_nnz =
+        llh->get_num_stored_elements() + a->get_num_stored_elements();
     auto total_nnz_per_row = total_nnz / num_rows;
     select_add_candidates(
         compiled_kernels(),

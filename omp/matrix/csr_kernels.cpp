@@ -84,7 +84,7 @@ template <typename MatrixValueType, typename InputValueType,
           typename OutputValueType, typename IndexType, typename AlphaOp,
           typename BetaOp>
 void merge_spmv(std::shared_ptr<const OmpExecutor> exec,
-                matrix::view::csr<const MatrixValueType, const IndexType> a,
+                const matrix::Csr<MatrixValueType, IndexType>* a,
                 matrix::view::dense<const InputValueType> b,
                 matrix::view::dense<OutputValueType> c, AlphaOp alpha_op,
                 BetaOp beta_op)
@@ -92,8 +92,8 @@ void merge_spmv(std::shared_ptr<const OmpExecutor> exec,
     using arithmetic_type =
         highest_precision<MatrixValueType, InputValueType, OutputValueType>;
 
-    auto row_ptrs = a.row_ptrs;
-    auto col_idxs = a.col_idxs;
+    auto row_ptrs = a->get_const_row_ptrs();
+    auto col_idxs = a->get_const_col_idxs();
 
     const auto a_vals =
         acc::helper::build_const_rrm_accessor<arithmetic_type>(a);
@@ -102,8 +102,8 @@ void merge_spmv(std::shared_ptr<const OmpExecutor> exec,
     auto c_vals = acc::helper::build_rrm_accessor<arithmetic_type>(c);
 
     // Merge-SpMV variables
-    const auto num_rows = static_cast<IndexType>(a.size[0]);
-    const auto nnz = static_cast<IndexType>(a.num_stored_elements);
+    const auto num_rows = static_cast<IndexType>(a->get_size()[0]);
+    const auto nnz = static_cast<IndexType>(a->get_num_stored_elements());
     const auto num_threads = static_cast<IndexType>(omp_get_max_threads());
     // Merge list A: row end ptr
     const IndexType* row_end_ptrs = row_ptrs + 1;
@@ -172,15 +172,15 @@ void merge_spmv(std::shared_ptr<const OmpExecutor> exec,
 template <typename MatrixValueType, typename InputValueType,
           typename OutputValueType, typename IndexType, typename Function>
 void classical_spmv(std::shared_ptr<const OmpExecutor> exec,
-                    matrix::view::csr<const MatrixValueType, const IndexType> a,
+                    const matrix::Csr<MatrixValueType, IndexType>* a,
                     matrix::view::dense<const InputValueType> b,
                     matrix::view::dense<OutputValueType> c, Function lambda)
 {
     using arithmetic_type =
         highest_precision<MatrixValueType, InputValueType, OutputValueType>;
 
-    auto row_ptrs = a.row_ptrs;
-    auto col_idxs = a.col_idxs;
+    auto row_ptrs = a->get_const_row_ptrs();
+    auto col_idxs = a->get_const_col_idxs();
 
     const auto a_vals =
         acc::helper::build_const_rrm_accessor<arithmetic_type>(a);
@@ -189,7 +189,7 @@ void classical_spmv(std::shared_ptr<const OmpExecutor> exec,
     auto c_vals = acc::helper::build_rrm_accessor<arithmetic_type>(c);
 
 #pragma omp parallel for
-    for (size_type row = 0; row < a.size[0]; ++row) {
+    for (size_type row = 0; row < a->get_size()[0]; ++row) {
         for (size_type j = 0; j < c.size[1]; ++j) {
             auto sum = zero<arithmetic_type>();
             for (size_type k = row_ptrs[row];
@@ -217,12 +217,10 @@ void spmv(std::shared_ptr<const OmpExecutor> exec,
         // empty output: nothing to do
     } else if (a->get_strategy()->get_name() == "merge_path") {
         merge_spmv(
-            exec, a->get_const_device_view(), b, c,
-            [](auto val) { return val; },
+            exec, a, b, c, [](auto val) { return val; },
             [](auto) { return zero<arithmetic_type>(); });
     } else {
-        classical_spmv(exec, a->get_const_device_view(), b, c,
-                       [](auto sum, auto) { return sum; });
+        classical_spmv(exec, a, b, c, [](auto sum, auto) { return sum; });
     }
 }
 
@@ -247,18 +245,16 @@ void advanced_spmv(std::shared_ptr<const OmpExecutor> exec,
         // empty output: nothing to do
     } else if (a->get_strategy()->get_name() == "merge_path") {
         merge_spmv(
-            exec, a->get_const_device_view(), b, c,
-            [valpha](auto val) { return valpha * val; },
+            exec, a, b, c, [valpha](auto val) { return valpha * val; },
             [vbeta](auto val) {
                 return is_zero(vbeta) ? zero(vbeta) : val * vbeta;
             });
     } else {
-        classical_spmv(exec, a->get_const_device_view(), b, c,
-                       [valpha, vbeta](auto sum, auto orig_val) {
-                           auto scaled_orig_val =
-                               is_zero(vbeta) ? zero(vbeta) : orig_val * vbeta;
-                           return valpha * sum + scaled_orig_val;
-                       });
+        classical_spmv(exec, a, b, c, [valpha, vbeta](auto sum, auto orig_val) {
+            auto scaled_orig_val =
+                is_zero(vbeta) ? zero(vbeta) : orig_val * vbeta;
+            return valpha * sum + scaled_orig_val;
+        });
     }
 }
 
@@ -781,8 +777,7 @@ void spgeam(std::shared_ptr<const OmpExecutor> exec,
     auto c_row_ptrs = c->get_row_ptrs();
 
     abstract_spgeam(
-        a->get_const_device_view(), b->get_const_device_view(),
-        [](IndexType) { return IndexType{}; },
+        a, b, [](IndexType) { return IndexType{}; },
         [](IndexType, IndexType, ValueType, ValueType, IndexType& nnz) {
             ++nnz;
         },
@@ -802,8 +797,7 @@ void spgeam(std::shared_ptr<const OmpExecutor> exec,
     auto c_vals = c_vals_array.get_data();
 
     abstract_spgeam(
-        a->get_const_device_view(), b->get_const_device_view(),
-        [&](IndexType row) { return c_row_ptrs[row]; },
+        a, b, [&](IndexType row) { return c_row_ptrs[row]; },
         [&](IndexType, IndexType col, ValueType a_val, ValueType b_val,
             IndexType& nz) {
             c_vals[nz] = valpha * a_val + vbeta * b_val;
@@ -819,9 +813,9 @@ GKO_INSTANTIATE_FOR_EACH_VALUE_AND_INDEX_TYPE(GKO_DECLARE_CSR_SPGEAM_KERNEL);
 template <typename ValueType, typename IndexType>
 void spgeam_numeric(std::shared_ptr<const OmpExecutor> exec,
                     matrix::view::dense<const ValueType> alpha,
-                    matrix::view::csr<const ValueType, const IndexType> a,
+                    const matrix::Csr<ValueType, IndexType>* a,
                     matrix::view::dense<const ValueType> beta,
-                    matrix::view::csr<const ValueType, const IndexType> b,
+                    const matrix::Csr<ValueType, IndexType>* b,
                     matrix::view::csr<ValueType, IndexType> c)
 {
     auto valpha = alpha(0, 0);

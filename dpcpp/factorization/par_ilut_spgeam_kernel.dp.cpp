@@ -345,24 +345,24 @@ namespace {
 template <int subgroup_size, typename ValueType, typename IndexType>
 void add_candidates(syn::value_list<int, subgroup_size>,
                     std::shared_ptr<const DefaultExecutor> exec,
-                    matrix::view::csr<const ValueType, const IndexType> lu,
-                    matrix::view::csr<const ValueType, const IndexType> a,
+                    const matrix::Csr<ValueType, IndexType>* lu,
+                    const matrix::Csr<ValueType, IndexType>* a,
                     matrix::view::csr<const ValueType, const IndexType> l,
                     matrix::view::csr<const ValueType, const IndexType> u,
                     matrix::Csr<ValueType, IndexType>* l_new,
                     matrix::Csr<ValueType, IndexType>* u_new)
 {
-    auto num_rows = static_cast<IndexType>(lu.size[0]);
+    auto num_rows = static_cast<IndexType>(lu->get_size()[0]);
     auto subwarps_per_block = default_block_size / subgroup_size;
     auto num_blocks = ceildiv(num_rows, subwarps_per_block);
     matrix::CsrBuilder<ValueType, IndexType> l_new_builder(l_new);
     matrix::CsrBuilder<ValueType, IndexType> u_new_builder(u_new);
-    auto lu_row_ptrs = lu.row_ptrs;
-    auto lu_col_idxs = lu.col_idxs;
-    auto lu_vals = as_device_type(lu.values);
-    auto a_row_ptrs = a.row_ptrs;
-    auto a_col_idxs = a.col_idxs;
-    auto a_vals = as_device_type(a.values);
+    auto lu_row_ptrs = lu->get_const_row_ptrs();
+    auto lu_col_idxs = lu->get_const_col_idxs();
+    auto lu_vals = as_device_type(lu->get_const_values());
+    auto a_row_ptrs = a->get_const_row_ptrs();
+    auto a_col_idxs = a->get_const_col_idxs();
+    auto a_vals = as_device_type(a->get_const_values());
     auto l_row_ptrs = l.row_ptrs;
     auto l_col_idxs = l.col_idxs;
     auto l_vals = as_device_type(l.values);
@@ -413,15 +413,16 @@ GKO_ENABLE_IMPLEMENTATION_SELECTION(select_add_candidates, add_candidates);
 
 template <typename ValueType, typename IndexType>
 void add_candidates(std::shared_ptr<const DefaultExecutor> exec,
-                    matrix::view::csr<const ValueType, const IndexType> lu,
-                    matrix::view::csr<const ValueType, const IndexType> a,
+                    const matrix::Csr<ValueType, IndexType>* lu,
+                    const matrix::Csr<ValueType, IndexType>* a,
                     matrix::view::csr<const ValueType, const IndexType> l,
                     matrix::view::csr<const ValueType, const IndexType> u,
                     matrix::Csr<ValueType, IndexType>* l_new,
                     matrix::Csr<ValueType, IndexType>* u_new)
 {
-    auto num_rows = a.size[0];
-    auto total_nnz = lu.num_stored_elements + a.num_stored_elements;
+    auto num_rows = a->get_size()[0];
+    auto total_nnz =
+        lu->get_num_stored_elements() + a->get_num_stored_elements();
     auto total_nnz_per_row = total_nnz / num_rows;
     select_add_candidates(
         compiled_kernels(),

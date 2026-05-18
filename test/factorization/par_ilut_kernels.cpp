@@ -456,13 +456,11 @@ TYPED_TEST(ParIlut, KernelAddCandidatesIsEquivalentToRef)
     auto dres_mtx_u = Csr::create(this->exec, square_size);
 
     gko::kernels::reference::par_ilut_factorization::add_candidates(
-        this->ref, mtx_lu->get_const_device_view(),
-        this->mtx_square->get_const_device_view(),
+        this->ref, mtx_lu.get(), this->mtx_square.get(),
         this->mtx_l2->get_const_device_view(),
         this->mtx_u->get_const_device_view(), res_mtx_l.get(), res_mtx_u.get());
     gko::kernels::GKO_DEVICE_NAMESPACE::par_ilut_factorization::add_candidates(
-        this->exec, dmtx_lu->get_const_device_view(),
-        this->dmtx_square->get_const_device_view(),
+        this->exec, dmtx_lu.get(), this->dmtx_square.get(),
         this->dmtx_l2->get_const_device_view(),
         this->dmtx_u->get_const_device_view(), dres_mtx_l.get(),
         dres_mtx_u.get());

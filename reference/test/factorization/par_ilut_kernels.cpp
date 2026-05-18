@@ -459,8 +459,7 @@ TYPED_TEST(ParIlut, KernelAddCandidates)
     auto res_mtx_u = Csr::create(this->exec, this->mtx_system->get_size());
 
     gko::kernels::reference::par_ilut_factorization::add_candidates(
-        this->ref, this->mtx_lu->get_const_device_view(),
-        this->mtx_system->get_const_device_view(),
+        this->ref, this->mtx_lu.get(), this->mtx_system.get(),
         this->mtx_l->get_const_device_view(),
         this->mtx_u->get_const_device_view(), res_mtx_l.get(), res_mtx_u.get());
 

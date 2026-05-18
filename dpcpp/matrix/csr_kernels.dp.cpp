@@ -1255,8 +1255,8 @@ void merge_path_spmv(
     // TODO: should we store the value in arithmetic_type or output_type?
     array<arithmetic_type> val_out(exec, grid_num);
 
-    const auto a_vals = acc::helper::build_const_rrm_accessor<arithmetic_type>(
-        a->get_const_device_view());
+    const auto a_vals =
+        acc::helper::build_const_rrm_accessor<arithmetic_type>(a);
 
     for (IndexType column_id = 0; column_id < b.size[1]; column_id++) {
         const auto column_span =
@@ -1325,7 +1325,7 @@ template <int subgroup_size, typename MatrixValueType, typename InputValueType,
 void classical_spmv(
     syn::value_list<int, subgroup_size>,
     std::shared_ptr<const DpcppExecutor> exec,
-    matrix::view::csr<const MatrixValueType, const IndexType> a,
+    const matrix::Csr<MatrixValueType, IndexType>* a,
     matrix::view::dense<const InputValueType> b,
     matrix::view::dense<OutputValueType> c,
     xstd::type_identity_t<
@@ -1342,7 +1342,7 @@ void classical_spmv(
         exec->get_num_subgroups() * classical_oversubscription;
     const auto nsg_in_group = spmv_block_size / subgroup_size;
     const auto gridx =
-        std::min(ceildiv(a.size[0], spmv_block_size / subgroup_size),
+        std::min(ceildiv(a->get_size()[0], spmv_block_size / subgroup_size),
                  int64(num_subgroup / nsg_in_group));
     const dim3 grid(gridx, b.size[1]);
     const dim3 block(spmv_block_size);
@@ -1355,17 +1355,19 @@ void classical_spmv(
     if (!alpha && !beta) {
         if (grid.x > 0 && grid.y > 0) {
             kernel::abstract_classical_spmv<subgroup_size>(
-                grid, block, 0, exec->get_queue(), a.size[0],
-                acc::as_device_range(a_vals), a.col_idxs, a.row_ptrs,
-                acc::as_device_range(b_vals), acc::as_device_range(c_vals));
+                grid, block, 0, exec->get_queue(), a->get_size()[0],
+                acc::as_device_range(a_vals), a->get_const_col_idxs(),
+                a->get_const_row_ptrs(), acc::as_device_range(b_vals),
+                acc::as_device_range(c_vals));
         }
     } else if (alpha && beta) {
         if (grid.x > 0 && grid.y > 0) {
             kernel::abstract_classical_spmv<subgroup_size>(
-                grid, block, 0, exec->get_queue(), a.size[0],
+                grid, block, 0, exec->get_queue(), a->get_size()[0],
                 as_device_type(alpha->values), acc::as_device_range(a_vals),
-                a.col_idxs, a.row_ptrs, acc::as_device_range(b_vals),
-                as_device_type(beta->values), acc::as_device_range(c_vals));
+                a->get_const_col_idxs(), a->get_const_row_ptrs(),
+                acc::as_device_range(b_vals), as_device_type(beta->values),
+                acc::as_device_range(c_vals));
         }
     } else {
         GKO_KERNEL_NOT_FOUND;
@@ -1406,8 +1408,7 @@ bool load_balance_spmv(
             const dim3 csr_block(config::warp_size, warps_in_block, 1);
             const dim3 csr_grid(ceildiv(nwarps, warps_in_block), b.size[1]);
             const auto a_vals =
-                acc::helper::build_const_rrm_accessor<arithmetic_type>(
-                    a->get_const_device_view());
+                acc::helper::build_const_rrm_accessor<arithmetic_type>(a);
             const auto b_vals =
                 acc::helper::build_const_rrm_accessor<arithmetic_type>(b);
             auto c_vals = acc::helper::build_rrm_accessor<arithmetic_type>(c);
@@ -1440,11 +1441,12 @@ bool load_balance_spmv(
 
 
 template <typename ValueType, typename IndexType>
-bool try_general_sparselib_spmv(
-    std::shared_ptr<const DpcppExecutor> exec, const ValueType host_alpha,
-    matrix::view::csr<const ValueType, const IndexType> a,
-    matrix::view::dense<const ValueType> b, const ValueType host_beta,
-    matrix::view::dense<ValueType> c)
+bool try_general_sparselib_spmv(std::shared_ptr<const DpcppExecutor> exec,
+                                const ValueType host_alpha,
+                                const matrix::Csr<ValueType, IndexType>* a,
+                                matrix::view::dense<const ValueType> b,
+                                const ValueType host_beta,
+                                matrix::view::dense<ValueType> c)
 {
     constexpr bool try_sparselib =
         !is_complex<ValueType>() &&
@@ -1457,10 +1459,11 @@ bool try_general_sparselib_spmv(
 #if INTEL_MKL_VERSION >= 20240000
             *exec->get_queue(),
 #endif
-            mat_handle, IndexType(a.size[0]), IndexType(a.size[1]),
-            oneapi::mkl::index_base::zero, const_cast<IndexType*>(a.row_ptrs),
-            const_cast<IndexType*>(a.col_idxs),
-            const_cast<ValueType*>(a.values));
+            mat_handle, IndexType(a->get_size()[0]),
+            IndexType(a->get_size()[1]), oneapi::mkl::index_base::zero,
+            const_cast<IndexType*>(a->get_const_row_ptrs()),
+            const_cast<IndexType*>(a->get_const_col_idxs()),
+            const_cast<ValueType*>(a->get_const_values()));
         if (b.size[1] == 1 && b.stride == 1) {
             oneapi::mkl::sparse::gemv(
                 *exec->get_queue(), oneapi::mkl::transpose::nontrans,
@@ -1491,7 +1494,7 @@ template <typename MatrixValueType, typename InputValueType,
               !std::is_same<MatrixValueType, OutputValueType>::value>>
 bool try_sparselib_spmv(
     std::shared_ptr<const DpcppExecutor> exec,
-    matrix::view::csr<const MatrixValueType, const IndexType> a,
+    const matrix::Csr<MatrixValueType, IndexType>* a,
     matrix::view::dense<const InputValueType> b,
     matrix::view::dense<OutputValueType> c,
     xstd::type_identity_t<
@@ -1508,7 +1511,7 @@ bool try_sparselib_spmv(
 template <typename ValueType, typename IndexType>
 bool try_sparselib_spmv(
     std::shared_ptr<const DpcppExecutor> exec,
-    matrix::view::csr<const ValueType, const IndexType> a,
+    const matrix::Csr<ValueType, IndexType>* a,
     matrix::view::dense<const ValueType> b, matrix::view::dense<ValueType> c,
     xstd::type_identity_t<std::optional<matrix::view::dense<const ValueType>>>
         alpha = {},
@@ -1564,8 +1567,7 @@ void spmv(std::shared_ptr<const DpcppExecutor> exec,
             use_classical = !host_kernel::load_balance_spmv(exec, a, b, c);
         } else if (a->get_strategy()->get_name() == "sparselib" ||
                    a->get_strategy()->get_name() == "cusparse") {
-            use_classical = !host_kernel::try_sparselib_spmv(
-                exec, a->get_const_device_view(), b, c);
+            use_classical = !host_kernel::try_sparselib_spmv(exec, a, b, c);
         }
         if (use_classical) {
             IndexType max_length_per_row = 0;
@@ -1589,8 +1591,7 @@ void spmv(std::shared_ptr<const DpcppExecutor> exec,
                 [&max_length_per_row](int compiled_info) {
                     return max_length_per_row >= compiled_info;
                 },
-                syn::value_list<int>(), syn::type_list<>(), exec,
-                a->get_const_device_view(), b, c);
+                syn::value_list<int>(), syn::type_list<>(), exec, a, b, c);
         }
     }
 }
@@ -1637,8 +1638,8 @@ void advanced_spmv(std::shared_ptr<const DpcppExecutor> exec,
                 !host_kernel::load_balance_spmv(exec, a, b, c, alpha, beta);
         } else if (a->get_strategy()->get_name() == "sparselib" ||
                    a->get_strategy()->get_name() == "cusparse") {
-            use_classical = !host_kernel::try_sparselib_spmv(
-                exec, a->get_const_device_view(), b, c, alpha, beta);
+            use_classical =
+                !host_kernel::try_sparselib_spmv(exec, a, b, c, alpha, beta);
         }
         if (use_classical) {
             IndexType max_length_per_row = 0;
@@ -1662,8 +1663,8 @@ void advanced_spmv(std::shared_ptr<const DpcppExecutor> exec,
                 [&max_length_per_row](int compiled_info) {
                     return max_length_per_row >= compiled_info;
                 },
-                syn::value_list<int>(), syn::type_list<>(), exec,
-                a->get_const_device_view(), b, c, alpha, beta);
+                syn::value_list<int>(), syn::type_list<>(), exec, a, b, c,
+                alpha, beta);
         }
     }
 }
@@ -2445,19 +2446,19 @@ GKO_INSTANTIATE_FOR_EACH_VALUE_AND_INDEX_TYPE(GKO_DECLARE_CSR_SPGEAM_KERNEL);
 template <typename ValueType, typename IndexType>
 void spgeam_numeric(std::shared_ptr<const DpcppExecutor> exec,
                     matrix::view::dense<const ValueType> alpha,
-                    matrix::view::csr<const ValueType, const IndexType> a,
+                    const matrix::Csr<ValueType, IndexType>* a,
                     matrix::view::dense<const ValueType> beta,
-                    matrix::view::csr<const ValueType, const IndexType> b,
+                    const matrix::Csr<ValueType, IndexType>* b,
                     matrix::view::csr<ValueType, IndexType> c)
 {
     constexpr auto sentinel = std::numeric_limits<IndexType>::max();
-    const auto num_rows = a.size[0];
-    const auto a_row_ptrs = a.row_ptrs;
-    const auto a_cols = a.col_idxs;
-    const auto a_vals = as_device_type(a.values);
-    const auto b_row_ptrs = b.row_ptrs;
-    const auto b_cols = b.col_idxs;
-    const auto b_vals = as_device_type(b.values);
+    const auto num_rows = a->get_size()[0];
+    const auto a_row_ptrs = a->get_const_row_ptrs();
+    const auto a_cols = a->get_const_col_idxs();
+    const auto a_vals = as_device_type(a->get_const_values());
+    const auto b_row_ptrs = b->get_const_row_ptrs();
+    const auto b_cols = b->get_const_col_idxs();
+    const auto b_vals = as_device_type(b->get_const_values());
     const auto c_row_ptrs = c.row_ptrs;
     const auto c_vals = as_device_type(c.values);
     const auto alpha_vals = as_device_type(alpha.values);

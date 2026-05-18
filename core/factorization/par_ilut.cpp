@@ -269,9 +269,8 @@ void ParIlutState<ValueType, IndexType>::iterate()
 
     // add new candidates to L' and U' factors
     exec->run(make_add_candidates(
-        lu->get_const_device_view(), system_matrix->get_const_device_view(),
-        l->get_const_device_view(), u->get_const_device_view(), l_new.get(),
-        u_new.get()));
+        lu.get(), system_matrix, l->get_const_device_view(),
+        u->get_const_device_view(), l_new.get(), u_new.get()));
 
     // update U'(CSC), L'(COO), U'(COO) sizes and pointers
     {

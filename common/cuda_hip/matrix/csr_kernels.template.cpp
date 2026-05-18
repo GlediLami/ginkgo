@@ -1454,13 +1454,14 @@ GKO_ENABLE_IMPLEMENTATION_SELECTION(select_spgeam_numeric, spgeam_numeric);
 template <typename ValueType, typename IndexType>
 void spgeam_numeric(std::shared_ptr<const DefaultExecutor> exec,
                     matrix::view::dense<const ValueType> alpha,
-                    matrix::view::csr<const ValueType, const IndexType> a,
+                    const matrix::Csr<ValueType, IndexType>* a,
                     matrix::view::dense<const ValueType> beta,
-                    matrix::view::csr<const ValueType, const IndexType> b,
+                    const matrix::Csr<ValueType, IndexType>* b,
                     matrix::view::csr<ValueType, IndexType> c)
 {
-    auto total_nnz = a.num_stored_elements + b.num_stored_elements;
-    auto nnz_per_row = a.size[0] ? total_nnz / a.size[0] : 0;
+    auto total_nnz =
+        a->get_num_stored_elements() + b->get_num_stored_elements();
+    auto nnz_per_row = a->get_size()[0] ? total_nnz / a->get_size()[0] : 0;
     select_spgeam_numeric(
         spgeam_kernels(),
         [&](int compiled_subwarp_size) {
@@ -1468,8 +1469,9 @@ void spgeam_numeric(std::shared_ptr<const DefaultExecutor> exec,
                    compiled_subwarp_size == config::warp_size;
         },
         syn::value_list<int>(), syn::type_list<>(), exec, alpha.values,
-        a.row_ptrs, a.col_idxs, a.values, beta.values, b.row_ptrs, b.col_idxs,
-        b.values, c.row_ptrs, c.values, a.size[0]);
+        a->get_const_row_ptrs(), a->get_const_col_idxs(), a->get_const_values(),
+        beta.values, b->get_const_row_ptrs(), b->get_const_col_idxs(),
+        b->get_const_values(), c.row_ptrs, c.values, a->get_size()[0]);
 }
 
 
@@ -1948,8 +1950,8 @@ void merge_path_spmv(
     // TODO: should we store the value in arithmetic_type or output_type?
     array<arithmetic_type> val_out(exec, grid_num);
 
-    const auto a_vals = acc::helper::build_const_rrm_accessor<arithmetic_type>(
-        a->get_const_device_view());
+    const auto a_vals =
+        acc::helper::build_const_rrm_accessor<arithmetic_type>(a);
 
     for (IndexType column_id = 0; column_id < b.size[1]; column_id++) {
         const auto column_span =
@@ -2069,7 +2071,7 @@ template <int subwarp_size, typename MatrixValueType, typename InputValueType,
 void classical_spmv(
     syn::value_list<int, subwarp_size>,
     std::shared_ptr<const DefaultExecutor> exec,
-    matrix::view::csr<const MatrixValueType, const IndexType> a,
+    const matrix::Csr<MatrixValueType, IndexType>* a,
     matrix::view::dense<const InputValueType> b,
     matrix::view::dense<OutputValueType> c,
     xstd::type_identity_t<
@@ -2086,7 +2088,7 @@ void classical_spmv(
                         exec->get_num_multiprocessor() *
                         classical_oversubscription;
     const auto gridx =
-        std::min(ceildiv(a.size[0], spmv_block_size / subwarp_size),
+        std::min(ceildiv(a->get_size()[0], spmv_block_size / subwarp_size),
                  int64(nwarps / warps_in_block));
     const dim3 grid(gridx, b.size[1]);
     const auto block = spmv_block_size;
@@ -2100,18 +2102,20 @@ void classical_spmv(
         if (grid.x > 0 && grid.y > 0) {
             kernel::abstract_classical_spmv<subwarp_size>
                 <<<grid, block, 0, exec->get_stream()>>>(
-                    a.size[0], acc::as_device_range(a_vals), a.col_idxs,
-                    as_device_type(a.row_ptrs), acc::as_device_range(b_vals),
-                    acc::as_device_range(c_vals));
+                    a->get_size()[0], acc::as_device_range(a_vals),
+                    a->get_const_col_idxs(),
+                    as_device_type(a->get_const_row_ptrs()),
+                    acc::as_device_range(b_vals), acc::as_device_range(c_vals));
         }
     } else if (alpha && beta) {
         if (grid.x > 0 && grid.y > 0) {
             kernel::abstract_classical_spmv<subwarp_size>
                 <<<grid, block, 0, exec->get_stream()>>>(
-                    a.size[0], as_device_type(alpha->values),
-                    acc::as_device_range(a_vals), a.col_idxs,
-                    as_device_type(a.row_ptrs), acc::as_device_range(b_vals),
-                    as_device_type(beta->values), acc::as_device_range(c_vals));
+                    a->get_size()[0], as_device_type(alpha->values),
+                    acc::as_device_range(a_vals), a->get_const_col_idxs(),
+                    as_device_type(a->get_const_row_ptrs()),
+                    acc::as_device_range(b_vals), as_device_type(beta->values),
+                    acc::as_device_range(c_vals));
         }
     } else {
         GKO_KERNEL_NOT_FOUND;
@@ -2164,8 +2168,7 @@ bool load_balance_spmv(
             const dim3 csr_block(config::warp_size, warps_in_block, 1);
             const dim3 csr_grid(ceildiv(nwarps, warps_in_block), b.size[1]);
             const auto a_vals =
-                acc::helper::build_const_rrm_accessor<arithmetic_type>(
-                    a->get_const_device_view());
+                acc::helper::build_const_rrm_accessor<arithmetic_type>(a);
             const auto b_vals =
                 acc::helper::build_const_rrm_accessor<arithmetic_type>(b);
             auto c_vals = acc::helper::build_rrm_accessor<arithmetic_type>(c);
@@ -2200,27 +2203,29 @@ bool load_balance_spmv(
 
 
 template <typename ValueType, typename IndexType>
-bool try_general_sparselib_spmv(
-    std::shared_ptr<const DefaultExecutor> exec, const ValueType* alpha,
-    matrix::view::csr<const ValueType, const IndexType> a,
-    matrix::view::dense<const ValueType> b, const ValueType* beta,
-    matrix::view::dense<ValueType> c)
+bool try_general_sparselib_spmv(std::shared_ptr<const DefaultExecutor> exec,
+                                const ValueType* alpha,
+                                const matrix::Csr<ValueType, IndexType>* a,
+                                matrix::view::dense<const ValueType> b,
+                                const ValueType* beta,
+                                matrix::view::dense<ValueType> c)
 {
 #ifdef GKO_COMPILING_HIP
     bool try_sparselib = sparselib::is_supported<ValueType, IndexType>::value;
     try_sparselib = try_sparselib && b.stride == 1 && c.stride == 1;
     // rocSPARSE has issues with zero matrices
-    try_sparselib = try_sparselib && a.num_stored_elements > 0;
+    try_sparselib = try_sparselib && a->get_num_stored_elements() > 0;
     if (try_sparselib) {
         auto descr = sparselib::create_mat_descr();
 
-        auto row_ptrs = a.row_ptrs;
-        auto col_idxs = a.col_idxs;
+        auto row_ptrs = a->get_const_row_ptrs();
+        auto col_idxs = a->get_const_col_idxs();
 
         sparselib::spmv(exec->get_sparselib_handle(),
-                        SPARSELIB_OPERATION_NON_TRANSPOSE, a.size[0], a.size[1],
-                        a.num_stored_elements, alpha, descr, a.values, row_ptrs,
-                        col_idxs, b.values, beta, c.values);
+                        SPARSELIB_OPERATION_NON_TRANSPOSE, a->get_size()[0],
+                        a->get_size()[1], a->get_num_stored_elements(), alpha,
+                        descr, a->get_const_values(), row_ptrs, col_idxs,
+                        b.values, beta, c.values);
 
         sparselib::destroy(descr);
     }
@@ -2228,16 +2233,16 @@ bool try_general_sparselib_spmv(
 #else  // GKO_COMPILING_CUDA
     auto handle = exec->get_sparselib_handle();
     // workaround for a division by zero in cuSPARSE 11.?
-    if (a.size[1] == 0) {
+    if (a->get_size()[1] == 0) {
         return false;
     }
     cusparseOperation_t trans = SPARSELIB_OPERATION_NON_TRANSPOSE;
-    auto row_ptrs = const_cast<IndexType*>(a.row_ptrs);
-    auto col_idxs = const_cast<IndexType*>(a.col_idxs);
-    auto values = const_cast<ValueType*>(a.values);
-    auto mat =
-        sparselib::create_csr(a.size[0], a.size[1], a.num_stored_elements,
-                              row_ptrs, col_idxs, values);
+    auto row_ptrs = const_cast<IndexType*>(a->get_const_row_ptrs());
+    auto col_idxs = const_cast<IndexType*>(a->get_const_col_idxs());
+    auto values = const_cast<ValueType*>(a->get_const_values());
+    auto mat = sparselib::create_csr(a->get_size()[0], a->get_size()[1],
+                                     a->get_num_stored_elements(), row_ptrs,
+                                     col_idxs, values);
     auto b_val = const_cast<ValueType*>(b.values);
     auto c_val = c.values;
     if (b.stride == 1 && c.stride == 1) {
@@ -2294,7 +2299,7 @@ template <typename MatrixValueType, typename InputValueType,
               !std::is_same<MatrixValueType, OutputValueType>::value>>
 bool try_sparselib_spmv(
     std::shared_ptr<const DefaultExecutor> exec,
-    matrix::view::csr<const MatrixValueType, const IndexType> a,
+    const matrix::Csr<MatrixValueType, IndexType>* a,
     matrix::view::dense<const InputValueType> b,
     matrix::view::dense<OutputValueType> c,
     xstd::type_identity_t<
@@ -2311,7 +2316,7 @@ bool try_sparselib_spmv(
 template <typename ValueType, typename IndexType>
 bool try_sparselib_spmv(
     std::shared_ptr<const DefaultExecutor> exec,
-    matrix::view::csr<const ValueType, const IndexType> a,
+    const matrix::Csr<ValueType, IndexType>* a,
     matrix::view::dense<const ValueType> b, matrix::view::dense<ValueType> c,
     xstd::type_identity_t<std::optional<matrix::view::dense<const ValueType>>>
         alpha = {},
@@ -2362,8 +2367,7 @@ void spmv(std::shared_ptr<const DefaultExecutor> exec,
             use_classical = !host_kernel::load_balance_spmv(exec, a, b, c);
         } else if (a->get_strategy()->get_name() == "sparselib" ||
                    a->get_strategy()->get_name() == "cusparse") {
-            use_classical = !host_kernel::try_sparselib_spmv(
-                exec, a->get_const_device_view(), b, c);
+            use_classical = !host_kernel::try_sparselib_spmv(exec, a, b, c);
         }
         if (use_classical) {
             IndexType max_length_per_row = 0;
@@ -2387,8 +2391,7 @@ void spmv(std::shared_ptr<const DefaultExecutor> exec,
                 [&max_length_per_row](int compiled_info) {
                     return max_length_per_row >= compiled_info;
                 },
-                syn::value_list<int>(), syn::type_list<>(), exec,
-                a->get_const_device_view(), b, c);
+                syn::value_list<int>(), syn::type_list<>(), exec, a, b, c);
         }
     }
 }
@@ -2425,8 +2428,8 @@ void advanced_spmv(std::shared_ptr<const DefaultExecutor> exec,
                 !host_kernel::load_balance_spmv(exec, a, b, c, alpha, beta);
         } else if (a->get_strategy()->get_name() == "sparselib" ||
                    a->get_strategy()->get_name() == "cusparse") {
-            use_classical = !host_kernel::try_sparselib_spmv(
-                exec, a->get_const_device_view(), b, c, alpha, beta);
+            use_classical =
+                !host_kernel::try_sparselib_spmv(exec, a, b, c, alpha, beta);
         }
         if (use_classical) {
             IndexType max_length_per_row = 0;
@@ -2450,8 +2453,8 @@ void advanced_spmv(std::shared_ptr<const DefaultExecutor> exec,
                 [&max_length_per_row](int compiled_info) {
                     return max_length_per_row >= compiled_info;
                 },
-                syn::value_list<int>(), syn::type_list<>(), exec,
-                a->get_const_device_view(), b, c, alpha, beta);
+                syn::value_list<int>(), syn::type_list<>(), exec, a, b, c,
+                alpha, beta);
         }
     }
 }

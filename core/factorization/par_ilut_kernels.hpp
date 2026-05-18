@@ -22,15 +22,14 @@ namespace gko {
 namespace kernels {
 
 
-#define GKO_DECLARE_PAR_ILUT_ADD_CANDIDATES_KERNEL(ValueType, IndexType) \
-    void add_candidates(                                                 \
-        std::shared_ptr<const DefaultExecutor> exec,                     \
-        matrix::view::csr<const ValueType, const IndexType> lu,          \
-        matrix::view::csr<const ValueType, const IndexType> a,           \
-        matrix::view::csr<const ValueType, const IndexType> l,           \
-        matrix::view::csr<const ValueType, const IndexType> u,           \
-        matrix::Csr<ValueType, IndexType>* l_new,                        \
-        matrix::Csr<ValueType, IndexType>* u_new)
+#define GKO_DECLARE_PAR_ILUT_ADD_CANDIDATES_KERNEL(ValueType, IndexType)       \
+    void add_candidates(std::shared_ptr<const DefaultExecutor> exec,           \
+                        const matrix::Csr<ValueType, IndexType>* lu,           \
+                        const matrix::Csr<ValueType, IndexType>* a,            \
+                        matrix::view::csr<const ValueType, const IndexType> l, \
+                        matrix::view::csr<const ValueType, const IndexType> u, \
+                        matrix::Csr<ValueType, IndexType>* l_new,              \
+                        matrix::Csr<ValueType, IndexType>* u_new)
 
 #define GKO_DECLARE_PAR_ILUT_COMPUTE_LU_FACTORS_KERNEL(ValueType, IndexType) \
     void compute_l_u_factors(                                                \

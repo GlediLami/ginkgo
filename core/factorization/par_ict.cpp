@@ -241,8 +241,7 @@ void ParIctState<ValueType, IndexType>::iterate()
     exec->run(make_spgemm(l.get(), lh.get(), llh.get()));
 
     // add new candidates to L' factor
-    exec->run(make_add_candidates(llh->get_const_device_view(),
-                                  system_matrix->get_const_device_view(),
+    exec->run(make_add_candidates(llh.get(), system_matrix,
                                   l->get_const_device_view(), l_new.get()));
 
     // update L(COO), L'^H sizes and pointers
