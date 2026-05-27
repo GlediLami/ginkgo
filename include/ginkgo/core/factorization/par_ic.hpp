@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2025 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -125,8 +125,8 @@ public:
          * Strategy which will be used by the L matrix. The default value
          * `nullptr` will result in the strategy `classical`.
          */
-        std::shared_ptr<typename matrix_type::strategy_type>
-            GKO_FACTORY_PARAMETER_SCALAR(l_strategy, nullptr);
+        matrix::csr::spmv_strategy GKO_FACTORY_PARAMETER_SCALAR(
+            l_strategy, matrix::csr::spmv_strategy::classical);
 
         /**
          * `true` will generate both L and L^H, `false` will only generate the L
@@ -162,10 +162,6 @@ protected:
         : Composition<ValueType>(factory->get_executor()),
           parameters_{factory->get_parameters()}
     {
-        if (parameters_.l_strategy == nullptr) {
-            parameters_.l_strategy =
-                std::make_shared<typename matrix_type::classical>();
-        }
         generate(system_matrix, parameters_.skip_sorting,
                  parameters_.both_factors)
             ->move_to(this);

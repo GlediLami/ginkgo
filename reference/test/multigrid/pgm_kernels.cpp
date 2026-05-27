@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -71,12 +71,11 @@ protected:
                I<VT>({0.0, 0.0}), I<VT>({0.0, 2.0})},
               exec)),
           mtx(Mtx::create(exec, gko::dim<2>(5, 5), 15,
-                          std::make_shared<typename Mtx::classical>())),
-          weight(WeightMtx::create(
-              exec, gko::dim<2>(5, 5), 15,
-              std::make_shared<typename WeightMtx::classical>())),
+                          gko::matrix::csr::spmv_strategy::classical)),
+          weight(WeightMtx::create(exec, gko::dim<2>(5, 5), 15,
+                                   gko::matrix::csr::spmv_strategy::classical)),
           coarse(Mtx::create(exec, gko::dim<2>(2, 2), 4,
-                             std::make_shared<typename Mtx::classical>())),
+                             gko::matrix::csr::spmv_strategy::classical)),
           agg(exec, 5)
     {
         this->create_mtx(mtx.get(), weight.get(), &agg, coarse.get());

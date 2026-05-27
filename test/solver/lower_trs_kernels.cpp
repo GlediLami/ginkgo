@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -340,7 +340,7 @@ TEST_F(LowerTrs, ApplyTriangularSparseMtxUnitDiagMultipleRhsIsEquivalentToRef)
 TEST_F(LowerTrs, ClassicalApplyFullDenseMtxIsEquivalentToRef)
 {
     initialize_data(50, 1, 50);
-    dmtx->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory = solver_type::build().on(ref);
     auto d_lower_trs_factory = solver_type::build().on(exec);
     auto solver = lower_trs_factory->generate(mtx);
@@ -356,7 +356,7 @@ TEST_F(LowerTrs, ClassicalApplyFullDenseMtxIsEquivalentToRef)
 TEST_F(LowerTrs, ClassicalApplyFullDenseMtxUnitDiagIsEquivalentToRef)
 {
     initialize_data(50, 1, 50);
-    dmtx->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory =
         solver_type::build().with_unit_diagonal(true).on(ref);
     auto d_lower_trs_factory =
@@ -374,7 +374,7 @@ TEST_F(LowerTrs, ClassicalApplyFullDenseMtxUnitDiagIsEquivalentToRef)
 TEST_F(LowerTrs, ClassicalApplyFullSparseMtxIsEquivalentToRef)
 {
     initialize_data(50, 1, 5);
-    dmtx->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory = solver_type::build().on(ref);
     auto d_lower_trs_factory = solver_type::build().on(exec);
     auto solver = lower_trs_factory->generate(mtx);
@@ -390,7 +390,7 @@ TEST_F(LowerTrs, ClassicalApplyFullSparseMtxIsEquivalentToRef)
 TEST_F(LowerTrs, ClassicalApplyFullSparseMtxUnitDiagIsEquivalentToRef)
 {
     initialize_data(50, 1, 5);
-    dmtx->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory =
         solver_type::build().with_unit_diagonal(true).on(ref);
     auto d_lower_trs_factory =
@@ -408,7 +408,7 @@ TEST_F(LowerTrs, ClassicalApplyFullSparseMtxUnitDiagIsEquivalentToRef)
 TEST_F(LowerTrs, ClassicalApplyTriangularDenseMtxIsEquivalentToRef)
 {
     initialize_data(50, 1, 50);
-    dmtx_l->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx_l->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory = solver_type::build().on(ref);
     auto d_lower_trs_factory = solver_type::build().on(exec);
     auto solver = lower_trs_factory->generate(mtx_l);
@@ -424,7 +424,7 @@ TEST_F(LowerTrs, ClassicalApplyTriangularDenseMtxIsEquivalentToRef)
 TEST_F(LowerTrs, ClassicalApplyTriangularDenseMtxUnitDiagIsEquivalentToRef)
 {
     initialize_data(50, 1, 50);
-    dmtx_l->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx_l->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory =
         solver_type::build().with_unit_diagonal(true).on(ref);
     auto d_lower_trs_factory =
@@ -442,7 +442,7 @@ TEST_F(LowerTrs, ClassicalApplyTriangularDenseMtxUnitDiagIsEquivalentToRef)
 TEST_F(LowerTrs, ClassicalApplyTriangularSparseMtxIsEquivalentToRef)
 {
     initialize_data(50, 1, 5);
-    dmtx_l->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx_l->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory = solver_type::build().on(ref);
     auto d_lower_trs_factory = solver_type::build().on(exec);
     auto solver = lower_trs_factory->generate(mtx_l);
@@ -458,7 +458,7 @@ TEST_F(LowerTrs, ClassicalApplyTriangularSparseMtxIsEquivalentToRef)
 TEST_F(LowerTrs, ClassicalApplyTriangularSparseMtxUnitDiagIsEquivalentToRef)
 {
     initialize_data(50, 1, 5);
-    dmtx_l->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx_l->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory =
         solver_type::build().with_unit_diagonal(true).on(ref);
     auto d_lower_trs_factory =
@@ -476,7 +476,7 @@ TEST_F(LowerTrs, ClassicalApplyTriangularSparseMtxUnitDiagIsEquivalentToRef)
 TEST_F(LowerTrs, ClassicalApplyFullDenseMtxMultipleRhsIsEquivalentToRef)
 {
     initialize_data(50, 4, 50);
-    dmtx->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory = solver_type::build().with_num_rhs(4u).on(ref);
     auto d_lower_trs_factory = solver_type::build().with_num_rhs(4u).on(exec);
     auto solver = lower_trs_factory->generate(mtx);
@@ -492,7 +492,7 @@ TEST_F(LowerTrs, ClassicalApplyFullDenseMtxMultipleRhsIsEquivalentToRef)
 TEST_F(LowerTrs, ClassicalApplyFullDenseMtxUnitDiagMultipleRhsIsEquivalentToRef)
 {
     initialize_data(50, 5, 50);
-    dmtx->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory =
         solver_type::build().with_num_rhs(5u).with_unit_diagonal(true).on(ref);
     auto d_lower_trs_factory =
@@ -510,7 +510,7 @@ TEST_F(LowerTrs, ClassicalApplyFullDenseMtxUnitDiagMultipleRhsIsEquivalentToRef)
 TEST_F(LowerTrs, ClassicalApplyFullSparseMtxMultipleRhsIsEquivalentToRef)
 {
     initialize_data(50, 6, 5);
-    dmtx->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory = solver_type::build().with_num_rhs(6u).on(ref);
     auto d_lower_trs_factory = solver_type::build().with_num_rhs(6u).on(exec);
     auto solver = lower_trs_factory->generate(mtx);
@@ -527,7 +527,7 @@ TEST_F(LowerTrs,
        ClassicalApplyFullSparseMtxUnitDiagMultipleRhsIsEquivalentToRef)
 {
     initialize_data(50, 7, 5);
-    dmtx->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory =
         solver_type::build().with_num_rhs(7u).with_unit_diagonal(true).on(ref);
     auto d_lower_trs_factory =
@@ -545,7 +545,7 @@ TEST_F(LowerTrs,
 TEST_F(LowerTrs, ClassicalApplyTriangularDenseMtxMultipleRhsIsEquivalentToRef)
 {
     initialize_data(50, 8, 50);
-    dmtx_l->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx_l->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory = solver_type::build().with_num_rhs(8u).on(ref);
     auto d_lower_trs_factory = solver_type::build().with_num_rhs(8u).on(exec);
     auto solver = lower_trs_factory->generate(mtx_l);
@@ -562,7 +562,7 @@ TEST_F(LowerTrs,
        ClassicalApplyTriangularDenseMtxUnitDiagMultipleRhsIsEquivalentToRef)
 {
     initialize_data(50, 9, 50);
-    dmtx_l->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx_l->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory =
         solver_type::build().with_num_rhs(9u).with_unit_diagonal(true).on(ref);
     auto d_lower_trs_factory =
@@ -580,7 +580,7 @@ TEST_F(LowerTrs,
 TEST_F(LowerTrs, ClassicalApplyTriangularSparseMtxMultipleRhsIsEquivalentToRef)
 {
     initialize_data(50, 10, 5);
-    dmtx_l->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx_l->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory = solver_type::build().with_num_rhs(10u).on(ref);
     auto d_lower_trs_factory = solver_type::build().with_num_rhs(10u).on(exec);
     auto solver = lower_trs_factory->generate(mtx_l);
@@ -597,7 +597,7 @@ TEST_F(LowerTrs,
        ClassicalApplyTriangularSparseMtxUnitDiagMultipleRhsIsEquivalentToRef)
 {
     initialize_data(50, 11, 5);
-    dmtx_l->set_strategy(std::make_shared<mtx_type::classical>());
+    dmtx_l->set_strategy(gko::matrix::csr::spmv_strategy::classical);
     auto lower_trs_factory =
         solver_type::build().with_num_rhs(11u).with_unit_diagonal(true).on(ref);
     auto d_lower_trs_factory =

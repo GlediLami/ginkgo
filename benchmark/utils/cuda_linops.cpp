@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2017 - 2024 The Ginkgo authors
+// SPDX-FileCopyrightText: 2017 - 2026 The Ginkgo authors
 //
 // SPDX-License-Identifier: BSD-3-Clause
 
@@ -172,7 +172,7 @@ protected:
                   const gko::dim<2>& size = gko::dim<2>{})
         : gko::EnableLinOp<CusparseCsrEx, CusparseBase>(exec, size),
           csr_(std::move(
-              csr::create(exec, std::make_shared<typename csr::classical>()))),
+              csr::create(exec, gko::matrix::csr::spmv_strategy::classical))),
           trans_(SPARSELIB_OPERATION_NON_TRANSPOSE),
           buffer_(exec)
     {
@@ -313,7 +313,7 @@ protected:
                        const gko::dim<2>& size = gko::dim<2>{})
         : gko::EnableLinOp<CusparseGenericCsr, CusparseBase>(exec, size),
           csr_(std::move(
-              csr::create(exec, std::make_shared<typename csr::classical>()))),
+              csr::create(exec, gko::matrix::csr::spmv_strategy::classical))),
           trans_(SPARSELIB_OPERATION_NON_TRANSPOSE)
     {}
 
